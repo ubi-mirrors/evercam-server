@@ -43,6 +43,6 @@ defmodule EvercamMedia.TimelapseView do
 
   defp get_logo(image_binary) when image_binary in ["", nil], do: ""
   defp get_logo(image_binary) do
-    "data:image/jpeg;base64,#{image_binary}"
+    "#{image_binary}"
   end
 end
