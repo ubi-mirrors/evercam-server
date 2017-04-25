@@ -232,7 +232,16 @@ defmodule EvercamMedia.Snapshot.Storage do
   end
 
   def thumbnail_load(camera_exid) do
-    disk_thumbnail_load(camera_exid)
+    seaweed_thumbnail_load(camera_exid)
+  end
+
+  def seaweed_thumbnail_load(camera_exid) do
+    url = "#{@seaweedfs}/#{camera_exid}/snapshots/thumbnail.jpg"
+    case HTTPoison.get(url, [], hackney: [pool: :seaweedfs_download_pool]) do
+      {:ok, %HTTPoison.Response{status_code: 200, body: snapshot}} ->
+        {:ok, snapshot}
+      _error -> {:error, Util.unavailable}
+    end
   end
 
   def disk_thumbnail_load(camera_exid) do
@@ -272,10 +281,10 @@ defmodule EvercamMedia.Snapshot.Storage do
     end
   end
 
-  def save(camera_exid, _timestamp, image, "Evercam Thumbnail"), do: thumbnail_save(camera_exid, image)
+  def save(camera_exid, _timestamp, image, "Evercam Thumbnail"), do: thumbnail_save_seaweedfs(camera_exid, image)
   def save(camera_exid, timestamp, image, notes) do
     seaweedfs_save(camera_exid, timestamp, image, notes)
-    thumbnail_save(camera_exid, image)
+    thumbnail_save_seaweedfs(camera_exid, image)
   end
 
   defp oldest_directory_name(directory, url, type \\ "Subdirectories", attribute \\ "Name") do
@@ -291,6 +300,13 @@ defmodule EvercamMedia.Snapshot.Storage do
         thumbnail_save(camera_exid, image)
       _ -> :noop
     end
+  end
+
+  def thumbnail_save_seaweedfs(camera_exid, image) do
+    hackney = [pool: :seaweedfs_upload_pool]
+    url = "#{@seaweedfs}/#{camera_exid}/snapshots/thumbnail.jpg"
+    file_path = "/#{camera_exid}/snapshots/thumbnail.jpg"
+    HTTPoison.post!(url, {:multipart, [{file_path, image, []}]}, [], hackney: hackney)
   end
 
   def save_mp4(camera_exid, archive_id, path) do
