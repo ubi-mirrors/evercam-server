@@ -147,9 +147,10 @@ defmodule EvercamMedia.Snapmail.Snapmailer do
       config.cameras
       |> Enum.map(fn(camera) ->
         case try_snapshot(camera, 1) do
-          {:ok, image} ->
+          {:ok, image, true} ->
             send worker, {:camera_reply, camera.camera_exid, image, timestamp}
             %{exid: camera.camera_exid, name: camera.name, data: image}
+          {:ok, image, false} -> %{exid: camera.camera_exid, name: camera.name, data: image}
           {:error, _error} -> %{exid: camera.camera_exid, name: camera.name, data: nil}
         end
       end)
@@ -167,7 +168,7 @@ defmodule EvercamMedia.Snapmail.Snapmailer do
       {:ok, ""} -> {:error, "Failed to get image"}
       {:ok, image} ->
         case is_younger_thumbnail(camera.camera_exid) do
-          true -> {:ok, image}
+          true -> {:ok, image, false}
           false -> {:error, "Failed to get image"}
         end
       _ -> {:error, "Failed to get image"}
@@ -176,16 +177,21 @@ defmodule EvercamMedia.Snapmail.Snapmailer do
 
   defp try_snapshot(camera, attempt) do
     case CamClient.fetch_snapshot(camera) do
-      {:ok, image} -> {:ok, image}
+      {:ok, image} -> {:ok, image, true}
       {:error, _error} -> try_snapshot(camera, attempt + 1)
     end
   end
 
   defp is_younger_thumbnail(camera_exid) do
     case Storage.thumbnail_options(camera_exid) do
-      {:ok, file_option} ->
+      {:ok, header} ->
         current_date = Calendar.DateTime.now_utc
-        thumbnail_date = Calendar.DateTime.from_erl!(file_option.mtime, "UTC")
+        {_, last_modified_date} = List.last(header)
+        {:ok, thumbnail_date} =
+          last_modified_date
+          |> Timex.parse!("{RFC1123}")
+          |> Timex.format!("{ISO:Extended:Z}")
+          |> Calendar.DateTime.Parse.rfc3339_utc
         case Calendar.DateTime.diff(current_date, thumbnail_date) do
           {:ok, seconds, _, :after} -> is_younder?(seconds)
           _ -> false

@@ -254,11 +254,12 @@ defmodule EvercamMedia.Snapshot.Storage do
   end
 
   def thumbnail_options(camera_exid) do
-    "#{@root_dir}/#{camera_exid}/snapshots/thumbnail.jpg"
-    |> File.stat
-    |> case do
-      {:ok, file_option} -> {:ok, file_option}
-      {:error, error} -> {:error, error}
+    hackney = [pool: :seaweedfs_upload_pool]
+    url = "#{@seaweedfs}/#{camera_exid}/snapshots/thumbnail.jpg"
+    case HTTPoison.head(url, [], hackney: hackney) do
+      {:ok, %HTTPoison.Response{headers: head, status_code: 200}} -> {:ok, head}
+      error ->
+        Logger.debug "Upload for file path '#{url}' failed with: #{inspect error}"
     end
   end
 
