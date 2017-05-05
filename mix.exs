@@ -53,6 +53,7 @@ defmodule EvercamMedia.Mixfile do
     :uuid,
     :xmerl,
     :html_sanitize_ex,
+    :appsignal,
   ]
 
   # Specifies which paths to compile per environment
@@ -74,7 +75,7 @@ defmodule EvercamMedia.Mixfile do
       {:httpoison, "~> 0.11.1"},
       {:jsx, "~> 2.8.0", override: true},
       {:mailgun, github: "evercam/mailgun"},
-      {:phoenix, "~> 1.2.0-rc.1"},
+      {:phoenix, "~> 1.2.0"},
       {:phoenix_ecto, "~> 3.0.0"},
       {:phoenix_html, "~> 2.6"},
       {:porcelain, github: "alco/porcelain"},
@@ -87,6 +88,7 @@ defmodule EvercamMedia.Mixfile do
       {:exvcr, "~> 0.7", only: :test},
       {:meck,  "~> 0.8.4", override: :true},
       {:html_sanitize_ex, "~> 1.0.0"},
+      {:appsignal, "~> 1.0"},
     ]
   end
 end
