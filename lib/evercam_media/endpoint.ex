@@ -1,5 +1,6 @@
 defmodule EvercamMedia.Endpoint do
   use Phoenix.Endpoint, otp_app: :evercam_media
+  use Appsignal.Phoenix
 
   socket "/socket", EvercamMedia.UserSocket
 

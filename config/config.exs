@@ -17,7 +17,8 @@ config :evercam_media, EvercamMedia.Endpoint,
   server: true,
   root: Path.expand("..", __DIR__),
   pubsub: [name: EvercamMedia.PubSub,
-           adapter: Phoenix.PubSub.PG2]
+           adapter: Phoenix.PubSub.PG2],
+  instrumenters: [Appsignal.Phoenix.Instrumenter]
 
 config :evercam_media,
   ecto_repos: [EvercamMedia.Repo]
@@ -49,6 +50,19 @@ config :evercam_media, :mailgun,
   key: "sandbox",
   mode: :test,
   test_file_path: "priv_dir/mailgun_test.json"
+
+config :appsignal, :config,
+  active: true,
+  name: "Evercam Staging",
+  push_api_key: System.get_env("APP_SIGNAL_KEY"),
+  env: Mix.env
+
+config :phoenix, :template_engines,
+  eex: Appsignal.Phoenix.Template.EExEngine,
+  exs: Appsignal.Phoenix.Template.ExsEngine
+
+config :evercam_media, EvercamMedia.Repo,
+  loggers: [Appsignal.Ecto, Ecto.LogEntry]
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
