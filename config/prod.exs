@@ -90,6 +90,12 @@ config :evercam_media, :mailgun,
   key: System.get_env("MAILGUN_KEY"),
   mode: :prod
 
+config :appsignal, :config,
+  active: true,
+  name: "Evercam Staging",
+  push_api_key: System.get_env("APP_SIGNAL_KEY"),
+  env: :prod
+
 config :evercam_media, EvercamMedia.Repo,
   adapter: Ecto.Adapters.Postgres,
   extensions: [
