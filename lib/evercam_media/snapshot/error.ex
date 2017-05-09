@@ -25,6 +25,17 @@ defmodule EvercamMedia.Snapshot.Error do
     end
   end
 
+  defp parse_response(error) do
+    try do
+      case Map.get(error, :response) do
+        nil -> Map.get(error, :message)
+        response -> response
+      end
+    catch _type, _error ->
+      ""
+    end
+  end
+
   def handle(reason, camera_exid, timestamp, error) do
     case reason do
       :system_limit ->
@@ -78,38 +89,38 @@ defmodule EvercamMedia.Snapshot.Error do
       :not_found ->
         Logger.debug "[#{camera_exid}] [snapshot_error] [not_found]"
         update_camera_status("#{camera_exid}", timestamp, false, "not_found", 100)
-        {504, %{message: "Camera snapshot url is not found.", response: error[:response]}}
+        {504, %{message: "Camera snapshot url is not found.", response: parse_response(error)}}
       :forbidden ->
         Logger.debug "[#{camera_exid}] [snapshot_error] [forbidden]"
         update_camera_status("#{camera_exid}", timestamp, false, "forbidden", 100)
-        {504, %{message: "Camera responded with a Forbidden message.", response: error[:response]}}
+        {504, %{message: "Camera responded with a Forbidden message.", response: parse_response(error)}}
       :unauthorized ->
         Logger.debug "[#{camera_exid}] [snapshot_error] [unauthorized]"
         update_camera_status("#{camera_exid}", timestamp, false, "unauthorized", 100)
-        {504, %{message: "Please check the username and password.", response: error[:response]}}
+        {504, %{message: "Please check the username and password.", response: parse_response(error)}}
       :device_error ->
         Logger.debug "[#{camera_exid}] [snapshot_error] [device_error]"
         update_camera_status("#{camera_exid}", timestamp, false, "device_error", 2)
-        {504, %{message: "Camera responded with a Device Error message.", response: error[:response]}}
+        {504, %{message: "Camera responded with a Device Error message.", response: parse_response(error)}}
       :device_busy ->
         ConCache.put(:camera_lock, camera_exid, camera_exid)
         Logger.debug "[#{camera_exid}] [snapshot_error] [device_busy]"
         update_camera_status("#{camera_exid}", timestamp, false, "device_busy", 1)
-        {502, %{message: "Camera responded with a Device Busy message.", response: error[:response]}}
+        {502, %{message: "Camera responded with a Device Busy message.", response: parse_response(error)}}
       :invalid_operation ->
         Logger.debug "[#{camera_exid}] [snapshot_error] [invalid_operation]"
         update_camera_status("#{camera_exid}", timestamp, false, "invalid_operation", 1)
-        {502, %{message: "Camera responded with a Invalid Operation message.", response: error[:response]}}
+        {502, %{message: "Camera responded with a Invalid Operation message.", response: parse_response(error)}}
       :moved ->
         Logger.debug "[#{camera_exid}] [snapshot_error] [moved]"
         update_camera_status("#{camera_exid}", timestamp, false, "moved", 100)
-        {502, %{message: "Camera url has changed, please update it.", response: error[:response]}}
+        {502, %{message: "Camera url has changed, please update it.", response: parse_response(error)}}
       :not_a_jpeg ->
         Logger.debug "[#{camera_exid}] [snapshot_error] [not_a_jpeg]"
         update_camera_status("#{camera_exid}", timestamp, false, "not_a_jpeg", 1)
-        {502, %{message: "Camera didn't respond with an image.", response: error[:response]}}
+        {502, %{message: "Camera didn't respond with an image.", response: parse_response(error)}}
       _reason ->
-        Logger.warn "[#{camera_exid}] [snapshot_error] [unhandled] #{inspect error}"
+        Logger.debug "[#{camera_exid}] [snapshot_error] [unhandled] #{inspect error}"
         update_camera_status("#{camera_exid}", timestamp, false, "unhandled", 1)
         {500, %{message: "Sorry, we dropped the ball."}}
     end

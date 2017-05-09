@@ -22,8 +22,8 @@ defmodule EvercamMedia.Snapshot.CamClient do
           _ -> HTTPClient.get(:basic_auth, args[:url], username, password)
         end
       parse_snapshot_response(response)
-    rescue
-      error -> {:error, error}
+    catch _type, error ->
+      {:error, error}
     end
   end
 
