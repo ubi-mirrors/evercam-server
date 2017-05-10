@@ -264,14 +264,15 @@ defmodule EvercamMedia.Snapshot.Storage do
   end
 
   def oldest_snapshot(camera_exid) do
-    url = "#{@seaweedfs}/#{camera_exid}/snapshots/archives/"
+    url = "#{@seaweedfs}/#{camera_exid}/snapshots/"
     hackney = [pool: :seaweedfs_download_pool]
-    with {:year, year} <- oldest_directory_name(:year, url),
-         {:month, month} <- oldest_directory_name(:month, "#{url}#{year}/"),
-         {:day, day} <- oldest_directory_name(:day, "#{url}#{year}/#{month}/"),
-         {:hour, hour} <- oldest_directory_name(:hour, "#{url}#{year}/#{month}/#{day}/"),
-         {:image, oldest_image} <- oldest_directory_name(:image, "#{url}#{year}/#{month}/#{day}/#{hour}/?limit=3600", "Files", "name") do
-      case HTTPoison.get("#{url}#{year}/#{month}/#{day}/#{hour}/#{oldest_image}", [], hackney: hackney) do
+    with {:notes, notes} <- oldest_directory_name(:notes, url),
+         {:year, year} <- oldest_directory_name(:year, "#{url}#{notes}/"),
+         {:month, month} <- oldest_directory_name(:month, "#{url}#{notes}/#{year}/"),
+         {:day, day} <- oldest_directory_name(:day, "#{url}#{notes}/#{year}/#{month}/"),
+         {:hour, hour} <- oldest_directory_name(:hour, "#{url}#{notes}/#{year}/#{month}/#{day}/"),
+         {:image, oldest_image} <- oldest_directory_name(:image, "#{url}#{notes}/#{year}/#{month}/#{day}/#{hour}/?limit=3600", "Files", "name") do
+      case HTTPoison.get("#{url}#{notes}/#{year}/#{month}/#{day}/#{hour}/#{oldest_image}", [], hackney: hackney) do
         {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
           {:ok, body}
         {:error, %HTTPoison.Error{reason: reason}} ->
@@ -289,7 +290,13 @@ defmodule EvercamMedia.Snapshot.Storage do
   end
 
   defp oldest_directory_name(directory, url, type \\ "Subdirectories", attribute \\ "Name") do
-    {directory, request_from_seaweedfs(url, type, attribute) |> Enum.sort(&(&2 > &1)) |> List.first}
+    {
+      directory,
+      request_from_seaweedfs(url, type, attribute)
+      |> Enum.filter(fn(d) -> d != "recordings" end)
+      |> Enum.sort(&(&2 > &1))
+      |> List.first
+    }
   end
 
   defp thumbnail_save(camera_exid, image) do
