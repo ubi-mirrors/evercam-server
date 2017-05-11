@@ -274,12 +274,22 @@ defmodule EvercamMedia.Snapshot.Storage do
          {:image, oldest_image} <- oldest_directory_name(:image, "#{url}#{notes}/#{year}/#{month}/#{day}/#{hour}/?limit=3600", "Files", "name") do
       case HTTPoison.get("#{url}#{notes}/#{year}/#{month}/#{day}/#{hour}/#{oldest_image}", [], hackney: hackney) do
         {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-          {:ok, body}
+          [minute, second, _] = String.split(oldest_image, "_")
+          erl_date = {{to_integer(year), to_integer(month), to_integer(day)}, {to_integer(hour), to_integer(minute), to_integer(second)}}
+          {:ok, datetime} = Calendar.DateTime.from_erl(erl_date, "UTC")
+          {:ok, body, datetime |> Calendar.DateTime.Format.unix}
         {:error, %HTTPoison.Error{reason: reason}} ->
           {:error, reason}
       end
     else
       _ -> {:error, "Not Found."}
+    end
+  end
+
+  defp to_integer(value) do
+    case Integer.parse(value) do
+      {number, ""} -> number
+      _ -> :error
     end
   end
 

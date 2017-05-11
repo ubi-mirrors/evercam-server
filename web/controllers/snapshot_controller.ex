@@ -92,7 +92,7 @@ defmodule EvercamMedia.SnapshotController do
         data = "data:image/jpeg;base64,#{Base.encode64(response[:image])}"
 
         conn
-        |> json(%{data: data, status: "ok"})
+        |> json(%{data: data, status: "ok", created_at: response[:created_at]})
       {code, response} ->
         conn
         |> put_status(code)
@@ -260,9 +260,9 @@ defmodule EvercamMedia.SnapshotController do
   defp old_snapshot(camera_exid, user) do
     camera = Camera.get_full(camera_exid)
     with true <- Permission.Camera.can_snapshot?(user, camera),
-         {:ok, image} <- Storage.oldest_snapshot(camera_exid)
+         {:ok, image, timestamp} <- Storage.oldest_snapshot(camera_exid)
     do
-      {200, %{image: image}}
+      {200, %{image: image, created_at: timestamp}}
     else
       {:error, error_image} -> {404, %{image: error_image}}
       false -> {403, %{message: "Forbidden"}}
