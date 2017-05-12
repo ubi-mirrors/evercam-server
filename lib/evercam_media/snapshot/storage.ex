@@ -24,7 +24,10 @@ defmodule EvercamMedia.Snapshot.Storage do
     directory_path = construct_directory_path(camera_exid, timestamp, app_name, "")
     file_name = construct_file_name(timestamp)
     file_path = directory_path <> file_name
-    HTTPoison.post!("#{@seaweedfs}#{file_path}", {:multipart, [{file_path, image, []}]}, [], hackney: hackney)
+    case HTTPoison.post("#{@seaweedfs}#{file_path}", {:multipart, [{file_path, image, []}]}, [], hackney: hackney) do
+      {:ok, response} -> response
+      {:error, error} -> Logger.info "[seaweedfs_save] [#{camera_exid}] [#{inspect error}]"
+    end
     metadata_save(directory_path, file_name, metadata)
   end
 
@@ -47,7 +50,10 @@ defmodule EvercamMedia.Snapshot.Storage do
         error ->
           raise "Metadata upload at '#{file_path}' failed with: #{inspect error}"
       end
-    HTTPoison.post!(url, {:multipart, [{file_path, data, []}]}, [], hackney: hackney)
+    case HTTPoison.post(url, {:multipart, [{file_path, data, []}]}, [], hackney: hackney) do
+      {:ok, response} -> response
+      {:error, error} -> Logger.info "[metadata_save] [#{file_path}] [#{inspect error}]"
+    end
   end
 
   defp metadata_load(url) do
@@ -295,8 +301,12 @@ defmodule EvercamMedia.Snapshot.Storage do
 
   def save(camera_exid, _timestamp, image, "Evercam Thumbnail"), do: thumbnail_save_seaweedfs(camera_exid, image)
   def save(camera_exid, timestamp, image, notes) do
-    seaweedfs_save(camera_exid, timestamp, image, notes)
-    thumbnail_save_seaweedfs(camera_exid, image)
+    try do
+      seaweedfs_save(camera_exid, timestamp, image, notes)
+      thumbnail_save_seaweedfs(camera_exid, image)
+    catch _type, _error ->
+      :noop
+    end
   end
 
   defp oldest_directory_name(directory, url, type \\ "Subdirectories", attribute \\ "Name") do
@@ -324,7 +334,10 @@ defmodule EvercamMedia.Snapshot.Storage do
     hackney = [pool: :seaweedfs_upload_pool]
     url = "#{@seaweedfs}/#{camera_exid}/snapshots/thumbnail.jpg"
     file_path = "/#{camera_exid}/snapshots/thumbnail.jpg"
-    HTTPoison.post!(url, {:multipart, [{file_path, image, []}]}, [], hackney: hackney)
+    case HTTPoison.post(url, {:multipart, [{file_path, image, []}]}, [], hackney: hackney) do
+      {:ok, response} -> response
+      {:error, error} -> Logger.info "[thumbnail_save_seaweedfs] [#{camera_exid}] [#{inspect error}]"
+    end
   end
 
   def save_mp4(camera_exid, archive_id, path) do
