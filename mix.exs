@@ -71,7 +71,7 @@ defmodule EvercamMedia.Mixfile do
       {:ecto, "~> 2.0.2"},
       {:exrm, github: "bitwalker/exrm"},
       {:geo, "~> 1.1"},
-      {:httpoison, "~> 0.11.2"},
+      {:httpoison, "~> 0.11.1"},
       {:jsx, "~> 2.8.0", override: true},
       {:mailgun, github: "evercam/mailgun"},
       {:phoenix, "~> 1.2.0-rc.1"},
