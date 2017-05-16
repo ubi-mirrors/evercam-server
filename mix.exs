@@ -53,6 +53,7 @@ defmodule EvercamMedia.Mixfile do
     :uuid,
     :xmerl,
     :html_sanitize_ex,
+    :new_relic,
   ]
 
   # Specifies which paths to compile per environment
@@ -87,6 +88,7 @@ defmodule EvercamMedia.Mixfile do
       {:exvcr, "~> 0.7", only: :test},
       {:meck,  "~> 0.8.4", override: :true},
       {:html_sanitize_ex, "~> 1.0.0"},
+      {:new_relic, github: "azharmalik3/newrelic-elixir", override: true},
     ]
   end
 end

@@ -50,6 +50,11 @@ config :evercam_media, :mailgun,
   mode: :test,
   test_file_path: "priv_dir/mailgun_test.json"
 
+config :new_relic,
+  application_name: System.get_env("NEWRELIC_APP_NAME"),
+  license_key: System.get_env("NEWRELIC_LICENSE_KEY"),
+  poll_interval: 60_000
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env}.exs"
