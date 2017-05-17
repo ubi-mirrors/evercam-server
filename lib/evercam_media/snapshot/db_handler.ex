@@ -94,10 +94,10 @@ defmodule EvercamMedia.Snapshot.DBHandler do
           |> Ecto.DateTime.cast!
         params = construct_camera(datetime, status, camera.is_online == status)
         changeset = Camera.changeset(camera, params)
-        Repo.update!(changeset)
-        Camera.invalidate_camera(camera)
-        broadcast_change_to_users(camera)
+        camera = Repo.update!(changeset)
         log_camera_status(camera, status, datetime, error_code)
+        broadcast_change_to_users(camera)
+        Camera.invalidate_camera(camera)
       end)
       Task.await(task, :timer.seconds(3))
     catch _type, error ->
