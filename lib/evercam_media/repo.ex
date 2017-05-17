@@ -1,5 +1,9 @@
 defmodule EvercamMedia.Repo do
   use Ecto.Repo, otp_app: :evercam_media
+
+  defmodule NewRelic do
+    use Elixir.NewRelic.Plug.Repo, repo: EvercamMedia.Repo
+  end
 end
 
 defmodule EvercamMedia.SnapshotRepo do

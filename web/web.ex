@@ -29,7 +29,8 @@ defmodule EvercamMedia.Web do
     quote do
       use Phoenix.Controller
 
-      alias EvercamMedia.Repo
+      plug NewRelic.Plug.Phoenix
+      alias EvercamMedia.Repo.NewRelic, as: Repo
       alias EvercamMedia.Util
 
       import Ecto.Schema
@@ -65,7 +66,7 @@ defmodule EvercamMedia.Web do
     quote do
       use Phoenix.Channel
 
-      alias EvercamMedia.Repo
+      alias EvercamMedia.Repo.NewRelic, as: Repo
       import Ecto.Schema
       import Ecto.Query, only: [from: 1, from: 2]
     end

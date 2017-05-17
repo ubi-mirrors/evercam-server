@@ -180,7 +180,7 @@ defmodule EvercamMedia.SnapmailController do
   defp get_by_user_camera(conn, caller, camera, _camera_id) do
     case Permission.Camera.can_list?(caller, camera) do
       true ->
-        snapmails = Snapmail.by_camera_id(camera.id, caller.id)
+        snapmails = Snapmail.by_camera_id(camera.id, caller.id, conn)
         {:ok, snapmails}
       false -> render_error(conn, 403, "Forbidden.")
     end

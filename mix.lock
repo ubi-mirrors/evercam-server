@@ -37,7 +37,7 @@
   "mime": {:hex, :mime, "1.0.0", "b63027733bba00b1013bad14e25dc8b6629ecb817731544a88a0fd14f2a55685", [:mix], [], "hexpm"},
   "mimerl": {:hex, :mimerl, "1.0.2", "993f9b0e084083405ed8252b99460c4f0563e41729ab42d9074fd5e52439be88", [:rebar3], [], "hexpm"},
   "mochiweb": {:hex, :mochiweb, "2.12.2", "80804ad342afa3d7f3524040d4eed66ce74b17a555de454ac85b07c479928e46", [:make, :rebar], [], "hexpm"},
-  "new_relic": {:git, "https://github.com/azharmalik3/newrelic-elixir.git", "df7858e5d69eb60cfdec430f982649fa6a0b987d", []},
+  "new_relic": {:git, "https://github.com/azharmalik3/newrelic-elixir.git", "9011a2cb975979b99fc61606576029afcc06aa16", []},
   "phoenix": {:hex, :phoenix, "1.2.0-rc.1", "08fdf0f290ef2fb76127f2cf63dfd59a501b19f91d51098f62b53fff991a27e6", [:mix], [{:cowboy, "~> 1.0", [hex: :cowboy, repo: "hexpm", optional: true]}, {:mime, "~> 1.0", [hex: :mime, repo: "hexpm", optional: false]}, {:phoenix_pubsub, "~> 1.0.0-rc", [hex: :phoenix_pubsub, repo: "hexpm", optional: false]}, {:plug, "~> 1.0", [hex: :plug, repo: "hexpm", optional: false]}, {:poison, "~> 1.5 or ~> 2.0", [hex: :poison, repo: "hexpm", optional: false]}], "hexpm"},
   "phoenix_ecto": {:hex, :phoenix_ecto, "3.0.0", "b947aaf03d076f5b1448f87828f22fb7710478ee38455c67cc3fe8e9a4dfd015", [:mix], [{:ecto, "~> 2.0.0-rc", [hex: :ecto, repo: "hexpm", optional: false]}, {:phoenix_html, "~> 2.6", [hex: :phoenix_html, repo: "hexpm", optional: true]}], "hexpm"},
   "phoenix_html": {:hex, :phoenix_html, "2.6.0", "b9f7e091eb3d908586d9634596478fb9e577ee033d76f4ff327a745569bdd2d8", [:mix], [{:plug, "~> 0.13 or ~> 1.0", [hex: :plug, repo: "hexpm", optional: false]}], "hexpm"},
