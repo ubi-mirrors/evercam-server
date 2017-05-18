@@ -2,6 +2,7 @@ defmodule EvercamMedia.Timelapse.ImportTimelapses do
   require Logger
   alias EvercamMedia.Snapshot.Storage
   alias EvercamMedia.Repo
+  alias EvercamMedia.Util
 
   @root_dir Application.get_env(:evercam_media, :storage_dir)
   @seaweedfs Application.get_env(:evercam_media, :seaweedfs_url)
@@ -11,7 +12,7 @@ defmodule EvercamMedia.Timelapse.ImportTimelapses do
     Logger.info "Start Timelapse import: #{timelapse.title}"
     timelapse_id = Map.get(timelapse.extra, "id")
     create_directory_structure(timelapse.camera.exid, timelapse.exid)
-    download_snapshot(timelapse.camera.exid, timelapse.exid, timelapse_id, timelapse.snapshot_count, 0)
+    download_snapshot(timelapse.camera.exid, timelapse.exid, timelapse_id, timelapse.snapshot_count, 0, 0)
     create_hls(timelapse)
     Logger.info "Complete Timelapse import: #{timelapse.title}"
   end
@@ -84,21 +85,25 @@ defmodule EvercamMedia.Timelapse.ImportTimelapses do
     File.mkdir_p(images_path)
   end
 
-  defp download_snapshot(camera_id, timelapse_exid, timelapse_id, total_snaps, n) when n < total_snaps do
+  defp download_snapshot(camera_id, timelapse_exid, timelapse_id, total_snaps, save_index, n) when n < total_snaps do
     download_url = "http://timelapse.evercam.io/timelapses/#{camera_id}/#{timelapse_id}/images/#{n}.jpg"
-    save_url = "#{@root_dir}/#{camera_id}/timelapses/#{timelapse_exid}/images/#{n}.jpg"
+    save_url = "#{@root_dir}/#{camera_id}/timelapses/#{timelapse_exid}/images/#{save_index}.jpg"
     case HTTPoison.get(download_url, [], hackney: [pool: :seaweedfs_download_pool]) do
       {:ok, %HTTPoison.Response{status_code: 200, body: image}} ->
-        File.write(save_url, image)
-        download_snapshot(camera_id, timelapse_exid, timelapse_id, total_snaps, n + 1)
+        case Util.jpeg?(image) do
+          true ->
+            File.write(save_url, image)
+            download_snapshot(camera_id, timelapse_exid, timelapse_id, total_snaps, save_index + 1, n + 1)
+          _ -> download_snapshot(camera_id, timelapse_exid, timelapse_id, total_snaps, save_index, n + 1)
+        end
       error ->
         Logger.info "[snapshot-get] [error] [#{camera_id}] [#{timelapse_exid}] [#{inspect error}]"
-        {:error, :not_found}
+        download_snapshot(camera_id, timelapse_exid, timelapse_id, total_snaps, save_index, n + 1)
     end
   end
-  defp download_snapshot(_camera_id, _timelapse_exid, _timelapse_id, _total_snaps, _n), do: :noop
+  defp download_snapshot(_camera_id, _timelapse_exid, _timelapse_id, _total_snaps, _save_index, _n), do: :noop
 
-  def get_timelapses(timelapse_url, app_id, app_key) do
+  def get_timelapses(timelapse_url, app_id, app_key, timelapse_list \\ []) do
     url = "#{timelapse_url}/#{app_id}/#{app_key}"
     headers = ["Accept": "Accept:application/json"]
     response = HTTPoison.get(url, headers) |> elem(1)
@@ -106,6 +111,7 @@ defmodule EvercamMedia.Timelapse.ImportTimelapses do
       200 ->
         response.body
         |> Poison.decode!
+        |> Enum.filter(fn(timelapse) -> Enum.member?(timelapse_list, timelapse["code"]) end)
         |> Enum.each(fn(timelapse) ->
           camera = Camera.by_exid(timelapse["camera_id"])
           user = User.by_username(timelapse["user_id"])
