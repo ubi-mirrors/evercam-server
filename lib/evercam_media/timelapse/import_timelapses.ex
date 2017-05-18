@@ -7,14 +7,17 @@ defmodule EvercamMedia.Timelapse.ImportTimelapses do
   @root_dir Application.get_env(:evercam_media, :storage_dir)
   @seaweedfs Application.get_env(:evercam_media, :seaweedfs_url)
 
-  def start_import(exid) do
-    timelapse = Timelapse.by_exid(exid)
-    Logger.info "Start Timelapse import: #{timelapse.title}"
-    timelapse_id = Map.get(timelapse.extra, "id")
-    create_directory_structure(timelapse.camera.exid, timelapse.exid)
-    download_snapshot(timelapse.camera.exid, timelapse.exid, timelapse_id, timelapse.snapshot_count, 0, 0)
-    create_hls(timelapse)
-    Logger.info "Complete Timelapse import: #{timelapse.title}"
+  def start_import(exids) do
+    exids
+    |> Enum.each(fn(exid) ->
+      timelapse = Timelapse.by_exid(exid)
+      Logger.info "Start Timelapse import: #{timelapse.title}"
+      timelapse_id = Map.get(timelapse.extra, "id")
+      create_directory_structure(timelapse.camera.exid, timelapse.exid)
+      download_snapshot(timelapse.camera.exid, timelapse.exid, timelapse_id, timelapse.snapshot_count, 0, 0)
+      create_hls(timelapse)
+      Logger.info "Complete Timelapse import: #{timelapse.title}"
+    end)
   end
 
   defp create_directory_structure(camera_id, timelapse_id) do
