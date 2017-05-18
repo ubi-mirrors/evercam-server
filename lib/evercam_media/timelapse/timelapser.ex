@@ -258,9 +258,9 @@ defmodule EvercamMedia.Timelapse.Timelapser do
     tsPath = "#{timelapse_path}ts/"
 
     bash_content = "#!/bin/bash"
-    bash_content = bash_content <> "\nffmpeg -threads 1 -y -framerate 24 -i #{imagesPath}/%d.jpg -c:v libx264 -pix_fmt yuv420p -profile:v baseline -level 2.1 -maxrate 500K -bufsize 2M -crf 18 -r 24 -g 30 -s 480x270 #{tsPath}/low#{file_index["low"]}.ts"
-    bash_content = bash_content <> "\nffmpeg -threads 1 -y -framerate 24 -i #{imagesPath}/%d.jpg -c:v libx264 -pix_fmt yuv420p -profile:v baseline -level 3.1 -maxrate 1M -bufsize 3M -crf 18 -r 24 -g 72 -s 640x360 #{tsPath}/medium#{file_index["medium"]}.ts"
-    bash_content = bash_content <> "\nffmpeg -threads 1 -y -framerate 24 -i #{imagesPath}/%d.jpg -c:v libx264 -pix_fmt yuv420p -profile:v high -level 3.2 -maxrate 4M -crf 18 -r 24 -g 100 #{tsPath}/high#{file_index["high"]}.ts"
+    bash_content = bash_content <> "\nffmpeg -threads 1 -y -framerate 24 -i #{imagesPath}/%d.jpg -c:v libx264 -pix_fmt yuv420p -preset slow -tune stillimage -b:v 64K -maxrate 10000k -bufsize 64k -crf 28 -r 24 #{tsPath}/low#{file_index["low"]}.ts"
+    bash_content = bash_content <> "\nffmpeg -threads 1 -y -framerate 24 -i #{imagesPath}/%d.jpg -c:v libx264 -pix_fmt yuv420p -preset slow -tune stillimage -b:v 64K -maxrate 13000k -bufsize 64k -crf 28 -r 24 #{tsPath}/medium#{file_index["medium"]}.ts"
+    bash_content = bash_content <> "\nffmpeg -threads 1 -y -framerate 24 -i #{imagesPath}/%d.jpg -c:v libx264 -pix_fmt yuv420p -preset slow -tune stillimage -b:v 64K -maxrate 16000k -bufsize 64k -crf 28 -r 24 #{tsPath}/high#{file_index["high"]}.ts"
     File.write("#{timelapse_path}build.sh", bash_content)
   end
 
