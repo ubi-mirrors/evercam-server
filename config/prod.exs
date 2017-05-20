@@ -58,7 +58,7 @@ config :evercam_media,
   start_camera_workers: System.get_env["START_CAMERA_WORKERS"]
 
 config :evercam_media,
-  start_timelapse_workers: false
+  start_timelapse_workers: true
 
 config :evercam_media,
   storage_dir: "/storage"
