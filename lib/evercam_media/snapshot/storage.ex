@@ -269,15 +269,15 @@ defmodule EvercamMedia.Snapshot.Storage do
     end
   end
 
-  def oldest_snapshot(camera_exid) do
+  def oldest_snapshot(camera_exid, cloud_recording) do
     url = "#{@seaweedfs}/#{camera_exid}/snapshots/"
     hackney = [pool: :seaweedfs_download_pool]
-    with {:notes, notes} <- oldest_directory_name(:notes, url),
-         {:year, year} <- oldest_directory_name(:year, "#{url}#{notes}/"),
-         {:month, month} <- oldest_directory_name(:month, "#{url}#{notes}/#{year}/"),
-         {:day, day} <- oldest_directory_name(:day, "#{url}#{notes}/#{year}/#{month}/"),
-         {:hour, hour} <- oldest_directory_name(:hour, "#{url}#{notes}/#{year}/#{month}/#{day}/"),
-         {:image, oldest_image} <- oldest_directory_name(:image, "#{url}#{notes}/#{year}/#{month}/#{day}/#{hour}/?limit=3600", "Files", "name") do
+    with {:notes, notes} <- oldest_directory_name(cloud_recording, :notes, url),
+         {:year, year} <- oldest_directory_name(cloud_recording, :year, "#{url}#{notes}/"),
+         {:month, month} <- oldest_directory_name(cloud_recording, :month, "#{url}#{notes}/#{year}/"),
+         {:day, day} <- oldest_directory_name(cloud_recording, :day, "#{url}#{notes}/#{year}/#{month}/"),
+         {:hour, hour} <- oldest_directory_name(cloud_recording, :hour, "#{url}#{notes}/#{year}/#{month}/#{day}/"),
+         {:image, oldest_image} <- oldest_directory_name(cloud_recording, :image, "#{url}#{notes}/#{year}/#{month}/#{day}/#{hour}/?limit=3600", "Files", "name") do
       case HTTPoison.get("#{url}#{notes}/#{year}/#{month}/#{day}/#{hour}/#{oldest_image}", [], hackney: hackney) do
         {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
           [minute, second, _] = String.split(oldest_image, "_")
@@ -309,7 +309,20 @@ defmodule EvercamMedia.Snapshot.Storage do
     end
   end
 
-  defp oldest_directory_name(directory, url, type \\ "Subdirectories", attribute \\ "Name") do
+  defp oldest_directory_name(cloud_recording, directory, url, type \\ "Subdirectories", attribute \\ "Name")
+  defp oldest_directory_name(%CloudRecording{storage_duration: -1}, directory, url, type, attribute) do
+    {structure, attr} =
+      case directory do
+        :hour -> {"Files", "name"}
+        _ -> {type, attribute}
+      end
+    value =
+      request_from_seaweedfs(url, type, attribute)
+      |> Enum.sort(&(&2 > &1))
+      |> exist_oldest_directory(directory, String.match?(url, ~r/archives/), url, structure, attr)
+    {directory, value}
+  end
+  defp oldest_directory_name(cloud_recording, directory, url, type, attribute) do
     {
       directory,
       request_from_seaweedfs(url, type, attribute)
@@ -318,6 +331,16 @@ defmodule EvercamMedia.Snapshot.Storage do
       |> List.first
     }
   end
+
+  defp exist_oldest_directory([tail | _head], _directory, true, _url, _type, _attribute), do: tail
+  defp exist_oldest_directory([tail | _head], :image, _bool, _url, _type, _attribute), do: tail
+  defp exist_oldest_directory([tail | head], directory, bool, url, type, attribute) do
+    case request_from_seaweedfs("#{url}#{tail}/", type, attribute) do
+      [] -> exist_oldest_directory(head, directory, bool, url, type, attribute)
+      _response -> tail
+    end
+  end
+  defp exist_oldest_directory([], _directory, _bool, _url, _type, _attribute), do: :noop
 
   defp thumbnail_save(camera_exid, image) do
     "#{@root_dir}/#{camera_exid}/snapshots/thumbnail.jpg"
