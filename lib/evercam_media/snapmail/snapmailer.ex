@@ -138,7 +138,7 @@ defmodule EvercamMedia.Snapmail.Snapmailer do
 
   defp _get_snapshots_send_snapmail(state, timestamp) do
     config = get_config_from_state(:config, state)
-    worker = self
+    worker = self()
     get_snapshots_send_snapmail(state, config, timestamp, worker)
   end
 

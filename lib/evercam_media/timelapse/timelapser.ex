@@ -142,7 +142,7 @@ defmodule EvercamMedia.Timelapse.Timelapser do
 
   defp _get_snapshots_create_hls_chunk(state, timestamp) do
     config = get_config_from_state(:config, state)
-    worker = self
+    worker = self()
     get_snapshots(state, config, timestamp, worker)
   end
 
@@ -254,13 +254,13 @@ defmodule EvercamMedia.Timelapse.Timelapser do
 
   defp create_bashfile(timelapse_path, file_index) do
     File.rm("#{timelapse_path}build.sh")
-    imagesPath = "#{timelapse_path}images/"
-    tsPath = "#{timelapse_path}ts/"
+    images_path = "#{timelapse_path}images/"
+    ts_path = "#{timelapse_path}ts/"
 
     bash_content = "#!/bin/bash"
-    bash_content = bash_content <> "\nffmpeg -threads 1 -y -framerate 24 -i #{imagesPath}/%d.jpg -c:v libx264 -pix_fmt yuv420p -preset slow -tune stillimage -b:v 64K -maxrate 10000k -bufsize 64k -crf 28 -r 24 #{tsPath}/low#{file_index["low"]}.ts"
-    bash_content = bash_content <> "\nffmpeg -threads 1 -y -framerate 24 -i #{imagesPath}/%d.jpg -c:v libx264 -pix_fmt yuv420p -preset slow -tune stillimage -b:v 64K -maxrate 13000k -bufsize 64k -crf 28 -r 24 #{tsPath}/medium#{file_index["medium"]}.ts"
-    bash_content = bash_content <> "\nffmpeg -threads 1 -y -framerate 24 -i #{imagesPath}/%d.jpg -c:v libx264 -pix_fmt yuv420p -preset slow -tune stillimage -b:v 64K -maxrate 16000k -bufsize 64k -crf 28 -r 24 #{tsPath}/high#{file_index["high"]}.ts"
+    bash_content = bash_content <> "\nffmpeg -threads 1 -y -framerate 24 -i #{images_path}/%d.jpg -c:v libx264 -pix_fmt yuv420p -preset slow -tune stillimage -b:v 64K -maxrate 10000k -bufsize 64k -crf 28 -r 24 #{ts_path}/low#{file_index["low"]}.ts"
+    bash_content = bash_content <> "\nffmpeg -threads 1 -y -framerate 24 -i #{images_path}/%d.jpg -c:v libx264 -pix_fmt yuv420p -preset slow -tune stillimage -b:v 64K -maxrate 13000k -bufsize 64k -crf 28 -r 24 #{ts_path}/medium#{file_index["medium"]}.ts"
+    bash_content = bash_content <> "\nffmpeg -threads 1 -y -framerate 24 -i #{images_path}/%d.jpg -c:v libx264 -pix_fmt yuv420p -preset slow -tune stillimage -b:v 64K -maxrate 16000k -bufsize 64k -crf 28 -r 24 #{ts_path}/high#{file_index["high"]}.ts"
     File.write("#{timelapse_path}build.sh", bash_content)
   end
 

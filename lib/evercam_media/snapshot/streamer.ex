@@ -31,7 +31,7 @@ defmodule EvercamMedia.Snapshot.Streamer do
   Initialize the camera streamer
   """
   def init(camera_exid) do
-    Process.send_after(self, :tick, 0)
+    Process.send_after(self(), :tick, 0)
     {:ok, camera_exid}
   end
 
@@ -58,7 +58,7 @@ defmodule EvercamMedia.Snapshot.Streamer do
         Logger.debug "[#{camera_exid}] Streaming ..."
         spawn fn -> stream(camera) end
     end
-    Process.send_after(self, :tick, 1000)
+    Process.send_after(self(), :tick, 1000)
     {:noreply, camera_exid}
   end
 

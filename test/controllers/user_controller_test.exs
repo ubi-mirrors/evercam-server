@@ -24,7 +24,7 @@ defmodule EvercamMedia.UserControllerTest do
 
   test "GET /v1/users/:id when user not found!", context do
     username = "legend"
-    response = build_conn |> get("/v1/users/#{username}?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}")
+    response = build_conn() |> get("/v1/users/#{username}?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}")
     response_body = %{"message" => "User does not exist."}
 
     assert response.status == 404
@@ -33,7 +33,7 @@ defmodule EvercamMedia.UserControllerTest do
 
   test "GET /v1/users/:id/credentials Get users credentials", context do
     password = "password123"
-    response = build_conn |> get("/v1/users/#{context[:user].username}/credentials?password=#{password}")
+    response = build_conn() |> get("/v1/users/#{context[:user].username}/credentials?password=#{password}")
 
     assert response.status == 200
   end

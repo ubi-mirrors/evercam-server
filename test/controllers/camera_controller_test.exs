@@ -30,7 +30,7 @@ defmodule EvercamMedia.CameraControllerTest do
 
   test 'PUT /v1/cameras/:id, returns success and the camera details when given valid parameters', context do
     response =
-      build_conn
+      build_conn()
       |> put("/v1/cameras/#{context[:camera].exid}?user_id=smithmarc&api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}")
 
     camera =
@@ -47,7 +47,7 @@ defmodule EvercamMedia.CameraControllerTest do
 
   test 'PUT /v1/cameras/:id, returns an unauthorized error if the caller is not the camera owner', context do
     response =
-      build_conn
+      build_conn()
       |> put("/v1/cameras/#{context[:camera].exid}?user_id=smithmarc&api_id=#{context[:user_b].api_id}&api_key=#{context[:user_b].api_key}")
 
     message =
@@ -61,7 +61,7 @@ defmodule EvercamMedia.CameraControllerTest do
 
   test 'PUT /v1/cameras/:id, returns a not found error for a camera that does not exist', context do
     response =
-      build_conn
+      build_conn()
       |> put("/v1/cameras/cameraxyz?user_id=smithmarc&api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}")
 
     message =
@@ -75,7 +75,7 @@ defmodule EvercamMedia.CameraControllerTest do
 
   test 'PUT /v1/cameras/:id, returns a not found error when the new owner does not exist', context do
     response =
-      build_conn
+      build_conn()
       |> put("/v1/cameras/#{context[:camera].exid}?user_id=userxyz&api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}")
 
     message =
@@ -89,7 +89,7 @@ defmodule EvercamMedia.CameraControllerTest do
 
   test 'PUT /v1/cameras/:id, returns an unauthenticated error when no authentication details are provided' do
     response =
-      build_conn
+      build_conn()
       |> put("/v1/cameras/austin?user_id=smithmarc")
 
     message =
@@ -111,7 +111,7 @@ defmodule EvercamMedia.CameraControllerTest do
       is_public: "true"
     }
     response =
-      build_conn
+      build_conn()
       |> patch("/v1/cameras/#{context[:camera].exid}?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}", camera_params)
 
     camera =
@@ -130,7 +130,7 @@ defmodule EvercamMedia.CameraControllerTest do
 
   test 'PATCH /v1/cameras/:id, returns a not found error for a camera that does not exist', context do
     response =
-      build_conn
+      build_conn()
       |> patch("/v1/cameras/cameraxyz?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}", %{})
 
     message =
@@ -147,7 +147,7 @@ defmodule EvercamMedia.CameraControllerTest do
       name: "Rename Camera"
     }
     response =
-      build_conn
+      build_conn()
       |> patch("/v1/cameras/#{context[:camera].exid}?api_id=#{context[:user_b].api_id}&api_key=#{context[:user_b].api_key}", camera_params)
 
     message =
@@ -164,7 +164,7 @@ defmodule EvercamMedia.CameraControllerTest do
       external_host: "Rename Camera"
     }
     response =
-      build_conn
+      build_conn()
       |> patch("/v1/cameras/#{context[:camera].exid}?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}", camera_params)
 
     message =
@@ -180,10 +180,10 @@ defmodule EvercamMedia.CameraControllerTest do
   @tag :skip
   test 'DELETE /v1/cameras/:id, returns success when camera and all associations delete', context do
     delete_response =
-      build_conn
+      build_conn()
       |> delete("/v1/cameras/#{context[:camera].exid}?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}")
     get_response =
-      build_conn
+      build_conn()
       |> get("/v1/cameras/#{context[:camera].exid}?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}")
 
     assert delete_response.status == 200
@@ -193,7 +193,7 @@ defmodule EvercamMedia.CameraControllerTest do
 
   test 'DELETE /v1/cameras/:id, returns an unauthenticated error when no authentication details are provided' do
     response =
-      build_conn
+      build_conn()
       |> delete("/v1/cameras/austin")
 
     message =
@@ -207,7 +207,7 @@ defmodule EvercamMedia.CameraControllerTest do
 
   test 'DELETE /v1/cameras/:id, returns Unauthorized error when user does not have permissions', context do
     response =
-      build_conn
+      build_conn()
       |> delete("/v1/cameras/#{context[:camera].exid}?api_id=#{context[:user_b].api_id}&api_key=#{context[:user_b].api_key}")
 
     message =
@@ -226,7 +226,7 @@ defmodule EvercamMedia.CameraControllerTest do
     }
 
     response =
-      build_conn
+      build_conn()
       |> post("/v1/cameras?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}", camera_params)
 
     camera =
@@ -247,7 +247,7 @@ defmodule EvercamMedia.CameraControllerTest do
     }
 
     response =
-      build_conn
+      build_conn()
       |> post("/v1/cameras?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}", camera_params)
 
     message =
@@ -267,7 +267,7 @@ defmodule EvercamMedia.CameraControllerTest do
     }
 
     response =
-      build_conn
+      build_conn()
       |> post("/v1/cameras", camera_params)
 
     message =
@@ -285,7 +285,7 @@ defmodule EvercamMedia.CameraControllerTest do
       external_host: "Rename Camera"
     }
     response =
-      build_conn
+      build_conn()
       |> post("/v1/cameras?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}", camera_params)
 
     message =

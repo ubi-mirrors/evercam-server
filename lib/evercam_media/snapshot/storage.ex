@@ -100,7 +100,7 @@ defmodule EvercamMedia.Snapshot.Storage do
       []
     else
       snapshot ->
-        {:ok, image, notes} = load(camera_exid, snapshot.created_at, snapshot.notes)
+        {:ok, image, _notes} = load(camera_exid, snapshot.created_at, snapshot.notes)
         data = "data:image/jpeg;base64,#{Base.encode64(image)}"
         [%{created_at: snapshot.created_at, notes: snapshot.notes, data: data}]
     end
@@ -322,7 +322,7 @@ defmodule EvercamMedia.Snapshot.Storage do
       |> exist_oldest_directory(directory, String.match?(url, ~r/archives/), url, structure, attr)
     {directory, value}
   end
-  defp oldest_directory_name(cloud_recording, directory, url, type, attribute) do
+  defp oldest_directory_name(_cloud_recording, directory, url, type, attribute) do
     {
       directory,
       request_from_seaweedfs(url, type, attribute)
@@ -341,17 +341,6 @@ defmodule EvercamMedia.Snapshot.Storage do
     end
   end
   defp exist_oldest_directory([], _directory, _bool, _url, _type, _attribute), do: :noop
-
-  defp thumbnail_save(camera_exid, image) do
-    "#{@root_dir}/#{camera_exid}/snapshots/thumbnail.jpg"
-    |> File.open([:write, :binary, :raw], fn(file) -> IO.binwrite(file, image) end)
-    |> case do
-      {:error, :enoent} ->
-        File.mkdir_p!("#{@root_dir}/#{camera_exid}/snapshots/")
-        thumbnail_save(camera_exid, image)
-      _ -> :noop
-    end
-  end
 
   def thumbnail_save_seaweedfs(camera_exid, image) do
     hackney = [pool: :seaweedfs_upload_pool]

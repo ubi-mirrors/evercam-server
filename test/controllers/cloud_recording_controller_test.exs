@@ -20,7 +20,7 @@ defmodule EvercamMedia.CloudRecordingControllerTest do
 
   test "GET /v1/cameras/:id/apps/cloud-recording", context do
     camera_exid = "austin"
-    response = build_conn |> get("/v1/cameras/#{camera_exid}/apps/cloud-recording?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}")
+    response = build_conn() |> get("/v1/cameras/#{camera_exid}/apps/cloud-recording?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}")
 
     response_body = %{"cloud_recordings" => [%{"frequency" => 2, "schedule" => [], "status" => "on", "storage_duration" => 1}]}
     assert response.status == 200
@@ -29,7 +29,7 @@ defmodule EvercamMedia.CloudRecordingControllerTest do
 
   test "GET /v1/cameras/:id/apps/cloud-recording Camera not found", context do
     camera_exid = "focuscam"
-    response = build_conn |> get("/v1/cameras/#{camera_exid}/apps/cloud-recording?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}")
+    response = build_conn() |> get("/v1/cameras/#{camera_exid}/apps/cloud-recording?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}")
 
     assert response.status == 404
     assert Poison.decode(response.resp_body) == {:ok, %{"message" => "Camera '#{camera_exid}' not found!"}}

@@ -130,6 +130,6 @@ defmodule EvercamMedia.Timelapse.Poller do
   end
 
   defp start_timer(sleep, message) do
-    Process.send_after(self, message, sleep)
+    Process.send_after(self(), message, sleep)
   end
 end

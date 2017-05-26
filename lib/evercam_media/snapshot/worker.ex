@@ -176,7 +176,7 @@ defmodule EvercamMedia.Snapshot.Worker do
   defp _get_snapshot(state, timestamp, reply_to \\ nil) do
     config = get_config_from_state(:config, state)
     camera_exid = config.camera_exid
-    worker = self
+    worker = self()
     try_snapshot(state, config, camera_exid, timestamp, reply_to, worker, 1)
   end
 
@@ -196,7 +196,7 @@ defmodule EvercamMedia.Snapshot.Worker do
       case {result, camera.is_online} do
         {{:error, _error}, true} ->
           if ConCache.get(:camera_lock, state.config.camera_exid) && attempt == 1 do
-            Process.exit self, :shutdown
+            Process.exit self(), :shutdown
           end
           ConCache.put(:camera_lock, camera_exid, camera_exid)
           try_snapshot(state, config, camera_exid, timestamp, reply_to, worker, attempt + 1)

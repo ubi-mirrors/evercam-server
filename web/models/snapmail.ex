@@ -203,9 +203,14 @@ defmodule Snapmail do
     end
   end
 
+  def required_fields do
+    @required_fields |> Enum.map(fn(field) -> String.to_atom(field) end)
+  end
+
   def changeset(model, params \\ :invalid) do
     model
-    |> cast(params, @required_fields, @optional_fields)
+    |> cast(params, @required_fields ++ @optional_fields)
+    |> validate_required(required_fields())
     |> validate_exid
     |> validate_format(:notify_time, ~r/^\d{1,2}:\d{1,2}$/, message: "Notify time is invalid")
     |> validate_recipients

@@ -32,11 +32,7 @@ config :phoenix, :stacktrace_depth, 20
 # Configure your database
 config :evercam_media, EvercamMedia.Repo,
   adapter: Ecto.Adapters.Postgres,
-  extensions: [
-    {EvercamMedia.Types.JSON.Extension, library: Poison},
-    {EvercamMedia.Types.MACADDR.Extension, []},
-    {Geo.PostGIS.Extension, library: Geo},
-  ],
+  types: EvercamMedia.PostgresTypes,
   username: "postgres",
   password: "postgres",
   database: System.get_env["db"] || "evercam_dev"
