@@ -155,6 +155,7 @@ defmodule EvercamMedia.SnapshotController do
          :ok <- ensure_authorized(conn, current_user, camera)
       do
       timezone = Camera.get_timezone(camera)
+      offset = Camera.get_offset(camera)
 
       from = construct_timestamp(year, month, "01", "00:00:00", timezone)
       number_of_days_in_month =
@@ -163,7 +164,7 @@ defmodule EvercamMedia.SnapshotController do
         |> Calendar.Date.number_of_days_in_month
       to =
         from
-        |> Calendar.DateTime.add!(number_of_days_in_month * 86_400)
+        |> Calendar.DateTime.add!(number_of_days_in_month * 86400)
         |> Calendar.DateTime.subtract!(1)
       days = Storage.days(camera_exid, from, to, timezone)
 
@@ -181,6 +182,7 @@ defmodule EvercamMedia.SnapshotController do
          :ok <- ensure_authorized(conn, current_user, camera)
     do
       timezone = Camera.get_timezone(camera)
+      offset = Camera.get_offset(camera)
       from = construct_timestamp(year, month, day, "00:00:00", timezone)
       to = construct_timestamp(year, month, day, "23:59:59", timezone)
       exists? = Storage.exists_for_day?(camera_exid, from, to, timezone)
@@ -199,6 +201,7 @@ defmodule EvercamMedia.SnapshotController do
          :ok <- ensure_authorized(conn, current_user, camera)
     do
       timezone = Camera.get_timezone(camera)
+      offset = Camera.get_offset(camera)
       from = construct_timestamp(year, month, day, "00:00:00", timezone)
       to = construct_timestamp(year, month, day, "23:59:59", timezone)
       hours = Storage.hours(camera_exid, from, to, timezone)
@@ -217,6 +220,7 @@ defmodule EvercamMedia.SnapshotController do
          :ok <- ensure_authorized(conn, current_user, camera)
     do
       timezone = Camera.get_timezone(camera)
+      offset = Camera.get_offset(camera)
       hour = String.rjust(hour, 2, ?0)
       hour_datetime = construct_timestamp(year, month, day, "#{hour}:00:00", timezone)
       snapshots = Storage.hour(camera_exid, hour_datetime)

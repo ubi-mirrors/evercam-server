@@ -19,7 +19,7 @@ defmodule EvercamMedia.CameraShareControllerTest do
 
   test "GET /v1/cameras/:id/shares, with valid params", context do
     response =
-      build_conn()
+      build_conn
       |> get("/v1/cameras/austin/shares?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}")
 
     shares =
@@ -65,7 +65,7 @@ defmodule EvercamMedia.CameraShareControllerTest do
       rights: "snapshot,list"
     }
     response =
-      build_conn()
+      build_conn
       |> post("/v1/cameras/austin/shares?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}", params)
 
     share =
@@ -85,7 +85,7 @@ defmodule EvercamMedia.CameraShareControllerTest do
       rights: "snapshot,list"
     }
     response =
-      build_conn()
+      build_conn
       |> post("/v1/cameras/austin/shares?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}", params)
 
     share =
@@ -105,7 +105,7 @@ defmodule EvercamMedia.CameraShareControllerTest do
       rights: "snapshot,list"
     }
     response =
-      build_conn()
+      build_conn
       |> post("/v1/cameras/austin/shares?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}", params)
 
     message =
@@ -124,7 +124,7 @@ defmodule EvercamMedia.CameraShareControllerTest do
       rights: "snapshot,list"
     }
     response =
-      build_conn()
+      build_conn
       |> post("/v1/cameras/austin/shares?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}", params)
 
     message =
@@ -143,7 +143,7 @@ defmodule EvercamMedia.CameraShareControllerTest do
       rights: "abc,list"
     }
     response =
-      build_conn()
+      build_conn
       |> post("/v1/cameras/austin/shares?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}", params)
 
     message =
@@ -162,7 +162,7 @@ defmodule EvercamMedia.CameraShareControllerTest do
       rights: "snapshot,list,view,edit"
     }
     response =
-      build_conn()
+      build_conn
       |> patch("/v1/cameras/austin/shares?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}", params)
 
     share =
@@ -182,7 +182,7 @@ defmodule EvercamMedia.CameraShareControllerTest do
       rights: "snapshot,list"
     }
     response =
-      build_conn()
+      build_conn
       |> patch("/v1/cameras/austin1/shares?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}", params)
 
     message =
@@ -200,7 +200,7 @@ defmodule EvercamMedia.CameraShareControllerTest do
       rights: "snapshot,list,test"
     }
     response =
-      build_conn()
+      build_conn
       |> patch("/v1/cameras/austin/shares?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}", params)
 
     message =
@@ -215,7 +215,7 @@ defmodule EvercamMedia.CameraShareControllerTest do
 
   test "DELETE /v1/cameras/:id/shares, when valid params", context do
     response =
-      build_conn()
+      build_conn
       |> delete("/v1/cameras/austin/shares?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}", %{email: "smithmarc"})
 
     assert response.status == 200
@@ -224,7 +224,7 @@ defmodule EvercamMedia.CameraShareControllerTest do
 
   test "DELETE /v1/cameras/:id/shares, when share not found", context do
     response =
-      build_conn()
+      build_conn
       |> delete("/v1/cameras/austin/shares?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}", %{email: "smithmarc1"})
 
     assert response.status == 404
@@ -233,7 +233,7 @@ defmodule EvercamMedia.CameraShareControllerTest do
 
   test "DELETE /v1/cameras/:id/shares, when required permission", _context do
     response =
-      build_conn()
+      build_conn
       |> delete("/v1/cameras/austin/shares", %{email: "smithmarc"})
 
     assert response.status == 401
@@ -242,7 +242,7 @@ defmodule EvercamMedia.CameraShareControllerTest do
 
   test "GET /v/cameras/evercam-remembrance-camera/shares, return empty array when exid is evercam-remembrance-camera", context do
     response =
-      build_conn()
+      build_conn
       |> get("/v1/cameras/evercam-remembrance-camera/shares?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}")
 
     shares =

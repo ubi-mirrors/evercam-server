@@ -33,13 +33,8 @@ defmodule MetaData do
     |> Repo.delete_all
   end
 
-  def required_fields do
-    @required_fields |> Enum.map(fn(field) -> String.to_atom(field) end)
-  end
-
   def changeset(model, params \\ :invalid) do
     model
-    |> cast(params, @required_fields ++ @optional_fields)
-    |> validate_required(required_fields())
+    |> cast(params, @required_fields, @optional_fields)
   end
 end

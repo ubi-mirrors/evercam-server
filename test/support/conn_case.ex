@@ -24,7 +24,7 @@ defmodule EvercamMedia.ConnCase do
       alias EvercamMedia.Repo
       alias EvercamMedia.Message
       alias EvercamMedia.Endpoint
-      # import Ecto.Model
+      import Ecto.Model
       import Ecto.Query, only: [from: 2]
 
       # Import URL helpers from the router
@@ -40,7 +40,7 @@ defmodule EvercamMedia.ConnCase do
     Ecto.Adapters.SQL.Sandbox.checkout(EvercamMedia.Repo)
     Ecto.Adapters.SQL.Sandbox.checkout(EvercamMedia.SnapshotRepo)
     EvercamMedia.TestHelpers.invalidate_caches
-    if tags[:onvif], do: seed_onvif_tests()
+    if tags[:onvif], do: seed_onvif_tests
 
     :ok
   end

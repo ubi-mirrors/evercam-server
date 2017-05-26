@@ -126,14 +126,9 @@ defmodule User do
     Comeonin.Bcrypt.hashpass(password, Comeonin.Bcrypt.gen_salt(12, true))
   end
 
-  def required_fields do
-    @required_fields |> Enum.map(fn(field) -> String.to_atom(field) end)
-  end
-
   def changeset(model, params \\ :invalid) do
     model
-    |> cast(params, @required_fields ++ @optional_fields)
-    |> validate_required(required_fields())
+    |> cast(params, @required_fields, @optional_fields)
     |> unique_constraint(:username, [name: :user_username_unique_index, message: "Username has already been taken."])
     |> unique_constraint(:email, [name: :user_email_unique_index, message: "Email has already been taken."])
     |> validate_format(:firstname, @name_regex)

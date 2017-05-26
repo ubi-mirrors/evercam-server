@@ -101,6 +101,8 @@ defmodule EvercamMedia.ONVIFClient do
   #### WSSE
 
   defp get_wsse_header_data(user, password) do
+    {a, b, c} = :os.timestamp
+    :random.seed(a, b, c)
     nonce = generate_nonce(20, []) |> to_string
     created = format_date_time(:erlang.localtime)
     digest = :crypto.hash(:sha, nonce <> created <> password) |> to_string
@@ -112,11 +114,11 @@ defmodule EvercamMedia.ONVIFClient do
   end
 
   defp generate_nonce(0,l) do
-    l ++ [:rand.uniform(255)]
+    l ++ [:random.uniform(255)]
   end
 
   defp generate_nonce(n,l) do
-    generate_nonce(n - 1, l ++ [:rand.uniform(255)])
+    generate_nonce(n - 1, l ++ [:random.uniform(255)])
   end
 
   #### XML Parsing

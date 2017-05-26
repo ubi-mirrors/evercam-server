@@ -72,14 +72,9 @@ defmodule CameraActivity do
     |> where([c], c.action in ^types)
   end
 
-  def required_fields do
-    @required_fields |> Enum.map(fn(field) -> String.to_atom(field) end)
-  end
-
   def changeset(camera_activity, params \\ :invalid) do
     camera_activity
-    |> cast(params, @required_fields ++ @optional_fields)
-    |> validate_required(required_fields())
+    |> cast(params, @required_fields, @optional_fields)
     |> unique_constraint(:camera_id, name: :camera_activities_camera_id_done_at_index)
   end
 end

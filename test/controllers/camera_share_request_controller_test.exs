@@ -12,7 +12,7 @@ defmodule EvercamMedia.CameraShareRequestControllerTest do
 
   test "GET /v1/cameras/:id/shares/requests, with valid params", context do
     response =
-      build_conn()
+      build_conn
       |> get("/v1/cameras/austin/shares/requests?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}")
 
     share_requests =
@@ -45,7 +45,7 @@ defmodule EvercamMedia.CameraShareRequestControllerTest do
 
   test "DELETE /v1/cameras/:id/shares/requests, with valid params", context do
     response =
-      build_conn()
+      build_conn
       |> delete("/v1/cameras/austin/shares/requests?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}", %{email: "abc@email.com"})
 
     assert response.status() == 200
@@ -63,7 +63,7 @@ defmodule EvercamMedia.CameraShareRequestControllerTest do
 
   test "DELETE /v1/cameras/:id/shares/requests, when share request not found", context do
     response =
-      build_conn()
+      build_conn
       |> delete("/v1/cameras/austin/shares/requests?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}", %{email: "xyz@email.com"})
 
     assert response.status() == 404
@@ -76,7 +76,7 @@ defmodule EvercamMedia.CameraShareRequestControllerTest do
       rights: "snapshot,list"
     }
     response =
-      build_conn()
+      build_conn
       |> patch("/v1/cameras/austin/shares/requests?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}", params)
 
     share_requests =
@@ -106,7 +106,7 @@ defmodule EvercamMedia.CameraShareRequestControllerTest do
     }
 
     response =
-      build_conn()
+      build_conn
       |> patch("/v1/cameras/austin/shares/requests?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}", params)
 
     message =
@@ -126,7 +126,7 @@ defmodule EvercamMedia.CameraShareRequestControllerTest do
     }
 
     response =
-      build_conn()
+      build_conn
       |> patch("/v1/cameras/austin/shares/requests?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}", params)
 
     assert response.status() == 404

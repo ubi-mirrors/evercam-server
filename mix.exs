@@ -4,13 +4,13 @@ defmodule EvercamMedia.Mixfile do
   def project do
     [app: :evercam_media,
      version: "1.0.1",
-     elixir: "~> 1.4.1",
+     elixir: "~> 1.3.0",
      elixirc_paths: elixirc_paths(Mix.env),
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      compilers: [:phoenix] ++ Mix.compilers,
-     aliases: aliases(),
-     deps: deps()]
+     aliases: aliases,
+     deps: deps]
   end
 
   defp aliases do
@@ -22,9 +22,9 @@ defmodule EvercamMedia.Mixfile do
      applications: app_list(Mix.env)]
   end
 
-  defp app_list(:dev), do: [:dotenv, :credo | app_list()]
-  defp app_list(:test), do: [:dotenv | app_list()]
-  defp app_list(_), do: app_list()
+  defp app_list(:dev), do: [:dotenv, :credo | app_list]
+  defp app_list(:test), do: [:dotenv | app_list]
+  defp app_list(_), do: app_list
   defp app_list, do: [
     :calendar,
     :cf,
@@ -50,7 +50,6 @@ defmodule EvercamMedia.Mixfile do
     :runtime_tools,
     :timex,
     :tzdata,
-    :erlware_commons,
     :uuid,
     :xmerl,
     :html_sanitize_ex,
@@ -63,32 +62,32 @@ defmodule EvercamMedia.Mixfile do
 
   defp deps do
     [
-      {:calendar, "~> 0.17.2"},
-      {:comeonin, "~> 3.0.2"},
-      {:con_cache, "~> 0.12.0"},
-      {:cors_plug, "~> 1.2.1"},
-      {:cowboy, "~> 1.1.2"},
-      {:credo, "~> 0.7.4", only: :dev},
+      {:calendar, "~> 0.16.0"},
+      {:comeonin, "~> 2.4"},
+      {:con_cache, "~> 0.11.1"},
+      {:cors_plug, "~> 1.1"},
+      {:cowboy, "~> 1.0"},
+      {:credo, github: "rrrene/credo", only: :dev},
       {:dotenv, "~> 2.1.0", only: [:dev, :test]},
-      {:ecto, "~> 2.1.4"},
-      {:exrm, "~> 1.0.8"},
-      {:geo, "~> 1.4"},
+      {:ecto, "~> 2.0.2"},
+      {:exrm, github: "bitwalker/exrm"},
+      {:geo, "~> 1.1"},
       {:httpoison, "~> 0.11.1"},
-      {:jsx, "~> 2.8.2", override: true},
+      {:jsx, "~> 2.8.0", override: true},
       {:mailgun, github: "evercam/mailgun"},
-      {:phoenix, "~> 1.2.4"},
-      {:phoenix_ecto, "~> 3.2.3"},
-      {:phoenix_html, "~> 2.9.3"},
-      {:porcelain, "~> 2.0.3"},
-      {:postgrex, ">= 0.13.2"},
-      {:quantum, "~> 1.9.2"},
-      {:uuid, "~> 1.1.7"},
-      {:relx, "~> 3.22.4"},
-      {:erlware_commons, "~> 1.0.0", override: true},
-      {:cf, "~> 0.2.2", override: true},
-      {:exvcr, "~> 0.8.9", only: :test},
+      {:phoenix, "~> 1.2.0-rc.1"},
+      {:phoenix_ecto, "~> 3.0.0"},
+      {:phoenix_html, "~> 2.6"},
+      {:porcelain, github: "alco/porcelain"},
+      {:postgrex, ">= 0.11.2"},
+      {:quantum, github: "c-rack/quantum-elixir"},
+      {:uuid, "~> 1.1"},
+      {:relx, github: "erlware/relx", override: true},
+      {:erlware_commons, "~> 0.22.0", override: true},
+      {:cf, "~> 0.2.1", override: true},
+      {:exvcr, "~> 0.7", only: :test},
       {:meck,  "~> 0.8.4", override: :true},
-      {:html_sanitize_ex, "~> 1.2.0"},
+      {:html_sanitize_ex, "~> 1.0.0"},
       {:new_relic, github: "azharmalik3/newrelic-elixir", override: true},
     ]
   end

@@ -5,6 +5,7 @@ defmodule EvercamMedia.Timelapse.ImportTimelapses do
   alias EvercamMedia.Util
 
   @root_dir Application.get_env(:evercam_media, :storage_dir)
+  @seaweedfs Application.get_env(:evercam_media, :seaweedfs_url)
 
   def start_import(exids) do
     exids

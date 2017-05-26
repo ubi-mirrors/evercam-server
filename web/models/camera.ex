@@ -6,6 +6,8 @@ defmodule Camera do
   alias EvercamMedia.Schedule
   alias EvercamMedia.Util
 
+  @mac_address_regex ~r/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/
+
   @required_fields ~w(name owner_id config is_public is_online_email_owner_notification)
   @optional_fields ~w(exid timezone thumbnail_url is_online last_polled_at alert_emails last_online_at updated_at created_at model_id location mac_address discoverable)
 
@@ -272,7 +274,7 @@ defmodule Camera do
   def get_mac_address(camera) do
     case camera.mac_address do
       nil -> ""
-      mac_address -> EvercamMedia.Types.MACADDR.decode(mac_address)
+      mac_address -> mac_address
     end
   end
 
@@ -463,18 +465,15 @@ defmodule Camera do
     |> cast(params, @required_fields, @optional_fields)
   end
 
-  def required_fields do
-    @required_fields |> Enum.map(fn(field) -> String.to_atom(field) end)
-  end
-
   def changeset(camera, params \\ :invalid) do
     camera
-    |> cast(params, @required_fields ++ @optional_fields)
-    |> validate_required(required_fields())
+    |> cast(params, @required_fields, @optional_fields)
+    |> validate_required([:name, :owner_id])
     |> validate_length(:name, max: 24, message: "Camera Name is too long. Maximum 24 characters.")
     |> validate_exid
     |> validate_params
     |> unique_constraint(:exid, [name: "cameras_exid_index"])
+    |> validate_format(:mac_address, @mac_address_regex, message: "Mac address is invalid")
     |> validate_lng_lat(params[:location_lng], params[:location_lat])
   end
 end

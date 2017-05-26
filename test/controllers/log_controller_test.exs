@@ -19,7 +19,7 @@ defmodule EvercamMedia.LogControllerTest do
 
   test "GET /v1/cameras/:id/logs Camera not found", context do
     camera_exid = "focuscam"
-    response = build_conn() |> get("/v1/cameras/#{camera_exid}/logs?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}")
+    response = build_conn |> get("/v1/cameras/#{camera_exid}/logs?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}")
 
     assert response.status == 404
     assert Poison.decode(response.resp_body) == {:ok, %{"message" => "Camera '#{camera_exid}' not found!"}}
@@ -27,7 +27,7 @@ defmodule EvercamMedia.LogControllerTest do
 
   test "GET /v1/cameras/:id/logs Unauthorized" do
     camera_exid = "austin"
-    response = build_conn() |> get("/v1/cameras/#{camera_exid}/logs?")
+    response = build_conn |> get("/v1/cameras/#{camera_exid}/logs?")
 
     assert response.status == 401
     assert Poison.decode(response.resp_body) == {:ok, %{"message" => "Unauthorized."}}

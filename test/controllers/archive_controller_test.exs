@@ -22,7 +22,7 @@ defmodule EvercamMedia.ArchiveControllerTest do
 
   test "GET /v1/cameras/:id/archives Camera not found", context do
     camera_exid = "focuscam"
-    response = build_conn() |> get("/v1/cameras/#{camera_exid}/archives?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}")
+    response = build_conn |> get("/v1/cameras/#{camera_exid}/archives?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}")
 
     assert response.status == 404
     assert Poison.decode(response.resp_body) == {:ok, %{"message" => "Camera '#{camera_exid}' not found!"}}
@@ -30,7 +30,7 @@ defmodule EvercamMedia.ArchiveControllerTest do
 
   test "GET /v1/cameras/:id/archives/:archive_id archive not found", context do
     archive_id = "text-dexter"
-    response = build_conn() |> get("/v1/cameras/#{context[:camera].exid}/archives/#{archive_id}?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}")
+    response = build_conn |> get("/v1/cameras/#{context[:camera].exid}/archives/#{archive_id}?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}")
 
     assert response.status == 404
     assert Poison.decode(response.resp_body) == {:ok, %{"message" => "Archive 'text-dexter' not found!"}}

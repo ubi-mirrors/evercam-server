@@ -1,4 +1,6 @@
 defmodule EvercamMedia.AddCameraLogs do
+  import Ecto.Query
+  import Ecto.Changeset
   import CameraActivity, only: [changeset: 2, get_last_on_off_log: 1]
   alias EvercamMedia.Repo
   alias EvercamMedia.SnapshotRepo

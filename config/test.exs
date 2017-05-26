@@ -29,11 +29,15 @@ config :evercam_media,
 # Configure your database
 config :evercam_media, EvercamMedia.Repo,
   adapter: Ecto.Adapters.Postgres,
+  extensions: [
+    {EvercamMedia.Types.JSON.Extension, library: Poison},
+    {EvercamMedia.Types.MACADDR.Extension, []},
+    {Geo.PostGIS.Extension, library: Geo},
+  ],
   username: "postgres",
   password: "postgres",
   database: "evercam_tst",
-  pool: Ecto.Adapters.SQL.Sandbox,
-  types: EvercamMedia.PostgresTypes
+  pool: Ecto.Adapters.SQL.Sandbox
 
 config :evercam_media, EvercamMedia.SnapshotRepo,
   adapter: Ecto.Adapters.Postgres,
