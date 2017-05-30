@@ -13,7 +13,7 @@ defmodule EvercamMedia.VendorModelControllerTest do
   end
 
   test "GET /v1/models/:id", %{model: model} do
-    response = build_conn |> get("/v1/models/model0")
+    response = build_conn() |> get("/v1/models/model0")
 
     model_json = render("show.json", %{vendor_model: VendorModel.by_exid(model.exid)})
 
@@ -22,7 +22,7 @@ defmodule EvercamMedia.VendorModelControllerTest do
   end
 
   test "GET /v1/models/:id Model not found" do
-    response = build_conn |> get("/v1/models/model1")
+    response = build_conn() |> get("/v1/models/model1")
 
     assert response.status == 404
     assert Poison.decode(response.resp_body) == {:ok, %{"message" => "Model Not found."}}

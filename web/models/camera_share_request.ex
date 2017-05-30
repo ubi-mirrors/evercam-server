@@ -71,6 +71,7 @@ defmodule CameraShareRequest do
     |> Repo.all
   end
 
+  def get_pending_request(_camera_id, email) when email in [nil, ""], do: :error
   def get_pending_request(camera_id, email) do
     CameraShareRequest
     |> where(camera_id: ^camera_id)
@@ -102,7 +103,7 @@ defmodule CameraShareRequest do
     share_request_params = %{
       camera_id: camera.id,
       user_id: sharer.id,
-      status: status.pending,
+      status: status().pending,
       email: email,
       rights: rights,
       message: message,
@@ -127,6 +128,7 @@ defmodule CameraShareRequest do
     case get_pending_request(camera_id, email) do
       nil ->
         changeset
+      :error -> changeset
       %CameraShareRequest{} ->
         add_error(changeset, email_field, "A share request already exists for the '#{email}' email address for this camera.")
     end
@@ -148,10 +150,14 @@ defmodule CameraShareRequest do
     changeset(model, params)
   end
 
+  def required_fields do
+    @required_fields |> Enum.map(fn(field) -> String.to_atom(field) end)
+  end
+
   def changeset(model, params) do
     model
-    |> cast(params, @required_fields, @optional_fields)
-    |> validate_required(:email)
+    |> cast(params, @required_fields ++ @optional_fields)
+    |> validate_required(required_fields())
     |> validate_format(:email, ~r/^\S+@\S+$/, [message: "You've entered an invalid email address."])
     |> update_change(:email, &String.downcase/1)
     |> validate_rights

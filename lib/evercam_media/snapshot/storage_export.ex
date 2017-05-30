@@ -44,18 +44,18 @@ defmodule EvercamMedia.Snapshot.Storage.Export.Worker do
   end
 
   def init({camera_exid, path}) do
-    Process.send_after(self, :run, 0)
+    Process.send_after(self(), :run, 0)
     {:ok, {camera_exid, path}}
   end
 
   def handle_info(:run, {camera_exid, path}) do
     case :poolboy.checkout(:storage_export_pool, false) do
       :full ->
-        Process.send_after(self, :run, 100)
+        Process.send_after(self(), :run, 100)
       pid ->
         GenServer.call(pid, {:export_snapshot, camera_exid, path}, 1_000_000)
         :poolboy.checkin(:storage_export_pool, pid)
-        Supervisor.terminate_child(Storage.Export.Supervisor, self)
+        Supervisor.terminate_child(Storage.Export.Supervisor, self())
     end
     {:noreply, {camera_exid, path}}
   end

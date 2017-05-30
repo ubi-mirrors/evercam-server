@@ -68,8 +68,13 @@ defmodule CloudRecording do
   defp count_sleep(frequency) when frequency in [5, 10], do: 60_000 * frequency
   defp count_sleep(frequency), do: div(60_000, frequency)
 
+  def required_fields do
+    @required_fields |> Enum.map(fn(field) -> String.to_atom(field) end)
+  end
+
   def changeset(model, params \\ :invalid) do
     model
     |> cast(params, @required_fields)
+    |> validate_required(required_fields())
   end
 end

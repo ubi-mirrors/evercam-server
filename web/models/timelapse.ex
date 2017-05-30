@@ -7,7 +7,7 @@ defmodule Timelapse do
   @required_fields ~w(camera_id user_id title frequency status date_always time_always)
   @optional_fields ~w(exid snapshot_count resolution from_datetime to_datetime watermark_logo watermark_position recreate_hls start_recreate_hls last_snapshot_at extra)
 
-  @status %{active: 0, scheduled: 1, expired: 2, paused: 3, stopped: 4}
+  # @status %{active: 0, scheduled: 1, expired: 2, paused: 3, stopped: 4}
 
   schema "timelapses" do
     belongs_to :user, User, foreign_key: :user_id
@@ -237,9 +237,14 @@ defmodule Timelapse do
     |> validate_from_to_datetime
   end
 
+  def required_fields do
+    @required_fields |> Enum.map(fn(field) -> String.to_atom(field) end)
+  end
+
   def changeset(model, params \\ :invalid) do
     model
-    |> cast(params, @required_fields, @optional_fields)
+    |> cast(params, @required_fields ++ @optional_fields)
+    |> validate_required(required_fields())
     |> validate_exid
   end
 end

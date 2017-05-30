@@ -26,9 +26,14 @@ defmodule Client do
     |> Repo.one
   end
 
+  def required_fields do
+    @required_fields |> Enum.map(fn(field) -> String.to_atom(field) end)
+  end
+
   def changeset(model, params \\ :invalid) do
     model
-    |> cast(params, @required_fields, @optional_fields)
+    |> cast(params, @required_fields ++ @optional_fields)
+    |> validate_required(required_fields())
     |> unique_constraint(:api_id, [name: "ux_clients_exid"])
   end
 end

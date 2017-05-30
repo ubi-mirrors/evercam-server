@@ -14,7 +14,7 @@ defmodule EvercamMedia.MotionDetectionControllerTest do
 
   test 'GET /v1/cameras/:id/apps/motion-detection, returns motion-detection when camera id valid', context do
     response =
-      build_conn
+      build_conn()
       |> get("/v1/cameras/#{context[:camera].exid}/apps/motion-detection?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}")
 
     motion_detection =
@@ -29,7 +29,7 @@ defmodule EvercamMedia.MotionDetectionControllerTest do
 
   test 'GET /v1/cameras/:id/apps/motion-detection, returns forbidden error when user does not have permissions', context do
     response =
-      build_conn
+      build_conn()
       |> get("/v1/cameras/#{context[:camera].exid}/apps/motion-detection?api_id=#{context[:user_b].api_id}&api_key=#{context[:user_b].api_key}")
 
     message =
@@ -43,7 +43,7 @@ defmodule EvercamMedia.MotionDetectionControllerTest do
 
   test 'GET /v1/cameras/:id/apps/motion-detection, returns a not found error for a camera that does not exist', context do
     response =
-      build_conn
+      build_conn()
       |> get("/v1/cameras/cameraxyz/apps/motion-detection?api_id=#{context[:user].api_id}&api_key=#{context[:user].api_key}", %{})
 
     message =

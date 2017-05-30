@@ -126,7 +126,7 @@ defmodule EvercamMedia.Snapmail.Poller do
   #######################
 
   defp start_timer(sleep, message) do
-    Process.send_after(self, message, sleep)
+    Process.send_after(self(), message, sleep)
   end
 
   defp send_mail(true, _name, _timestamp, _recipients), do: :noop

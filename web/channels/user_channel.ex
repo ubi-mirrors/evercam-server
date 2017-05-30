@@ -6,7 +6,7 @@ defmodule EvercamMedia.UserChannel do
     caller_username = Util.deep_get(socket, [:assigns, :current_user, :username], "")
 
     if username == caller_username do
-      send(self, {:after_join, username})
+      send(self(), {:after_join, username})
       {:ok, socket}
     else
       {:error, "Unauthorized."}

@@ -66,7 +66,7 @@ config :evercam_media,
 config :evercam_media,
   seaweedfs_url: System.get_env["SEAWEEDFS_URL"]
 
-config :quantum,
+config :quantum, :evercam_media,
   cron: [
     snapshot_cleanup: [
       task: {"EvercamMedia.Snapshot.Storage", "cleanup_all"},
@@ -92,11 +92,7 @@ config :evercam_media, :mailgun,
 
 config :evercam_media, EvercamMedia.Repo,
   adapter: Ecto.Adapters.Postgres,
-  extensions: [
-    {EvercamMedia.Types.JSON.Extension, library: Poison},
-    {EvercamMedia.Types.MACADDR.Extension, []},
-    {Geo.PostGIS.Extension, library: Geo},
-  ],
+  types: EvercamMedia.PostgresTypes,
   url: System.get_env("DATABASE_URL"),
   socket_options: [keepalive: true],
   timeout: 60_000,

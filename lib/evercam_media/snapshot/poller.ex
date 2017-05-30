@@ -130,10 +130,10 @@ defmodule EvercamMedia.Snapshot.Poller do
   #######################
 
   defp start_timer(sleep, message, false, _pause_sleep) do
-    Process.send_after(self, message, sleep)
+    Process.send_after(self(), message, sleep)
   end
 
   defp start_timer(_sleep, message, true, pause_sleep) do
-    Process.send_after(self, message, pause_sleep)
+    Process.send_after(self(), message, pause_sleep)
   end
 end

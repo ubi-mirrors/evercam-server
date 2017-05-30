@@ -204,9 +204,14 @@ defmodule CameraShare do
     |> Repo.delete_all
   end
 
+  def required_fields do
+    @required_fields |> Enum.map(fn(field) -> String.to_atom(field) end)
+  end
+
   def changeset(model, params \\ :invalid) do
     model
-    |> cast(params, @required_fields, @optional_fields)
+    |> cast(params, @required_fields ++ @optional_fields)
+    |> validate_required(required_fields())
     |> unique_constraint(:share, [name: "camera_shares_camera_id_user_id_index", message: "The camera has already been shared with this user."])
     |> validate_rights(params[:rights])
     |> can_share(params[:owner])
