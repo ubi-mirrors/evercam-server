@@ -243,10 +243,15 @@ defmodule EvercamMedia.Snapshot.Storage do
 
   def seaweed_thumbnail_load(camera_exid) do
     url = "#{@seaweedfs}/#{camera_exid}/snapshots/thumbnail.jpg"
-    case HTTPoison.get(url, [], hackney: [pool: :seaweedfs_download_pool]) do
-      {:ok, %HTTPoison.Response{status_code: 200, body: snapshot}} ->
-        {:ok, snapshot}
-      _error -> {:error, Util.unavailable}
+    case ConCache.get(:camera_thumbnail, camera_exid) do
+      nil ->
+        case HTTPoison.get(url, [], hackney: [pool: :seaweedfs_download_pool]) do
+          {:ok, %HTTPoison.Response{status_code: 200, body: snapshot}} ->
+            ConCache.put(:camera_thumbnail, camera_exid, {Calendar.DateTime.now!("UTC"), snapshot})
+            {:ok, snapshot}
+          _error -> {:error, Util.unavailable}
+        end
+      {_last_save_date, img} -> {:ok, img}
     end
   end
 
@@ -299,11 +304,11 @@ defmodule EvercamMedia.Snapshot.Storage do
     end
   end
 
-  def save(camera_exid, _timestamp, image, "Evercam Thumbnail"), do: thumbnail_save_seaweedfs(camera_exid, image)
+  def save(camera_exid, _timestamp, image, "Evercam Thumbnail"), do: update_cache_and_save_thumbnail(camera_exid, image)
   def save(camera_exid, timestamp, image, notes) do
     try do
       seaweedfs_save(camera_exid, timestamp, image, notes)
-      thumbnail_save_seaweedfs(camera_exid, image)
+      update_cache_and_save_thumbnail(camera_exid, image)
     catch _type, _error ->
       :noop
     end
@@ -342,7 +347,15 @@ defmodule EvercamMedia.Snapshot.Storage do
   end
   defp exist_oldest_directory([], _directory, _bool, _url, _type, _attribute), do: :noop
 
-  def thumbnail_save_seaweedfs(camera_exid, image) do
+  def update_cache_and_save_thumbnail(camera_exid, image) do
+    {last_save_date, _img} = ConCache.dirty_get_or_store(:camera_thumbnail, camera_exid, fn() -> {Calendar.DateTime.now!("UTC"), image} end)
+    case Calendar.DateTime.diff(Calendar.DateTime.now!("UTC"), last_save_date) do
+      {:ok, seconds, _, :after} -> thumbnail_save_seaweedfs(camera_exid, image, last_save_date, seconds)
+      _ -> ConCache.dirty_put(:camera_thumbnail, camera_exid, {last_save_date, image})
+    end
+  end
+
+  def thumbnail_save_seaweedfs(camera_exid, image, _last_save_date, seconds) when seconds > 60 do
     hackney = [pool: :seaweedfs_upload_pool]
     url = "#{@seaweedfs}/#{camera_exid}/snapshots/thumbnail.jpg"
     file_path = "/#{camera_exid}/snapshots/thumbnail.jpg"
@@ -350,6 +363,10 @@ defmodule EvercamMedia.Snapshot.Storage do
       {:ok, response} -> response
       {:error, error} -> Logger.info "[thumbnail_save_seaweedfs] [#{camera_exid}] [#{inspect error}]"
     end
+    ConCache.dirty_put(:camera_thumbnail, camera_exid, {Calendar.DateTime.now!("UTC"), image})
+  end
+  def thumbnail_save_seaweedfs(camera_exid, image, last_save_date, _seconds) do
+    ConCache.dirty_put(:camera_thumbnail, camera_exid, {last_save_date, image})
   end
 
   def save_mp4(camera_exid, archive_id, path) do
