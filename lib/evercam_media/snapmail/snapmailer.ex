@@ -3,7 +3,7 @@ defmodule EvercamMedia.Snapmail.Snapmailer do
   Provides functions to send schedule snapmail
   """
 
-  use GenServer
+  use GenStage
   alias EvercamMedia.Snapshot.CamClient
   alias EvercamMedia.Snapshot.Storage
 
@@ -15,35 +15,35 @@ defmodule EvercamMedia.Snapmail.Snapmailer do
   Start the Snapmail server for a given snapmail.
   """
   def start_link(args) do
-    GenServer.start_link(__MODULE__, args, name: args[:name])
+    GenStage.start_link(__MODULE__, args, name: args[:name])
   end
 
   @doc """
   Get the state of the snapmail worker.
   """
   def get_state(snapmail_server) do
-    GenServer.call(snapmail_server, :get_state)
+    GenStage.call(snapmail_server, :get_state)
   end
 
   @doc """
   Get the configuration of the snapmail worker.
   """
   def get_config(snapmail_server) do
-    GenServer.call(snapmail_server, :get_snapmail_config)
+    GenStage.call(snapmail_server, :get_snapmail_config)
   end
 
   @doc """
   Update the configuration of the snapmail worker
   """
   def update_config(snapmail_server, config) do
-    GenServer.cast(snapmail_server, {:update_snapmail_config, config})
+    GenStage.cast(snapmail_server, {:update_snapmail_config, config})
   end
 
   @doc """
   Get a snapshot from the camera and send snapmail
   """
   def get_snapshot(cam_server, {:poll, timestamp}) do
-    GenServer.cast(cam_server, {:get_camera_snapshot, timestamp})
+    GenStage.cast(cam_server, {:get_camera_snapshot, timestamp})
   end
 
   ######################
@@ -61,42 +61,42 @@ defmodule EvercamMedia.Snapmail.Snapmailer do
       poller: poller,
       event_manager: event_manager
     }
-    {:ok, args}
+    {:producer, args}
   end
 
   @doc """
   Server callback for restarting snapmail poller
   """
   def handle_call(:restart_snapmail_poller, _from, state) do
-    {:reply, nil, state}
+    {:reply, nil, [], state}
   end
 
   @doc """
   Server callback for stopping snapmail poller
   """
   def handle_call(:stop_snapmail_poller, _from, state) do
-    {:reply, nil, state}
+    {:reply, nil, [], state}
   end
 
   @doc """
   Server callback for getting snapmail config
   """
   def handle_call(:get_snapmail_config, _from, state) do
-    {:reply, get_config_from_state(:config, state), state}
+    {:reply, get_config_from_state(:config, state), [], state}
   end
 
   @doc """
   Server callback for getting worker state
   """
   def handle_call(:get_state, _from, state) do
-    {:reply, state, state}
+    {:reply, state, [], state}
   end
 
   @doc """
   """
   def handle_cast({:get_camera_snapshot, timestamp}, state) do
     _get_snapshots_send_snapmail(state, timestamp)
-    {:noreply, state}
+    {:noreply, [], state}
   end
 
   @doc """
@@ -105,7 +105,7 @@ defmodule EvercamMedia.Snapmail.Snapmailer do
   def handle_cast({:update_snapmail_config, config}, state) do
     updated_config = Map.merge state, config
     GenEvent.sync_notify(state.event_manager, {:update_snapmail_config, updated_config})
-    {:noreply, updated_config}
+    {:noreply, [], updated_config}
   end
 
   @doc """
@@ -114,14 +114,14 @@ defmodule EvercamMedia.Snapmail.Snapmailer do
   def handle_info({:camera_reply, camera_exid, image, timestamp}, state) do
     data = {camera_exid, timestamp, image}
     GenEvent.sync_notify(state.event_manager, {:got_snapshot, data})
-    {:noreply, state}
+    {:noreply, [], state}
   end
 
   @doc """
   Take care of unknown messages which otherwise would trigger function clause mismatch error.
   """
   def handle_info(_msg, state) do
-    {:noreply, state}
+    {:noreply, [], state}
   end
 
   #####################

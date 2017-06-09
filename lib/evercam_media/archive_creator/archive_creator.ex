@@ -3,7 +3,7 @@ defmodule EvercamMedia.ArchiveCreator.ArchiveCreator do
   Provides functions to create archive
   """
 
-  use GenServer
+  use GenStage
   require Logger
   alias EvercamMedia.Repo
   alias EvercamMedia.Snapshot.Storage
@@ -16,10 +16,17 @@ defmodule EvercamMedia.ArchiveCreator.ArchiveCreator do
   ######################
 
   @doc """
+  Initialize the snapmail server
+  """
+  def init(args) do
+    {:producer, args}
+  end
+
+  @doc """
   """
   def handle_cast({:create_archive, archive_exid}, state) do
     _create_archive(state, archive_exid)
-    {:noreply, state}
+    {:noreply, [], state}
   end
 
   #####################

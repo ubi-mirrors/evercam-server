@@ -4,7 +4,7 @@ defmodule EvercamMedia.Snapmail.Poller do
 
   """
 
-  use GenServer
+  use GenStage
   require Logger
   alias EvercamMedia.Snapmail.Snapmailer
 
@@ -16,7 +16,7 @@ defmodule EvercamMedia.Snapmail.Poller do
   Start a poller for snapmail worker.
   """
   def start_link(args) do
-    GenServer.start_link(__MODULE__, args)
+    GenStage.start_link(__MODULE__, args)
   end
 
   @doc """
@@ -24,28 +24,28 @@ defmodule EvercamMedia.Snapmail.Poller do
   as defined in the args passed to the snapmail server.
   """
   def start_timer(cam_server) do
-    GenServer.call(cam_server, :restart_snapmail_timer)
+    GenStage.call(cam_server, :restart_snapmail_timer)
   end
 
   @doc """
   Stop the poller for the snapmail.
   """
   def stop_timer(cam_server) do
-    GenServer.call(cam_server, :stop_snapmail_timer)
+    GenStage.call(cam_server, :stop_snapmail_timer)
   end
 
   @doc """
   Get the configuration of the snapmail worker.
   """
   def get_config(cam_server) do
-    GenServer.call(cam_server, :get_poller_config)
+    GenStage.call(cam_server, :get_poller_config)
   end
 
   @doc """
   Update the configuration of the snapmail worker
   """
   def update_config(cam_server, config) do
-    GenServer.cast(cam_server, {:update_snapmail_config, config})
+    GenStage.cast(cam_server, {:update_snapmail_config, config})
   end
 
 
@@ -60,28 +60,28 @@ defmodule EvercamMedia.Snapmail.Poller do
     args = Map.merge args, %{
       timer: start_timer(args.config.sleep, :poll)
     }
-    {:ok, args}
+    {:consumer, args}
   end
 
   @doc """
   Server callback for restarting snapmail poller
   """
   def handle_call(:restart_snapmail_timer, _from, state) do
-    {:reply, nil, state}
+    {:reply, nil, [], state}
   end
 
   @doc """
   Server callback for getting snapmail poller state
   """
   def handle_call(:get_poller_config, _from, state) do
-    {:reply, state, state}
+    {:reply, state, [], state}
   end
 
   @doc """
   Server callback for stopping snapmail poller
   """
   def handle_call(:stop_snapmail_timer, _from, state) do
-    {:reply, nil, state}
+    {:reply, nil, [], state}
   end
 
   def handle_cast({:update_snapmail_config, new_config}, state) do
@@ -91,7 +91,7 @@ defmodule EvercamMedia.Snapmail.Poller do
     new_config = Map.merge new_config, %{
       timer: new_timer
     }
-    {:noreply, new_config}
+    {:noreply, [], new_config}
   end
 
   @doc """
@@ -110,7 +110,7 @@ defmodule EvercamMedia.Snapmail.Poller do
     end
     sleep = Snapmail.sleep(state.config.notify_time, state.config.timezone)
     timer = start_timer(sleep, :poll)
-    {:noreply, Map.put(state, :timer, timer)}
+    {:noreply, [], Map.put(state, :timer, timer)}
   end
 
   @doc """
@@ -118,7 +118,7 @@ defmodule EvercamMedia.Snapmail.Poller do
   """
   def handle_info(msg, state) do
     Logger.info "[handle_info] [#{msg}] [#{state.name}] [unknown messages]"
-    {:noreply, state}
+    {:noreply, [], state}
   end
 
   #######################

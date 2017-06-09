@@ -24,6 +24,7 @@
   "exjsx": {:hex, :exjsx, "3.2.1", "1bc5bf1e4fd249104178f0885030bcd75a4526f4d2a1e976f4b428d347614f0f", [:mix], [{:jsx, "~> 2.8.0", [hex: :jsx, optional: false]}]},
   "exrm": {:hex, :exrm, "1.0.8", "5aa8990cdfe300282828b02cefdc339e235f7916388ce99f9a1f926a9271a45d", [:mix], [{:relx, "~> 3.5", [hex: :relx, optional: false]}]},
   "exvcr": {:hex, :exvcr, "0.8.9", "e01a4e7c288e964efd0b444136a4388ad1b21a1f00e2e571427bc7a602e29a76", [:mix], [{:exactor, "~> 2.2", [hex: :exactor, optional: false]}, {:exjsx, "~> 3.2", [hex: :exjsx, optional: false]}, {:httpoison, "~> 0.11", [hex: :httpoison, optional: true]}, {:httpotion, "~> 3.0", [hex: :httpotion, optional: true]}, {:ibrowse, "~> 4.2.2", [hex: :ibrowse, optional: true]}, {:meck, "~> 0.8.3", [hex: :meck, optional: false]}]},
+  "gen_stage": {:hex, :gen_stage, "0.12.0", "74ec6f84ea0e0e81aa26b745870495094de1c59bfdbd012ae3103208ea124623", [:mix], []},
   "geo": {:hex, :geo, "1.4.1", "c1d93e12daecf0bac17d8d5b202e3aeed1e772e6ed99b7cc81c270ae54cf57e4", [:mix], [{:ecto, "~> 2.1", [hex: :ecto, optional: true]}, {:poison, "~> 1.5 or ~> 2.0 or ~> 3.0", [hex: :poison, optional: true]}, {:postgrex, "~> 0.13", [hex: :postgrex, optional: true]}]},
   "getopt": {:hex, :getopt, "0.8.2", "b17556db683000ba50370b16c0619df1337e7af7ecbf7d64fbf8d1d6bce3109b", [:rebar], []},
   "gettext": {:hex, :gettext, "0.13.1", "5e0daf4e7636d771c4c71ad5f3f53ba09a9ae5c250e1ab9c42ba9edccc476263", [:mix], []},

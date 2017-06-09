@@ -3,7 +3,7 @@ defmodule EvercamMedia.Timelapse.Timelapser do
   Provides functions to create timelapse
   """
 
-  use GenServer
+  use GenStage
   alias EvercamMedia.Snapshot.CamClient
   alias EvercamMedia.Snapshot.Storage
   require Logger
@@ -18,35 +18,35 @@ defmodule EvercamMedia.Timelapse.Timelapser do
   Start the timelapse server for a given timelapse.
   """
   def start_link(args) do
-    GenServer.start_link(__MODULE__, args, name: args[:name])
+    GenStage.start_link(__MODULE__, args, name: args[:name])
   end
 
   @doc """
   Get the state of the timelapse worker.
   """
   def get_state(timelapse_server) do
-    GenServer.call(timelapse_server, :get_state)
+    GenStage.call(timelapse_server, :get_state)
   end
 
   @doc """
   Get the configuration of the timelapse worker.
   """
   def get_config(timelapse_server) do
-    GenServer.call(timelapse_server, :get_timelapse_config)
+    GenStage.call(timelapse_server, :get_timelapse_config)
   end
 
   @doc """
   Update the configuration of the timelapse worker
   """
   def update_config(timelapse_server, config) do
-    GenServer.cast(timelapse_server, {:update_timelapse_config, config})
+    GenStage.cast(timelapse_server, {:update_timelapse_config, config})
   end
 
   @doc """
   Get a snapshot from the camera and create new of HLS if have 24 frames
   """
   def get_snapshot(timelapse_server, {:poll, timestamp}) do
-    GenServer.cast(timelapse_server, {:get_camera_snapshot, timestamp})
+    GenStage.cast(timelapse_server, {:get_camera_snapshot, timestamp})
   end
 
   ######################
@@ -64,35 +64,35 @@ defmodule EvercamMedia.Timelapse.Timelapser do
       poller: poller,
       event_manager: event_manager
     }
-    {:ok, args}
+    {:producer, args}
   end
 
   @doc """
   Server callback for restarting timelapse poller
   """
   def handle_call(:restart_timelapse_poller, _from, state) do
-    {:reply, nil, state}
+    {:reply, nil, [], state}
   end
 
   @doc """
   Server callback for stopping timelapse poller
   """
   def handle_call(:stop_timelapse_poller, _from, state) do
-    {:reply, nil, state}
+    {:reply, nil, [], state}
   end
 
   @doc """
   Server callback for getting timelapse config
   """
   def handle_call(:get_timelapse_config, _from, state) do
-    {:reply, get_config_from_state(:config, state), state}
+    {:reply, get_config_from_state(:config, state), [], state}
   end
 
   @doc """
   Server callback for getting worker state
   """
   def handle_call(:get_state, _from, state) do
-    {:reply, state, state}
+    {:reply, state, [], state}
   end
 
   @doc """
@@ -100,7 +100,7 @@ defmodule EvercamMedia.Timelapse.Timelapser do
   """
   def handle_cast({:get_camera_snapshot, timestamp}, state) do
     _get_snapshots_create_hls_chunk(state, timestamp)
-    {:noreply, state}
+    {:noreply, [], state}
   end
 
   @doc """
@@ -109,7 +109,7 @@ defmodule EvercamMedia.Timelapse.Timelapser do
   def handle_cast({:update_timelapse_config, config}, state) do
     updated_config = Map.merge state, config
     GenEvent.sync_notify(state.event_manager, {:update_timelapse_config, updated_config})
-    {:noreply, updated_config}
+    {:noreply, [], updated_config}
   end
 
   @doc """
@@ -118,14 +118,14 @@ defmodule EvercamMedia.Timelapse.Timelapser do
   def handle_info({:camera_reply, camera_exid, image, timestamp}, state) do
     data = {camera_exid, timestamp, image}
     GenEvent.sync_notify(state.event_manager, {:got_snapshot, data})
-    {:noreply, state}
+    {:noreply, [], state}
   end
 
   @doc """
   Take care of unknown messages which otherwise would trigger function clause mismatch error.
   """
   def handle_info(_msg, state) do
-    {:noreply, state}
+    {:noreply, [], state}
   end
 
   #####################

@@ -204,10 +204,10 @@ defmodule EvercamMedia.ArchiveController do
     spawn fn ->
       case Process.whereis(:archive_creator) do
         nil ->
-          {:ok, pid} = GenServer.start_link(EvercamMedia.ArchiveCreator.ArchiveCreator, {}, name: :archive_creator)
-          GenServer.cast(pid, {:create_archive, archive_id})
+          {:ok, pid} = GenStage.start_link(EvercamMedia.ArchiveCreator.ArchiveCreator, {}, name: :archive_creator)
+          GenStage.cast(pid, {:create_archive, archive_id})
         pid ->
-          GenServer.cast(pid, {:create_archive, archive_id})
+          GenStage.cast(pid, {:create_archive, archive_id})
       end
     end
   end

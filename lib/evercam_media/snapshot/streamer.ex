@@ -3,7 +3,7 @@ defmodule EvercamMedia.Snapshot.Streamer do
   TODO
   """
 
-  use GenServer
+  use GenStage
   alias EvercamMedia.Util
   alias EvercamMedia.Snapshot.CamClient
   alias EvercamMedia.Snapshot.DBHandler
@@ -20,7 +20,7 @@ defmodule EvercamMedia.Snapshot.Streamer do
   """
   def start_link(camera_exid) do
     streamer_id = String.to_atom("#{camera_exid}_streamer")
-    GenServer.start_link(__MODULE__, camera_exid, name: streamer_id)
+    GenStage.start_link(__MODULE__, camera_exid, name: streamer_id)
   end
 
   ######################
@@ -32,7 +32,7 @@ defmodule EvercamMedia.Snapshot.Streamer do
   """
   def init(camera_exid) do
     Process.send_after(self(), :tick, 0)
-    {:ok, camera_exid}
+    {:producer, camera_exid}
   end
 
   @doc """
@@ -59,14 +59,14 @@ defmodule EvercamMedia.Snapshot.Streamer do
         spawn fn -> stream(camera) end
     end
     Process.send_after(self(), :tick, 1000)
-    {:noreply, camera_exid}
+    {:noreply, [], camera_exid}
   end
 
   @doc """
   Take care of unknown messages which otherwise would trigger function clause mismatch error.
   """
   def handle_info(_msg, state) do
-    {:noreply, state}
+    {:noreply, [], state}
   end
 
   def stream(camera) do
