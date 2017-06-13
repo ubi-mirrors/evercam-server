@@ -25,20 +25,26 @@ defmodule EvercamMedia.SnapshotController do
 
   def create(conn, %{"id" => camera_exid} = params) do
     params = Map.merge(@optional_params, params)
-    function = fn -> snapshot_with_user(camera_exid, conn.assigns[:current_user], true, params["notes"]) end
-    case {exec_with_timeout(function, 25), params["with_data"]} do
-      {{200, response}, "true"} ->
-        data = "data:image/jpeg;base64,#{Base.encode64(response[:image])}"
+    user = conn.assigns[:current_user]
+    camera = Camera.get_full(camera_exid)
+    with true <- Permission.Camera.can_snapshot?(user, camera)
+    do
+      case {fetch_latest_snapshot(camera, params), params["with_data"]} do
+        {{200, response}, "true"} ->
+          data = "data:image/jpeg;base64,#{Base.encode64(response[:image])}"
 
-        conn
-        |> json(%{created_at: response[:timestamp], notes: response[:notes], data: data})
-      {{200, response}, _} ->
-        conn
-        |> json(%{created_at: response[:timestamp], notes: response[:notes]})
-      {{code, response}, _} ->
-        conn
-        |> put_status(code)
-        |> json(response)
+          conn
+          |> json(%{created_at: response[:timestamp], notes: response[:notes], data: data})
+        {{200, response}, _} ->
+          conn
+          |> json(%{created_at: response[:timestamp], notes: response[:notes]})
+        {{code, response}, _} ->
+          conn
+          |> put_status(code)
+          |> json(response)
+      end
+    else
+      false -> render_error(conn, 403, "Forbidden.")
     end
   end
 
@@ -310,6 +316,21 @@ defmodule EvercamMedia.SnapshotController do
   defp update_thumbnail(camera) do
     if camera.is_online && !Camera.recording?(camera) do
       construct_args(camera, true, "Evercam Thumbnail") |> fetch_snapshot(3)
+    end
+  end
+
+  defp fetch_latest_snapshot(camera, params) do
+    to = Calendar.DateTime.now!("UTC")
+    from = to |> Calendar.DateTime.advance!(-3) |> Calendar.DateTime.Format.unix
+
+    case Storage.seaweedfs_load_range(camera.exid, from, Calendar.DateTime.Format.unix(to)) do
+      [] ->
+        function = fn -> construct_args(camera, true, params["notes"]) |> fetch_snapshot end
+        exec_with_timeout(function, 25)
+      snapshot_list ->
+        snapshot = List.last(snapshot_list)
+        {:ok, image, notes} = Storage.load(camera.exid, snapshot.created_at, "#{snapshot.notes}")
+        {200, %{timestamp: snapshot.created_at, image: image, notes: notes}}
     end
   end
 
