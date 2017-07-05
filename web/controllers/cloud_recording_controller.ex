@@ -58,6 +58,37 @@ defmodule EvercamMedia.CloudRecordingController do
     end
   end
 
+  def hikvision_nvr(conn, %{"id" => exid, "starttime" => starttime, "endtime" => endtime}) do
+    camera = Camera.by_exid_with_associations(exid)
+
+    with :ok <- ensure_camera_exists(camera, exid, conn)
+    do
+      ip = Camera.host(camera, "external")
+      port = Camera.port(camera, "external", "rtsp")
+      cam_username = Camera.username(camera)
+      cam_password = Camera.password(camera)
+      url = camera.vendor_model.h264_url
+      channel = url |> String.split("/channels/") |> List.last |> String.split("/") |> List.first
+      case EvercamMedia.HikvisionNVR.publish_stream_from_rtsp(ip, port, cam_username, cam_password, channel, convert_timestamp(starttime), convert_timestamp(endtime)) do
+        {:ok} -> json(conn, %{message: "Streaming started."})
+        {:error} -> render_error(conn, 404, "No recordings found")
+      end
+    end
+  end
+
+  defp shutdown_process(nil, _exid), do: :noop
+  defp shutdown_process(pid, _exid) do
+    Process.exit pid, :shutdown
+    ConCache.delete(:nvr_recording, "nvr_recording")
+  end
+
+  defp convert_timestamp(timestamp) do
+    timestamp
+    |> String.to_integer
+    |> Calendar.DateTime.Parse.unix!
+    |> Calendar.Strftime.strftime!("%Y%m%dT%H%M%SZ")
+  end
+
   defp set_settings(cloud_recording) do
     case cloud_recording.camera_id do
       nil -> nil

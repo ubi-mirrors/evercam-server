@@ -136,6 +136,8 @@ defmodule EvercamMedia.Router do
       delete "/cameras/:id/timelapses/:timelapse_id", TimelapseController, :delete
       options "/cameras/:id/timelapses/:timelapse_id", TimelapseController, :nothing
 
+      get "/cameras/:id/nvr/stream", CloudRecordingController, :hikvision_nvr
+
       get "/cameras/:id/apps/motion-detection", MotionDetectionController, :show
     end
 

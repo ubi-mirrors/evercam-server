@@ -5,10 +5,7 @@ defmodule EvercamMedia.StreamController do
   @hls_url Application.get_env(:evercam_media, :hls_url)
 
   def rtmp(conn, params) do
-    requester_ip = user_request_ip(conn)
-    conn
-    |> put_status(request_stream(params["camera_id"], params["name"], requester_ip, :kill))
-    |> text("")
+    ensure_nvr_stream(conn, params, params["nvr"])
   end
 
   def hls(conn, params) do
@@ -31,6 +28,16 @@ defmodule EvercamMedia.StreamController do
   def ts(conn, params) do
     conn
     |> redirect(external: "#{@hls_url}/#{params["token"]}/#{params["filename"]}")
+  end
+
+  defp ensure_nvr_stream(conn, params, is_nvr) when is_nvr in [nil, ""] do
+    requester_ip = user_request_ip(conn)
+    conn
+    |> put_status(request_stream(params["camera_id"], params["name"], requester_ip, :kill))
+    |> text("")
+  end
+  defp ensure_nvr_stream(conn, _params, _nvr) do
+    conn |> put_status(200) |> text("")
   end
 
   defp request_stream(camera_exid, token, ip, command) do
