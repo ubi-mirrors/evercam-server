@@ -9,8 +9,7 @@ defmodule EvercamMedia.StreamController do
   end
 
   def hls(conn, params) do
-    requester_ip = user_request_ip(conn)
-    code = request_stream(params["camera_id"], params["token"], requester_ip, :check)
+    code = ensure_nvr_hls(conn, params, params["nvr"])
     hls_response(code, conn, params)
   end
 
@@ -29,6 +28,12 @@ defmodule EvercamMedia.StreamController do
     conn
     |> redirect(external: "#{@hls_url}/#{params["token"]}/#{params["filename"]}")
   end
+
+  defp ensure_nvr_hls(conn, params, is_nvr) when is_nvr in [nil, ""] do
+    requester_ip = user_request_ip(conn)
+    request_stream(params["camera_id"], params["token"], requester_ip, :check)
+  end
+  defp ensure_nvr_hls(_conn, _params, _is_nvr), do: 200
 
   defp ensure_nvr_stream(conn, params, is_nvr) when is_nvr in [nil, ""] do
     requester_ip = user_request_ip(conn)
