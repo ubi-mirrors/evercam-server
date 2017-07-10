@@ -60,7 +60,7 @@ defmodule EvercamMedia.Snapshot.Error do
         {504, %{message: "Connection closed."}}
       :nxdomain ->
         Logger.debug "[#{camera_exid}] [snapshot_error] [nxdomain]"
-        update_camera_status("#{camera_exid}", timestamp, false, "nxdomain", 100)
+        update_camera_status("#{camera_exid}", timestamp, false, "nxdomain", 18)
         {504, %{message: "Non-existant domain."}}
       :ehostunreach ->
         Logger.debug "[#{camera_exid}] [snapshot_error] [ehostunreach]"
