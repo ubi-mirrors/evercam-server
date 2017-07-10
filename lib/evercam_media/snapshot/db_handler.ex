@@ -71,8 +71,7 @@ defmodule EvercamMedia.Snapshot.DBHandler do
     Camera.get_full(camera_exid)
   end
 
-  defp pause_camera_requests(camera, "econnrefused", 0), do: do_pause_camera(camera)
-  defp pause_camera_requests(camera, "device_error", 0), do: do_pause_camera(camera)
+  defp pause_camera_requests(camera, _error_code, 0), do: do_pause_camera(camera)
   defp pause_camera_requests(_camera, _error_code, _reminder), do: :noop
 
   defp do_pause_camera(camera, pause_seconds \\ 5000) do

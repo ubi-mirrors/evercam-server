@@ -76,12 +76,6 @@ defmodule EvercamMedia.CloudRecordingController do
     end
   end
 
-  defp shutdown_process(nil, _exid), do: :noop
-  defp shutdown_process(pid, _exid) do
-    Process.exit pid, :shutdown
-    ConCache.delete(:nvr_recording, "nvr_recording")
-  end
-
   defp convert_timestamp(timestamp) do
     timestamp
     |> String.to_integer

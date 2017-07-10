@@ -24,7 +24,6 @@ defmodule EvercamMedia.UserMailer do
       text: Phoenix.View.render_to_string(EvercamMedia.EmailView, "confirm.txt", user: user, code: code)
   end
 
-  def camera_status(status, _user, _camera) when status in ["online", "offline"], do: :noop
   def camera_status(status, _user, camera) do
     timezone = camera |> Camera.get_timezone
     current_time = Calendar.DateTime.now_utc |> Calendar.DateTime.shift_zone!(timezone) |> Calendar.Strftime.strftime!("%A, %d %b %Y %l:%M %p")
@@ -42,7 +41,6 @@ defmodule EvercamMedia.UserMailer do
     end)
   end
 
-  def camera_offline_reminder(_user, _camera, _subject), do: :noop
   def camera_offline_reminder(_user, camera, subject) do
     timezone = camera |> Camera.get_timezone
     current_time =
