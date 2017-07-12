@@ -11,28 +11,6 @@ defmodule EvercamMedia.CameraShareView do
     end
   end
 
-  def render("all_shares.json", %{shares: shares, share_requests: share_requests, errors: errors}) do
-    %{
-      shares: render_many(shares, __MODULE__, "camera_share.json"),
-      share_requests: Enum.map(share_requests, fn(camera_share_request) ->
-        %{
-          id: camera_share_request.key,
-          email: camera_share_request.email,
-          rights: camera_share_request.rights,
-          camera_id: camera_share_request.camera.exid,
-          sharer_name: User.get_fullname(camera_share_request.user),
-          user_id: Util.deep_get(camera_share_request, [:user, :username], ""),
-          sharer_email: Util.deep_get(camera_share_request, [:user, :email], ""),
-        }
-      end),
-      errors: Enum.map(errors, fn(error) ->
-        %{
-          text: error
-        }
-      end)
-    }
-  end
-
   def render("show.json", %{camera_share: camera_share}) do
     %{shares: render_many([camera_share], __MODULE__, "camera_share.json")}
   end
