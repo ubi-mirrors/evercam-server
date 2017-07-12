@@ -1,7 +1,6 @@
 defmodule EvercamMedia.CameraShareController do
   use EvercamMedia.Web, :controller
   alias EvercamMedia.CameraShareView
-  alias EvercamMedia.CameraShareRequestView
   alias EvercamMedia.Intercom
 
   def show(conn, %{"id" => exid} = params) do
@@ -32,36 +31,56 @@ defmodule EvercamMedia.CameraShareController do
   def create(conn, params) do
     caller = conn.assigns[:current_user]
     camera = Camera.get_full(params["id"])
-    sharee = User.by_username_or_email(params["email"])
+    email_array = params["email"]
 
     with :ok <- camera_exists(conn, params["id"], camera),
          :ok <- user_can_create_share(conn, caller, camera)
     do
       requester_ip = user_request_ip(conn)
-      if sharee do
-        case CameraShare.create_share(camera, sharee, caller, params["rights"], params["message"]) do
-          {:ok, camera_share} ->
-            unless caller == sharee do
-              send_email_notification(caller, camera, sharee.email, camera_share.message)
+      fetch_shares =
+        Enum.reduce(email_array, {[], [], []}, fn email, {shares, share_requests, changes} = _acc ->
+          with {:found_user, sharee} <- ensure_user(email)
+          do
+            case CameraShare.create_share(camera, sharee, caller, params["rights"], params["message"]) do
+              {:ok, camera_share} ->
+                unless caller == sharee do
+                  send_email_notification(caller, camera, sharee.email, camera_share.message)
+                end
+                Camera.invalidate_user(sharee)
+                Camera.invalidate_camera(camera)
+                CameraActivity.log_activity(caller, camera, "shared", %{with: sharee.email, ip: requester_ip})
+                {[camera_share | shares], share_requests, changes}
+              {:error, changeset} ->
+                {shares, share_requests, [attach_email_to_message(changeset, email) | changes]}
             end
-            Camera.invalidate_user(sharee)
-            Camera.invalidate_camera(camera)
-            CameraActivity.log_activity(caller, camera, "shared", %{with: sharee.email, ip: requester_ip})
-            conn |> put_status(:created) |> render(CameraShareView, "show.json", %{camera_share: camera_share})
-          {:error, changeset} ->
-            render_error(conn, 400, Util.parse_changeset(changeset))
-        end
-      else
-        case CameraShareRequest.create_share_request(camera, params["email"], caller, params["rights"], params["message"]) do
-          {:ok, camera_share_request} ->
-            send_email_notification(caller, camera, params["email"], camera_share_request.message, camera_share_request.key)
-            CameraActivity.log_activity(caller, camera, "shared", %{with: params["email"], ip: requester_ip})
-            Intercom.intercom_activity(Application.get_env(:evercam_media, :create_intercom_user), get_user_model(params["email"]), get_user_agent(conn), requester_ip, "Shared-Non-Registered")
-            conn |> put_status(:created) |> render(CameraShareRequestView, "show.json", %{camera_share_requests: camera_share_request})
-          {:error, changeset} ->
-            render_error(conn, 400, Util.parse_changeset(changeset))
-        end
-      end
+          else
+            {:not_found, email} ->
+              case CameraShareRequest.create_share_request(camera, email, caller, params["rights"], params["message"]) do
+                {:ok, camera_share_request} ->
+                  send_email_notification(caller, camera, email, camera_share_request.message, camera_share_request.key)
+                  CameraActivity.log_activity(caller, camera, "shared", %{with: email, ip: requester_ip})
+                  Intercom.intercom_activity(Application.get_env(:evercam_media, :create_intercom_user), get_user_model(email), get_user_agent(conn), requester_ip, "Shared-Non-Registered")
+                  {shares, [camera_share_request | share_requests], changes}
+                {:error, changeset} ->
+                  {shares, share_requests, [attach_email_to_message(changeset, email) | changes]}
+              end
+          end
+        end)
+      {total_shares, share_requests, errors} = fetch_shares
+      conn
+      |> put_status(:created)
+      |> render(CameraShareView, "all_shares.json", %{shares: total_shares, share_requests: share_requests, errors: errors})
+    end
+  end
+
+  defp attach_email_to_message(changeset, email) do
+    "#{Util.parse_changeset(changeset) |>  Map.values |> hd} (#{email})"
+  end
+
+  defp ensure_user(email) do
+    case sharee = User.by_username_or_email(email) do
+      nil -> {:not_found, email}
+      %User{} -> {:found_user, sharee}
     end
   end
 
