@@ -3,10 +3,10 @@ defmodule EvercamMedia.HikvisionNVR do
 
   @root_dir Application.get_env(:evercam_media, :storage_dir)
 
-  def publish_stream_from_rtsp(host, port, username, password, channel, starttime, endtime) do
+  def publish_stream_from_rtsp(exid, host, port, username, password, channel, starttime, endtime) do
     rtsp_url = "rtsp://#{username}:#{password}@#{host}:#{port}/Streaming/tracks/#{channel}/?starttime=#{starttime}&endtime=#{endtime}"
-    kill_published_streams("rtmp://localhost:1935/live/stream")
-    "ffmpeg -rtsp_transport tcp -i '#{rtsp_url}' -f lavfi -i aevalsrc=0 -vcodec copy -acodec aac -map 0:0 -map 1:0 -shortest -strict experimental -f flv rtmp://localhost:1935/live/stream"
+    kill_published_streams("rtmp://localhost:1935/live/#{exid}")
+    "ffmpeg -rtsp_transport tcp -i '#{rtsp_url}' -f lavfi -i aevalsrc=0 -vcodec copy -acodec aac -map 0:0 -map 1:0 -shortest -strict experimental -f flv rtmp://localhost:1935/live/#{exid}"
     |> Porcelain.spawn_shell
     {:ok}
   end

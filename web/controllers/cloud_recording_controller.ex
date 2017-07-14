@@ -69,7 +69,7 @@ defmodule EvercamMedia.CloudRecordingController do
       cam_password = Camera.password(camera)
       url = camera.vendor_model.h264_url
       channel = url |> String.split("/channels/") |> List.last |> String.split("/") |> List.first
-      case EvercamMedia.HikvisionNVR.publish_stream_from_rtsp(ip, port, cam_username, cam_password, channel, convert_timestamp(starttime), convert_timestamp(endtime)) do
+      case EvercamMedia.HikvisionNVR.publish_stream_from_rtsp(camera.exid, ip, port, cam_username, cam_password, channel, convert_timestamp(starttime), convert_timestamp(endtime)) do
         {:ok} -> json(conn, %{message: "Streaming started."})
         {:error} -> render_error(conn, 404, "No recordings found")
       end

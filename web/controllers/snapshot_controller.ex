@@ -107,8 +107,13 @@ defmodule EvercamMedia.SnapshotController do
   end
 
   def nearest(conn, %{"id" => camera_exid, "timestamp" => timestamp} = _params) do
-    timestamp = convert_timestamp(timestamp)
     camera = Camera.get_full(camera_exid)
+    timezone = Camera.get_timezone(camera)
+    timestamp =
+      timestamp
+      |> convert_timestamp
+      |> convert_to_utc(timezone)
+
     with true <- Permission.Camera.can_list?(conn.assigns[:current_user], camera) do
       conn
       |> json(%{snapshots: Storage.nearest(camera_exid, timestamp)})
@@ -456,5 +461,14 @@ defmodule EvercamMedia.SnapshotController do
       {:bad_format, nil} ->
         String.to_integer(timestamp)
     end
+  end
+
+  defp convert_to_utc(unix_timestamp, timezone) do
+    unix_timestamp
+    |> Calendar.DateTime.Parse.unix!
+    |> Calendar.DateTime.to_erl
+    |> Calendar.DateTime.from_erl!(timezone)
+    |> Calendar.DateTime.shift_zone!("Etc/UTC")
+    |> Calendar.DateTime.Format.unix
   end
 end
