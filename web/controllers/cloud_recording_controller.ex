@@ -76,11 +76,94 @@ defmodule EvercamMedia.CloudRecordingController do
     end
   end
 
+  def get_recording_times(conn, %{"id" => exid, "starttime" => starttime, "endtime" => endtime}) do
+    camera = Camera.by_exid_with_associations(exid)
+
+    with :ok <- ensure_camera_exists(camera, exid, conn)
+    do
+      ip = Camera.host(camera, "external")
+      port = Camera.port(camera, "external", "http")
+      cam_username = Camera.username(camera)
+      cam_password = Camera.password(camera)
+      url = camera.vendor_model.h264_url
+      channel = url |> String.split("/channels/") |> List.last |> String.split("/") |> List.first
+      case EvercamMedia.HikvisionNVR.get_stream_urls(camera.exid, ip, port, cam_username, cam_password, channel, convert_timestamp_to_rfc(starttime), convert_timestamp_to_rfc(endtime)) do
+        {:ok, body} ->
+          starttime_list = EvercamMedia.XMLParser.parse_xml(body, '/CMSearchResult/matchList/searchMatchItem/timeSpan/startTime')
+          endtime_list = EvercamMedia.XMLParser.parse_xml(body, '/CMSearchResult/matchList/searchMatchItem/timeSpan/endTime')
+          meta_data = EvercamMedia.XMLParser.parse_single(body, '/CMSearchResult/matchList/searchMatchItem[1]/metadataMatches/metadataDescriptor')
+
+          cond do
+            Enum.count(starttime_list) > 0 ->
+              times_list = get_times_list(String.contains?(meta_data, "motion"), starttime_list, endtime_list, starttime)
+              json(conn, %{times_list: times_list})
+            true ->
+              render_error(conn, 404, "No recordings found")
+          end
+
+        {:error} -> render_error(conn, 404, "No recordings found")
+      end
+    end
+  end
+
+  defp get_times_list(true, starttime_list, endtime_list, _starttime) do
+    starttime_list
+    |> Enum.with_index
+    |> Enum.map(fn(item) ->
+      {timestamp, index} = item
+      stime = String.replace(timestamp, "T", " ") |> String.replace("Z", "")
+      etime = endtime_list |> Enum.at(index) |> String.replace("T", " ") |> String.replace("Z", "")
+      [stime, 1, etime]
+    end)
+  end
+  defp get_times_list(false, starttime_list, endtime_list, starttime) do
+    starttime_list
+      |> Enum.with_index
+      |> Enum.reduce([], fn(item, times_list) ->
+        {timestamp, index} = item
+        starttime = convert_timestap_from_rfc(timestamp)
+        endtime = convert_timestap_from_rfc(Enum.at(endtime_list, index))
+        {:ok, seconds, _, _} = Calendar.DateTime.diff(endtime, starttime)
+
+        times_list ++ get_timespan_chunk(starttime, endtime, [], seconds)
+    end)
+  end
+
+  defp get_timespan_chunk(starttime, endtime, times_list, seconds) when seconds > 0 do
+    cond do
+      seconds > 299 ->
+        starttime_str = starttime |> Calendar.Strftime.strftime!("%Y-%m-%d %H:%M:%S")
+        endtime_str = starttime |> Calendar.DateTime.advance!(299) |> Calendar.Strftime.strftime!("%Y-%m-%d %H:%M:%S")
+        times_list = times_list ++ [["#{starttime_str}",1,"#{endtime_str}"]]
+        adv_starttime = Calendar.DateTime.advance!(starttime, 300)
+        get_timespan_chunk(adv_starttime, endtime, times_list, seconds - 300)
+      true ->
+        starttime_str = starttime |> Calendar.Strftime.strftime!("%Y-%m-%d %H:%M:%S")
+        endtime_str = endtime |> Calendar.Strftime.strftime!("%Y-%m-%d %H:%M:%S")
+        times_list ++ [["#{starttime_str}",1,"#{endtime_str}"]]
+    end
+  end
+  defp get_timespan_chunk(_starttime, _endtime, times_list, _seconds), do: times_list
+
+  defp convert_timestamp_to_rfc(timestamp) do
+    timestamp
+    |> String.to_integer
+    |> Calendar.DateTime.Parse.unix!
+    |> Calendar.Strftime.strftime!("%Y-%m-%dT%H:%M:%SZ")
+  end
+
   defp convert_timestamp(timestamp) do
     timestamp
     |> String.to_integer
     |> Calendar.DateTime.Parse.unix!
     |> Calendar.Strftime.strftime!("%Y%m%dT%H%M%SZ")
+  end
+
+  defp convert_timestap_from_rfc(timestamp) do
+    case Calendar.DateTime.Parse.rfc3339_utc(timestamp) do
+      {:ok, datetime} -> datetime
+      {:bad_format, nil} -> nil
+    end
   end
 
   defp set_settings(cloud_recording) do

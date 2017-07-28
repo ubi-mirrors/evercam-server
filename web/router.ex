@@ -137,6 +137,7 @@ defmodule EvercamMedia.Router do
       options "/cameras/:id/timelapses/:timelapse_id", TimelapseController, :nothing
 
       get "/cameras/:id/nvr/stream", CloudRecordingController, :hikvision_nvr
+      get "/cameras/:id/nvr/videos", CloudRecordingController, :get_recording_times
 
       get "/cameras/:id/apps/motion-detection", MotionDetectionController, :show
     end

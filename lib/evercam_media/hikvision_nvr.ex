@@ -4,35 +4,28 @@ defmodule EvercamMedia.HikvisionNVR do
   @root_dir Application.get_env(:evercam_media, :storage_dir)
 
   def publish_stream_from_rtsp(exid, host, port, username, password, channel, starttime, endtime) do
-    rtsp_url = "rtsp://#{username}:#{password}@#{host}:#{port}/Streaming/tracks/#{channel}/?starttime=#{starttime}&endtime=#{endtime}"
-    kill_published_streams("rtmp://localhost:1935/live/#{exid}")
-    "ffmpeg -rtsp_transport tcp -i '#{rtsp_url}' -f lavfi -i aevalsrc=0 -vcodec copy -acodec aac -map 0:0 -map 1:0 -shortest -strict experimental -f flv rtmp://localhost:1935/live/#{exid}"
+    rtsp_url = "rtsp://#{username}:#{password}@#{host}:#{port}/Streaming/tracks/"
+    kill_published_streams(exid, rtsp_url)
+    "ffmpeg -rtsp_transport tcp -i '#{rtsp_url}#{channel}/?starttime=#{starttime}&endtime=#{endtime}' -f lavfi -i aevalsrc=0 -vcodec copy -acodec aac -map 0:0 -map 1:0 -shortest -strict experimental -f flv rtmp://localhost:1935/live/#{exid}"
     |> Porcelain.spawn_shell
     {:ok}
   end
 
-  def get_stream_urls(_exid, host, port, username, password, starttime, endtime) do
+  def get_stream_urls(_exid, host, port, username, password, channel, starttime, endtime) do
     xml = "<?xml version='1.0' encoding='utf-8'?><CMSearchDescription><searchID>C5954E12-60B0-0001-954E-999096EF7420</searchID><trackList>"
-    xml = "#{xml}<trackID>101</trackID></trackList><timeSpanList><timeSpan><startTime>#{starttime}</startTime><endTime>#{endtime}</endTime>"
-    xml = "#{xml}</timeSpan></timeSpanList><maxResults>40</maxResults><searchResultPostion>0</searchResultPostion><metadataList>"
+    xml = "#{xml}<trackID>#{channel}</trackID></trackList><timeSpanList><timeSpan><startTime>#{starttime}</startTime><endTime>#{endtime}</endTime>"
+    xml = "#{xml}</timeSpan></timeSpanList><maxResults>600</maxResults><searchResultPostion>0</searchResultPostion><metadataList>"
     xml = "#{xml}<metadataDescriptor>//metadata.psia.org/VideoMotion</metadataDescriptor></metadataList></CMSearchDescription>"
 
     url = "http://#{host}:#{port}/PSIA/ContentMgmt/search"
     case HTTPoison.post!(url, xml, ["Content-Type": "application/x-www-form-urlencoded", "Authorization": "Basic #{Base.encode64("#{username}:#{password}")}", "SOAPAction": "http://www.w3.org/2003/05/soap-envelope"]) do
       %HTTPoison.Response{body: body} ->
-        url =
-          body
-          |> String.split("<playbackURI>")
-          |> List.last
-          |> String.split("</playbackURI>")
-          |> List.first
-
-        ip_index = url |> :binary.match("/Streaming") |> elem(0)
-        refine_url = String.slice(url, ip_index..-1)
-        pid = spawn(fn -> download_stream(host, port, username, password, refine_url) end)
-        ConCache.put(:nvr_recording, "nvr_recording", pid)
-        spawn(fn -> kill_streams() end)
-        {:ok}
+        # ip_index = url |> :binary.match("/Streaming") |> elem(0)
+        # refine_url = String.slice(url, ip_index..-1)
+        # pid = spawn(fn -> download_stream(host, port, username, password, refine_url) end)
+        # ConCache.put(:nvr_recording, "nvr_recording", pid)
+        # spawn(fn -> kill_streams() end)
+        {:ok, body}
       _ ->
         Logger.error "[get_stream_urls] [#{url}] [#{xml}]"
         {:error}
@@ -92,17 +85,11 @@ defmodule EvercamMedia.HikvisionNVR do
     |> Porcelain.spawn_shell
   end
 
-  defp kill_streams() do
-    "#{@root_dir}/stream/stream.mp4"
-    |> ffmpeg_pids
-    |> Enum.each(fn(pid) -> Porcelain.shell("kill -9 #{pid}") end)
-    publish_stream()
-  end
-
-  defp kill_published_streams(rtsp_url) do
+  defp kill_published_streams(camera_id, rtsp_url) do
     rtsp_url
     |> ffmpeg_pids
     |> Enum.each(fn(pid) -> Porcelain.shell("kill -9 #{pid}") end)
+    File.rm_rf!("/tmp/hls/#{camera_id}/")
   end
 
   defp ffmpeg_pids(rtsp_url) do
