@@ -71,37 +71,35 @@ defmodule EvercamMedia.Snapshot.DBHandler do
     Camera.get_full(camera_exid)
   end
 
-  defp pause_camera_requests(camera, _error_code, 0), do: do_pause_camera(camera)
+  defp pause_camera_requests(camera, _error_code, 0), do: do_pause_camera(camera, 5000)
   defp pause_camera_requests(_camera, _error_code, _reminder), do: :noop
 
-  defp do_pause_camera(camera, pause_seconds \\ 5000) do
+  defp do_pause_camera(camera, pause_seconds, is_pause \\ true) do
     Logger.debug("Pause camera requests for #{camera.exid}")
     camera.exid
     |> String.to_atom
     |> Process.whereis
-    |> WorkerSupervisor.pause_worker(camera, true, pause_seconds)
+    |> WorkerSupervisor.pause_worker(camera, is_pause, pause_seconds)
   end
 
   def change_camera_status(camera, timestamp, status, error_code \\ nil) do
-    do_pause_camera(camera, 3000)
+    do_pause_camera(camera, 20000)
     try do
-      task = Task.async(fn() ->
-        datetime =
-          timestamp
-          |> Calendar.DateTime.Parse.unix!
-          |> Calendar.DateTime.to_erl
-          |> Ecto.DateTime.cast!
-        params = construct_camera(datetime, status, camera.is_online == status)
-        changeset = Camera.changeset(camera, params)
-        camera = Repo.update!(changeset)
-        log_camera_status(camera, status, datetime, error_code)
-        broadcast_change_to_users(camera)
-        Camera.invalidate_camera(camera)
-      end)
-      Task.await(task, :timer.seconds(3))
+      datetime =
+        timestamp
+        |> Calendar.DateTime.Parse.unix!
+        |> Calendar.DateTime.to_erl
+        |> Ecto.DateTime.cast!
+      params = construct_camera(datetime, status, camera.is_online == status)
+      changeset = Camera.changeset(camera, params)
+      camera = Repo.update!(changeset)
+      log_camera_status(camera, status, datetime, error_code)
+      broadcast_change_to_users(camera)
+      Camera.invalidate_camera(camera)
     catch _type, error ->
       Util.error_handler(error)
     end
+    do_pause_camera(camera, 5000, false)
   end
 
   def broadcast_change_to_users(camera) do
@@ -114,24 +112,28 @@ defmodule EvercamMedia.Snapshot.DBHandler do
 
   defp do_log_camera_status(camera, status, datetime, extra \\ nil) do
     spawn fn ->
-      case check_last_camera_status(camera.id, status) do
-        true ->
+      case ConCache.get(:current_camera_status, camera.exid) |> declare_camera_status(camera) |> humanize_status == status do
+        false ->
+          ConCache.dirty_put(:current_camera_status, camera.exid, camera.is_online)
           parameters = %{camera_id: camera.id, camera_exid: camera.exid, action: status, done_at: datetime, extra: extra}
           changeset = CameraActivity.changeset(%CameraActivity{}, parameters)
           SnapshotRepo.insert(changeset)
           send_notification(status, camera, camera.alert_emails)
-        false -> :noop
+        true -> ConCache.dirty_put(:current_camera_status, camera.exid, camera.is_online)
       end
     end
   end
 
-  defp check_last_camera_status(camera_id, status) do
-    case CameraActivity.get_last_on_off_log(camera_id) do
-      nil -> true
-      %CameraActivity{} = camera_activity ->
-        camera_activity.action != status
+  defp declare_camera_status(nil, camera) do
+    case camera.is_online do
+      true -> false
+      false -> true
     end
   end
+  defp declare_camera_status(status, _camera), do: status
+
+  defp humanize_status(true), do: "online"
+  defp humanize_status(false), do: "offline"
 
   defp send_notification(_status, _camera, alert_emails) when alert_emails in [nil, ""], do: :noop
   defp send_notification(status, camera, _alert_emails) do
