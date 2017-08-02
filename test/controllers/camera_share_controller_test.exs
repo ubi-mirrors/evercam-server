@@ -61,7 +61,7 @@ defmodule EvercamMedia.CameraShareControllerTest do
 
   test "POST /v1/cameras/:id/shares, return share when sharee exists", context do
     params = %{
-      email: "abcxyz",
+      email: ["abcxyz"],
       rights: "snapshot,list"
     }
     response =
@@ -81,7 +81,7 @@ defmodule EvercamMedia.CameraShareControllerTest do
 
   test "POST /v1/cameras/:id/shares, return share request when sharee not exists", context do
     params = %{
-      email: "user@new.com",
+      email: ["user@new.com"],
       rights: "snapshot,list"
     }
     response =
@@ -94,14 +94,15 @@ defmodule EvercamMedia.CameraShareControllerTest do
       |> Map.get("share_requests")
       |> List.first
 
+    [email] = params[:email]
     assert response.status == 201
     assert Map.get(share, "camera_id") == context[:camera].exid
-    assert Map.get(share, "email") == params[:email]
+    assert Map.get(share, "email") == email
   end
 
   test "POST /v1/cameras/:id/shares, camera already shared", context do
     params = %{
-      email: "smithmarc",
+      email: ["smithmarc"],
       rights: "snapshot,list"
     }
     response =
@@ -111,16 +112,16 @@ defmodule EvercamMedia.CameraShareControllerTest do
     message =
       response.resp_body
       |> Poison.decode!
-      |> Map.get("message")
-      |> Map.get("share")
+      |> Map.get("errors")
+      |> List.first
+      |> Map.get("text")
 
-    assert response.status == 400
-    assert message == ["The camera has already been shared with this user."]
+    assert message == "The camera has already been shared with this user. (#{params[:email]})"
   end
 
   test "POST /v1/cameras/:id/shares, share request already exists", context do
     params = %{
-      email: "share_request@xyz.com",
+      email: ["share_request@xyz.com"],
       rights: "snapshot,list"
     }
     response =
@@ -130,16 +131,16 @@ defmodule EvercamMedia.CameraShareControllerTest do
     message =
       response.resp_body
       |> Poison.decode!
-      |> Map.get("message")
-      |> Map.get("email")
+      |> Map.get("errors")
+      |> List.first
+      |> Map.get("text")
 
-    assert response.status == 400
-    assert message == ["A share request already exists for the '#{params[:email]}' email address for this camera."]
+    assert message == "A share request already exists for the '#{params[:email]}' email address for this camera. (#{params[:email]})"
   end
 
   test "POST /v1/cameras/:id/shares, invalid rights", context do
     params = %{
-      email: "abcxyz",
+      email: ["abcxyz"],
       rights: "abc,list"
     }
     response =
@@ -149,11 +150,11 @@ defmodule EvercamMedia.CameraShareControllerTest do
     message =
       response.resp_body
       |> Poison.decode!
-      |> Map.get("message")
-      |> Map.get("rights")
+      |> Map.get("errors")
+      |> List.first
+      |> Map.get("text")
 
-    assert response.status == 400
-    assert message == ["Invalid rights specified in request."]
+    assert message == "Invalid rights specified in request. (#{params[:email]})"
   end
 
   test "PATCH /v1/cameras/:id/shares, return share when valid params", context do
