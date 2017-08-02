@@ -48,6 +48,7 @@ defmodule EvercamMedia.Router do
     options "/vendors/:id", VendorController, :show
 
     post "/users", UserController, :create
+    post "/users/exist/:input", UserController, :user_exist
 
     get "/public/cameras", PublicController, :index
 

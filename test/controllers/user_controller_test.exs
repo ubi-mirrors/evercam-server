@@ -129,4 +129,32 @@ defmodule EvercamMedia.UserControllerTest do
     assert updated_user["firstname"] == "Doe"
     assert updated_user["lastname"] == "John"
   end
+
+  test "POST /v1/users/exist/:input when user is present with the given email or username" do
+    response =
+      build_conn()
+      |> post("/v1/users/exist/johndoe")
+
+    user =
+      response.resp_body
+      |> Poison.decode!
+      |> Map.get("user")
+
+    assert response.status == 201
+    assert user == true
+  end
+
+  test "POST /v1/users/exist/:input when user is not present with the given email or username" do
+    response =
+      build_conn()
+      |> post("/v1/users/exist/jhonydoe")
+
+    user =
+      response.resp_body
+      |> Poison.decode!
+      |> Map.get("user")
+
+    assert response.status == 404
+    assert user == false
+  end
 end

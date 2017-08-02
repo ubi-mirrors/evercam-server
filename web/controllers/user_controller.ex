@@ -114,6 +114,19 @@ defmodule EvercamMedia.UserController do
     end
   end
 
+  def user_exist(conn, %{"input" => input} = _params) do
+    with %User{} <- User.by_username_or_email(input) do
+      conn
+      |> put_status(201)
+      |> json(%{user: true})
+    else
+      nil ->
+        conn
+        |> put_status(404)
+        |> json(%{user: false})
+    end
+  end
+
   def ensure_application(conn, token) when token in [nil, ""], do: render_error(conn, 400, "Invalid token.")
   def ensure_application(conn, token) do
     cond do
