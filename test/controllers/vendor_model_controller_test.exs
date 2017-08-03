@@ -1,6 +1,6 @@
 defmodule EvercamMedia.VendorModelControllerTest do
   use EvercamMediaWeb.ConnCase
-  import EvercamMedia.VendorModelView, only: [render: 2]
+  import EvercamMediaWeb.VendorModelView, only: [render: 2]
 
   setup do
     vendor = Repo.insert!(%Vendor{exid: "vendor0", name: "Vendor XYZ", known_macs: []})
