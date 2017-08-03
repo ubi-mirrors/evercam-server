@@ -1,5 +1,5 @@
 defmodule EvercamMedia.ONVIFControllerErrorsTest do
-  use EvercamMedia.ConnCase
+  use EvercamMediaWeb.ConnCase
   use ExVCR.Mock, adapter: ExVCR.Adapter.Hackney, options: [clear_mock: true]
   import EvercamMedia.ConnCase ,only: [parse_onvif_error_type: 1]
 

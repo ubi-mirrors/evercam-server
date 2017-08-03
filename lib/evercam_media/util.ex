@@ -63,14 +63,14 @@ defmodule EvercamMedia.Util do
   end
 
   def broadcast_snapshot(camera_exid, image, timestamp) do
-    EvercamMedia.Endpoint.broadcast(
+    EvercamMediaWeb.Endpoint.broadcast(
       "cameras:#{camera_exid}",
       "snapshot-taken",
       %{image: Base.encode64(image), timestamp: timestamp})
   end
 
   def broadcast_camera_status(camera_exid, status, username) do
-    EvercamMedia.Endpoint.broadcast(
+    EvercamMediaWeb.Endpoint.broadcast(
       "users:#{username}",
       "camera-status-changed",
       %{camera_id: camera_exid, status: status})

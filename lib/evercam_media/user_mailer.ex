@@ -11,8 +11,8 @@ defmodule EvercamMedia.UserMailer do
       subject: "Cloud Recording has been updated for \"#{camera.name}\"",
       from: @from,
       bcc: "vinnie@evercam.io",
-      html: Phoenix.View.render_to_string(EvercamMedia.EmailView, "cr_settings_changed.html", camera: camera, current_user: current_user, cloud_recording: cloud_recording, old_cloud_recording: old_cloud_recording, user_request_ip: user_request_ip, year: @year),
-      text: Phoenix.View.render_to_string(EvercamMedia.EmailView, "cr_settings_changed.txt", camera: camera, current_user: current_user, cloud_recording: cloud_recording, old_cloud_recording: old_cloud_recording, user_request_ip: user_request_ip)
+      html: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "cr_settings_changed.html", camera: camera, current_user: current_user, cloud_recording: cloud_recording, old_cloud_recording: old_cloud_recording, user_request_ip: user_request_ip, year: @year),
+      text: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "cr_settings_changed.txt", camera: camera, current_user: current_user, cloud_recording: cloud_recording, old_cloud_recording: old_cloud_recording, user_request_ip: user_request_ip)
   end
 
   def confirm(user, code) do
@@ -20,8 +20,8 @@ defmodule EvercamMedia.UserMailer do
       to: user.email,
       subject: "Evercam Confirmation",
       from: @from,
-      html: Phoenix.View.render_to_string(EvercamMedia.EmailView, "confirm.html", user: user, code: code, year: @year),
-      text: Phoenix.View.render_to_string(EvercamMedia.EmailView, "confirm.txt", user: user, code: code)
+      html: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "confirm.html", user: user, code: code, year: @year),
+      text: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "confirm.txt", user: user, code: code)
   end
 
   def camera_status(status, _user, camera) do
@@ -36,8 +36,8 @@ defmodule EvercamMedia.UserMailer do
         subject: "\"#{camera.name}\" camera is now #{status}",
         from: @from,
         attachments: get_attachments(thumbnail),
-        html: Phoenix.View.render_to_string(EvercamMedia.EmailView, "#{status}.html", user: email, camera: camera, thumbnail_available: !!thumbnail, year: @year, current_time: current_time),
-        text: Phoenix.View.render_to_string(EvercamMedia.EmailView, "#{status}.txt", user: email, camera: camera)
+        html: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "#{status}.html", user: email, camera: camera, thumbnail_available: !!thumbnail, year: @year, current_time: current_time),
+        text: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "#{status}.txt", user: email, camera: camera)
     end)
   end
 
@@ -58,8 +58,8 @@ defmodule EvercamMedia.UserMailer do
         subject: "#{subject} reminder: \"#{camera.name}\" camera has gone offline",
         from: @from,
         attachments: get_attachments(thumbnail),
-        html: Phoenix.View.render_to_string(EvercamMedia.EmailView, "offline.html", user: email, camera: camera, thumbnail_available: !!thumbnail, year: @year, current_time: current_time),
-        text: Phoenix.View.render_to_string(EvercamMedia.EmailView, "offline.txt", user: email, camera: camera)
+        html: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "offline.html", user: email, camera: camera, thumbnail_available: !!thumbnail, year: @year, current_time: current_time),
+        text: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "offline.txt", user: email, camera: camera)
     end)
   end
 
@@ -72,8 +72,8 @@ defmodule EvercamMedia.UserMailer do
       "h:Reply-To": user.email,
       bcc: user.email,
       attachments: get_attachments(thumbnail),
-      html: Phoenix.View.render_to_string(EvercamMedia.EmailView, "camera_shared_notification.html", user: user, camera: camera, message: message, thumbnail_available: !!thumbnail, year: @year),
-      text: Phoenix.View.render_to_string(EvercamMedia.EmailView, "camera_shared_notification.txt", user: user, camera: camera, message: message)
+      html: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "camera_shared_notification.html", user: user, camera: camera, message: message, thumbnail_available: !!thumbnail, year: @year),
+      text: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "camera_shared_notification.txt", user: user, camera: camera, message: message)
   end
 
   def camera_share_request_notification(user, camera, email, message, key) do
@@ -85,8 +85,8 @@ defmodule EvercamMedia.UserMailer do
       "h:Reply-To": user.email,
       bcc: "#{user.email},marco@evercam.io,vinnie@evercam.io,aine@evercam.io",
       attachments: get_attachments(thumbnail),
-      html: Phoenix.View.render_to_string(EvercamMedia.EmailView, "sign_up_to_share_email.html", user: user, camera: camera, message: message, key: key, sharee: email, thumbnail_available: !!thumbnail, year: @year),
-      text: Phoenix.View.render_to_string(EvercamMedia.EmailView, "sign_up_to_share_email.txt", user: user, camera: camera, message: message, key: key)
+      html: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "sign_up_to_share_email.html", user: user, camera: camera, message: message, key: key, sharee: email, thumbnail_available: !!thumbnail, year: @year),
+      text: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "sign_up_to_share_email.txt", user: user, camera: camera, message: message, key: key)
   end
 
   def accepted_share_request_notification(user, camera, email) do
@@ -96,8 +96,8 @@ defmodule EvercamMedia.UserMailer do
       subject: "#{email} has accepted your request to view your camera",
       from: @from,
       attachments: get_attachments(thumbnail),
-      html: Phoenix.View.render_to_string(EvercamMedia.EmailView, "accepted_share_request.html", user: user, camera: camera, sharee: email, thumbnail_available: !!thumbnail, year: @year),
-      text: Phoenix.View.render_to_string(EvercamMedia.EmailView, "accepted_share_request.txt", user: user, camera: camera, sharee: email)
+      html: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "accepted_share_request.html", user: user, camera: camera, sharee: email, thumbnail_available: !!thumbnail, year: @year),
+      text: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "accepted_share_request.txt", user: user, camera: camera, sharee: email)
   end
 
   def revoked_share_request_notification(user, camera, email) do
@@ -108,8 +108,8 @@ defmodule EvercamMedia.UserMailer do
       from: @from,
       bcc: "marco@evercam.io,vinnie@evercam.io,aine@evercam.io",
       attachments: get_attachments(thumbnail),
-      html: Phoenix.View.render_to_string(EvercamMedia.EmailView, "revoke_share_request.html", user: user, camera: camera, sharee: email, thumbnail_available: !!thumbnail, year: @year),
-      text: Phoenix.View.render_to_string(EvercamMedia.EmailView, "revoke_share_request.txt", user: user, camera: camera, sharee: email)
+      html: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "revoke_share_request.html", user: user, camera: camera, sharee: email, thumbnail_available: !!thumbnail, year: @year),
+      text: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "revoke_share_request.txt", user: user, camera: camera, sharee: email)
   end
 
   def camera_create_notification(user, camera) do
@@ -120,8 +120,8 @@ defmodule EvercamMedia.UserMailer do
       from: @from,
       bcc: "marco@evercam.io,vinnie@evercam.io,aine@evercam.io",
       attachments: get_attachments(thumbnail),
-      html: Phoenix.View.render_to_string(EvercamMedia.EmailView, "camera_create_notification.html", user: user, camera: camera, thumbnail_available: !!thumbnail, year: @year),
-      text: Phoenix.View.render_to_string(EvercamMedia.EmailView, "camera_create_notification.txt", user: user, camera: camera)
+      html: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "camera_create_notification.html", user: user, camera: camera, thumbnail_available: !!thumbnail, year: @year),
+      text: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "camera_create_notification.txt", user: user, camera: camera)
   end
 
   def archive_completed(archive, email) do
@@ -131,8 +131,8 @@ defmodule EvercamMedia.UserMailer do
       subject: "Archive #{archive.title} is ready.",
       from: @from,
       attachments: get_attachments(thumbnail),
-      html: Phoenix.View.render_to_string(EvercamMedia.EmailView, "archive_create_completed.html", archive: archive, thumbnail_available: !!thumbnail, year: @year),
-      text: Phoenix.View.render_to_string(EvercamMedia.EmailView, "archive_create_completed.txt", archive: archive, thumbnail_available: !!thumbnail, year: @year)
+      html: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "archive_create_completed.html", archive: archive, thumbnail_available: !!thumbnail, year: @year),
+      text: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "archive_create_completed.txt", archive: archive, thumbnail_available: !!thumbnail, year: @year)
   end
 
   def archive_failed(archive, email) do
@@ -142,8 +142,8 @@ defmodule EvercamMedia.UserMailer do
       subject: "Archive #{archive.title} is failed.",
       from: @from,
       attachments: get_attachments(thumbnail),
-      html: Phoenix.View.render_to_string(EvercamMedia.EmailView, "archive_create_failed.html", archive: archive, thumbnail_available: !!thumbnail, year: @year),
-      text: Phoenix.View.render_to_string(EvercamMedia.EmailView, "archive_create_failed.txt", archive: archive, thumbnail_available: !!thumbnail, year: @year)
+      html: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "archive_create_failed.html", archive: archive, thumbnail_available: !!thumbnail, year: @year),
+      text: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "archive_create_failed.txt", archive: archive, thumbnail_available: !!thumbnail, year: @year)
   end
 
   def snapmail(id, notify_time, recipients, camera_images) do
@@ -156,8 +156,8 @@ defmodule EvercamMedia.UserMailer do
         subject: "Your Scheduled SnapMail @ #{notify_time}",
         from: @from,
         attachments: attachments,
-        html: Phoenix.View.render_to_string(EvercamMedia.EmailView, "snapmail.html", id: id, recipient: recipient, notify_time: notify_time, camera_images: camera_images, year: @year),
-        text: Phoenix.View.render_to_string(EvercamMedia.EmailView, "snapmail.txt", id: id, recipient: recipient, notify_time: notify_time, camera_images: camera_images, year: @year)
+        html: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "snapmail.html", id: id, recipient: recipient, notify_time: notify_time, camera_images: camera_images, year: @year),
+        text: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "snapmail.txt", id: id, recipient: recipient, notify_time: notify_time, camera_images: camera_images, year: @year)
     end)
   end
 

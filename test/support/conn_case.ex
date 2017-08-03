@@ -1,4 +1,4 @@
-defmodule EvercamMedia.ConnCase do
+defmodule EvercamMediaWeb.ConnCase do
   @moduledoc """
   This module defines the test case to be used by
   tests that require setting up a connection.
@@ -28,10 +28,10 @@ defmodule EvercamMedia.ConnCase do
       import Ecto.Query, only: [from: 2]
 
       # Import URL helpers from the router
-      import EvercamMedia.Router.Helpers
+      import EvercamMediaWeb.Router.Helpers
 
       # The default endpoint for testing
-      @endpoint EvercamMedia.Endpoint
+      @endpoint EvercamMediaWeb.Endpoint
     end
   end
 

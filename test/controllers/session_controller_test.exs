@@ -1,3 +1,3 @@
 defmodule EvercamMedia.SessionControllerTest do
-  use EvercamMedia.ConnCase
+  use EvercamMediaWeb.ConnCase
 end

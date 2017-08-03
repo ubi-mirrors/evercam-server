@@ -1,5 +1,5 @@
 defmodule EvercamMedia.ONVIFPTZControllerTest do
-  use EvercamMedia.ConnCase
+  use EvercamMediaWeb.ConnCase
   use ExVCR.Mock, adapter: ExVCR.Adapter.Hackney, options: [clear_mock: true]
 
   @moduletag :onvif

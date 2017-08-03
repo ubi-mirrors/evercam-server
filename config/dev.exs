@@ -8,7 +8,7 @@ config :evercam_media,
 
 # For development, we disable any cache and enable
 # debugging and code reloading.
-config :evercam_media, EvercamMedia.Endpoint,
+config :evercam_media, EvercamMediaWeb.Endpoint,
   http: [port: 4000],
   debug_errors: true,
   code_reloader: true,

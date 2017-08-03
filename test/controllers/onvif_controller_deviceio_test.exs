@@ -1,5 +1,5 @@
 defmodule EvercamMedia.ONVIFControllerDeviceIOTest do
-  use EvercamMedia.ConnCase
+  use EvercamMediaWeb.ConnCase
   use ExVCR.Mock, adapter: ExVCR.Adapter.Hackney, options: [clear_mock: true]
 
   @auth Application.get_env(:evercam_media, :dummy_auth)

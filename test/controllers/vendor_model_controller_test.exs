@@ -1,5 +1,5 @@
 defmodule EvercamMedia.VendorModelControllerTest do
-  use EvercamMedia.ConnCase
+  use EvercamMediaWeb.ConnCase
   import EvercamMedia.VendorModelView, only: [render: 2]
 
   setup do

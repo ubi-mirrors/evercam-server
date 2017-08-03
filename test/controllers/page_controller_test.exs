@@ -1,5 +1,5 @@
 defmodule EvercamMedia.PageControllerTest do
-  use EvercamMedia.ConnCase
+  use EvercamMediaWeb.ConnCase
 
   test "GET /" do
     conn = get build_conn(), "/"
