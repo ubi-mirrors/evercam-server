@@ -26,7 +26,7 @@ defmodule EvercamMedia.UserMailer do
 
   def camera_status(status, _user, camera) do
     timezone = camera |> Camera.get_timezone
-    current_time = Calendar.DateTime.now_utc |> Calendar.DateTime.shift_zone!(timezone) |> Calendar.Strftime.strftime!("%A, %d %b %Y %l:%M %p")
+    current_time = Calendar.DateTime.now_utc |> Calendar.DateTime.shift_zone!(timezone) |> Calendar.Strftime.strftime!("%A, %d %b %Y %H:%M")
     thumbnail = get_thumbnail(camera)
     camera.alert_emails
     |> String.split(",", trim: true)
@@ -48,7 +48,7 @@ defmodule EvercamMedia.UserMailer do
       |> Ecto.DateTime.to_erl
       |> Calendar.DateTime.from_erl!("UTC")
       |> Calendar.DateTime.shift_zone!(timezone)
-      |> Calendar.Strftime.strftime!("%A, %d %b %Y %l:%M %p")
+      |> Calendar.Strftime.strftime!("%A, %d %b %Y %H:%M")
     thumbnail = get_thumbnail(camera)
     camera.alert_emails
     |> String.split(",", trim: true)
