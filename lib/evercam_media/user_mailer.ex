@@ -2,7 +2,7 @@ defmodule EvercamMedia.UserMailer do
   alias EvercamMedia.Snapshot.Storage
 
   @config Application.get_env(:evercam_media, :mailgun)
-  @from Application.get_env(:evercam_media, EvercamMedia.Endpoint)[:email]
+  @from Application.get_env(:evercam_media, EvercamMediaWeb.Endpoint)[:email]
   @year Calendar.DateTime.now_utc |> Calendar.Strftime.strftime!("%Y")
 
   def cr_settings_changed(current_user, camera, cloud_recording, old_cloud_recording, user_request_ip) do
