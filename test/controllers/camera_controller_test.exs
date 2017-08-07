@@ -1,5 +1,5 @@
 defmodule EvercamMedia.CameraControllerTest do
-  use EvercamMedia.ConnCase
+  use EvercamMediaWeb.ConnCase
   alias EvercamMedia.Snapshot.Storage
 
   setup context do

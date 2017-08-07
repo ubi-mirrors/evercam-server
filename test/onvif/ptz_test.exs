@@ -1,7 +1,7 @@
 defmodule PTZTest do
   use ExUnit.Case
   use ExVCR.Mock, adapter: ExVCR.Adapter.Hackney, options: [clear_mock: true]
-  import EvercamMedia.ConnCase ,only: [parse_onvif_error_type: 1]
+  import EvercamMediaWeb.ConnCase ,only: [parse_onvif_error_type: 1]
   alias EvercamMedia.ONVIFPTZ
 
   @auth Application.get_env(:evercam_media, :dummy_auth)

@@ -18,7 +18,7 @@ defmodule EvercamMedia do
       worker(ConCache, [[ttl_check: :timer.hours(2), ttl: :timer.hours(24)], [name: :camera_thumbnail]], id: :camera_thumbnail),
       worker(ConCache, [[ttl_check: :timer.hours(2), ttl: :timer.hours(24)], [name: :current_camera_status]], id: :current_camera_status),
       supervisor(EvercamMedia.Repo, []),
-      supervisor(EvercamMedia.Endpoint, []),
+      supervisor(EvercamMediaWeb.Endpoint, []),
       supervisor(EvercamMedia.SnapshotRepo, []),
       supervisor(EvercamMedia.Snapshot.Storage.Export.PoolSupervisor, []),
       supervisor(EvercamMedia.Snapshot.Storage.Export.Supervisor, []),
@@ -40,7 +40,7 @@ defmodule EvercamMedia do
   # Tell Phoenix to update the endpoint configuration
   # whenever the application is updated.
   def config_change(changed, _new, removed) do
-    EvercamMedia.Endpoint.config_change(changed, removed)
+    EvercamMediaWeb.Endpoint.config_change(changed, removed)
     :ok
   end
 end

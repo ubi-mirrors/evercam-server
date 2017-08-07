@@ -6,7 +6,7 @@ use Mix.Config
 #
 # You should also configure the url host to something
 # meaningful, we use this information when generating URLs.
-config :evercam_media, EvercamMedia.Endpoint,
+config :evercam_media, EvercamMediaWeb.Endpoint,
   check_origin: false,
   http: [port: 4000],
   url: [host: "media.evercam.io"],

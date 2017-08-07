@@ -59,8 +59,8 @@ defmodule EvercamMedia.Mixfile do
   ]
 
   # Specifies which paths to compile per environment
-  defp elixirc_paths(:test), do: ["lib", "web", "test/support"]
-  defp elixirc_paths(_),     do: ["lib", "web"]
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_),     do: ["lib"]
 
   defp deps do
     [
@@ -77,7 +77,7 @@ defmodule EvercamMedia.Mixfile do
       {:httpoison, "== 0.11.1", override: true},
       {:jsx, "~> 2.8.2", override: true},
       {:mailgun, github: "evercam/mailgun"},
-      {:phoenix, "~> 1.2.4"},
+      {:phoenix, "~> 1.3.0", override: true},
       {:phoenix_ecto, "~> 3.2.3"},
       {:phoenix_html, "~> 2.9.3"},
       {:porcelain, "~> 2.0.3"},

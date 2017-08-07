@@ -1,6 +1,6 @@
 defmodule EvercamMedia.UserControllerTest do
   alias EvercamMedia.Util
-  use EvercamMedia.ConnCase
+  use EvercamMediaWeb.ConnCase
 
   setup do
     country = Repo.insert!(%Country{name: "Something", iso3166_a2: "smt"})

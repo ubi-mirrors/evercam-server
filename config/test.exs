@@ -8,7 +8,7 @@ config :evercam_media,
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
-config :evercam_media, EvercamMedia.Endpoint,
+config :evercam_media, EvercamMediaWeb.Endpoint,
   http: [port: 4001],
   server: false,
   email: "evercam.io <env.test@evercam.io>"

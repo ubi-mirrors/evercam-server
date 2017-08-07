@@ -1,5 +1,5 @@
 defmodule EvercamMedia.ONVIFPTZControllerExternalTest do
-  use EvercamMedia.ConnCase
+  use EvercamMediaWeb.ConnCase
 
   @moduletag :onvif
   @moduletag :external
