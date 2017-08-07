@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.PageController do
-  use EvercamMedia.Web, :controller
+  use EvercamMediaWeb, :controller
 
   def index(conn, _params) do
     redirect conn, external: "http://www.evercam.io"

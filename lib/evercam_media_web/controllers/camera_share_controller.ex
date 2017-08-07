@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.CameraShareController do
-  use EvercamMedia.Web, :controller
+  use EvercamMediaWeb, :controller
   alias EvercamMediaWeb.CameraShareView
   alias EvercamMedia.Intercom
 

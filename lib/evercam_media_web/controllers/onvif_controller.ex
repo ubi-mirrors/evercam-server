@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.ONVIFController do
-  use EvercamMedia.Web, :controller
+  use EvercamMediaWeb, :controller
   alias EvercamMedia.ONVIFClient
 
   def invoke(conn, %{"service" => service, "operation" => operation}) do

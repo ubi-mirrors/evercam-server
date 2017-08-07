@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.UserView do
-  use EvercamMedia.Web, :view
+  use EvercamMediaWeb, :view
   alias EvercamMedia.Util
 
   def render("show.json", %{user: user}) do

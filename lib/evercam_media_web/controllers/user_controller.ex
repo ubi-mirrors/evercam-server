@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.UserController do
-  use EvercamMedia.Web, :controller
+  use EvercamMediaWeb, :controller
   alias EvercamMediaWeb.UserView
   alias EvercamMediaWeb.LogView
   alias EvercamMediaWeb.ErrorView

@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.SnapmailController do
-  use EvercamMedia.Web, :controller
+  use EvercamMediaWeb, :controller
   alias EvercamMediaWeb.SnapmailView
   alias EvercamMedia.Snapmail.SnapmailerSupervisor
 

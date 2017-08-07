@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.StreamController do
-  use EvercamMedia.Web, :controller
+  use EvercamMediaWeb, :controller
 
   @hls_dir "/tmp/hls"
   @hls_url Application.get_env(:evercam_media, :hls_url)

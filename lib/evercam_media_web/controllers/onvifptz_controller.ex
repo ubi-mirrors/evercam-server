@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.ONVIFPTZController do
-  use EvercamMedia.Web, :controller
+  use EvercamMediaWeb, :controller
   alias EvercamMedia.ONVIFPTZ
 
   def status(conn, _params) do

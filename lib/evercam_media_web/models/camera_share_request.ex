@@ -1,5 +1,5 @@
 defmodule CameraShareRequest do
-  use EvercamMedia.Web, :model
+  use EvercamMediaWeb, :model
   import Ecto.Query
   import CameraShare, only: [validate_rights: 1]
   alias EvercamMedia.Repo

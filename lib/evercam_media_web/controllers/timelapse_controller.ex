@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.TimelapseController do
-  use EvercamMedia.Web, :controller
+  use EvercamMediaWeb, :controller
   alias EvercamMediaWeb.TimelapseView
   alias EvercamMedia.Timelapse.TimelapserSupervisor
 

@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.MotionDetectionView do
-  use EvercamMedia.Web, :view
+  use EvercamMediaWeb, :view
 
   def render("show.json", %{motion_detection: nil}), do: %{motion_detections: []}
   def render("show.json", %{motion_detection: motion_detection}) do

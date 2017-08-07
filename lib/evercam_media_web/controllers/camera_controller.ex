@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.CameraController do
-  use EvercamMedia.Web, :controller
+  use EvercamMediaWeb, :controller
   alias EvercamMediaWeb.CameraView
   alias EvercamMediaWeb.ErrorView
   alias EvercamMedia.Repo

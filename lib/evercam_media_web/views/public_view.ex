@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.PublicView do
-  use EvercamMedia.Web, :view
+  use EvercamMediaWeb, :view
   alias EvercamMedia.Util
 
   def render("index.json", %{cameras: cameras, total_pages: total_pages, count: count}) do

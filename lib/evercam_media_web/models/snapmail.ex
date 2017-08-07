@@ -1,5 +1,5 @@
 defmodule Snapmail do
-  use EvercamMedia.Web, :model
+  use EvercamMediaWeb, :model
   import Ecto.Changeset
   import Ecto.Query
   alias EvercamMedia.Repo

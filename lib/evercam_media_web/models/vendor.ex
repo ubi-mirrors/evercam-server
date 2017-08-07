@@ -1,5 +1,5 @@
 defmodule Vendor do
-  use EvercamMedia.Web, :model
+  use EvercamMediaWeb, :model
   import Ecto.Query
   alias EvercamMedia.Repo
 

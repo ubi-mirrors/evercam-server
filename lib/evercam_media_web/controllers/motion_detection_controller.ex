@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.MotionDetectionController do
-  use EvercamMedia.Web, :controller
+  use EvercamMediaWeb, :controller
 
   def show(conn, %{"id" => camera_exid}) do
     caller = conn.assigns[:current_user]

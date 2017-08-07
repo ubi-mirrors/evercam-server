@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.VendorModelController do
-  use EvercamMedia.Web, :controller
+  use EvercamMediaWeb, :controller
   alias EvercamMediaWeb.VendorModelView
   import String, only: [to_integer: 1]
 

@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.CloudRecordingController do
-  use EvercamMedia.Web, :controller
+  use EvercamMediaWeb, :controller
   alias EvercamMediaWeb.ErrorView
   alias EvercamMedia.Snapshot.WorkerSupervisor
   import EvercamMedia.Validation.CloudRecording

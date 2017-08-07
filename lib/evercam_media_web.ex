@@ -1,4 +1,4 @@
-defmodule EvercamMedia.Web do
+defmodule EvercamMediaWeb do
   @moduledoc """
   A module that keeps using definitions for controllers,
   views and so on.

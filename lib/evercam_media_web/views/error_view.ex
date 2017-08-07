@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.ErrorView do
-  use EvercamMedia.Web, :view
+  use EvercamMediaWeb, :view
 
   def render("error.json", %{message: message}) do
     %{

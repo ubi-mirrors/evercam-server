@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.CloudRecordingView do
-  use EvercamMedia.Web, :view
+  use EvercamMediaWeb, :view
 
   def render("show.json", %{cloud_recording: cloud_recording}) do
     %{cloud_recordings: cloud_recording}

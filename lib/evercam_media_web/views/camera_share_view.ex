@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.CameraShareView do
-  use EvercamMedia.Web, :view
+  use EvercamMediaWeb, :view
   alias EvercamMedia.Util
 
   def render("index.json", %{camera_shares: camera_shares, camera: camera, user: user}) do

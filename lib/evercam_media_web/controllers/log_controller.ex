@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.LogController do
-  use EvercamMedia.Web, :controller
+  use EvercamMediaWeb, :controller
   import EvercamMedia.Validation.Log
   import Ecto.Query
   alias EvercamMediaWeb.ErrorView

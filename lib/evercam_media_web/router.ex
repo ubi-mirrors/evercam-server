@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.Router do
-  use EvercamMedia.Web, :router
+  use EvercamMediaWeb, :router
 
   pipeline :browser do
     plug :accepts, ["html", "json", "jpg"]

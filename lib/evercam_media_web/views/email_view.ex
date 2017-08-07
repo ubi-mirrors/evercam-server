@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.EmailView do
-  use EvercamMedia.Web, :view
+  use EvercamMediaWeb, :view
 
   def full_name(user) do
     "#{user.firstname} #{user.lastname}"

@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.SnapmailView do
-  use EvercamMedia.Web, :view
+  use EvercamMediaWeb, :view
   alias EvercamMedia.Util
 
   def render("index.json", %{snapmails: snapmails}) do

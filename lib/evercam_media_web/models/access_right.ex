@@ -1,5 +1,5 @@
 defmodule AccessRight do
-  use EvercamMedia.Web, :model
+  use EvercamMediaWeb, :model
   alias EvercamMedia.Repo
   import Ecto.Query
 

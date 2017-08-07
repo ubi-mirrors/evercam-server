@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.LogView do
-  use EvercamMedia.Web, :view
+  use EvercamMediaWeb, :view
   alias EvercamMedia.Util
 
   def render("show.json", %{total_pages: total_pages, camera_exid: camera_exid, camera_name: camera_name, logs: logs}) do

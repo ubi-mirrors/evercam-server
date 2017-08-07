@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.PublicController do
-  use EvercamMedia.Web, :controller
+  use EvercamMediaWeb, :controller
   alias EvercamMediaWeb.PublicView
 
   @default_distance 1000

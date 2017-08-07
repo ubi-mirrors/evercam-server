@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.VendorController do
-  use EvercamMedia.Web, :controller
+  use EvercamMediaWeb, :controller
   alias EvercamMediaWeb.VendorView
   alias EvercamMediaWeb.ErrorView
 

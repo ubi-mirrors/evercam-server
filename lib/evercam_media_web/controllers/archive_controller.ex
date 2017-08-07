@@ -1,5 +1,5 @@
 defmodule EvercamMediaWeb.ArchiveController do
-  use EvercamMedia.Web, :controller
+  use EvercamMediaWeb, :controller
   alias EvercamMediaWeb.ArchiveView
   alias EvercamMedia.Util
   import EvercamMedia.Snapshot.Storage, only: [delete_archive: 2]
