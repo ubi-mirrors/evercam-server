@@ -1,5 +1,6 @@
 defmodule EvercamMedia.UserMailer do
   alias EvercamMedia.Snapshot.Storage
+  alias EvercamMedia.Snapshot.CamClient
 
   @config Application.get_env(:evercam_media, :mailgun)
   @from Application.get_env(:evercam_media, EvercamMediaWeb.Endpoint)[:email]
@@ -27,7 +28,7 @@ defmodule EvercamMedia.UserMailer do
   def camera_status(status, _user, camera) do
     timezone = camera |> Camera.get_timezone
     current_time = Calendar.DateTime.now_utc |> Calendar.DateTime.shift_zone!(timezone) |> Calendar.Strftime.strftime!("%A, %d %b %Y %H:%M")
-    thumbnail = get_thumbnail(camera)
+    thumbnail = get_thumbnail(camera, status)
     camera.alert_emails
     |> String.split(",", trim: true)
     |> Enum.each(fn(email) ->
@@ -161,7 +162,14 @@ defmodule EvercamMedia.UserMailer do
     end)
   end
 
-  defp get_thumbnail(camera) do
+  defp get_thumbnail(camera, status \\ "")
+  defp get_thumbnail(camera, "online") do
+    case camera |> construct_args |> fetch_snapshot do
+      {:ok, data} -> data
+      {:error, _error} -> try_get_thumbnail(camera, 3)
+    end
+  end
+  defp get_thumbnail(camera, _status) do
     try_get_thumbnail(camera, 1)
   end
 
@@ -192,5 +200,26 @@ defmodule EvercamMedia.UserMailer do
       end
     end)
     |> Enum.reject(fn(content) -> content == nil end)
+  end
+
+  defp fetch_snapshot(args, attempt \\ 1) do
+    response = CamClient.fetch_snapshot(args)
+
+    case {response, attempt} do
+      {{:error, _error}, attempt} when attempt <= 3 ->
+        fetch_snapshot(args, attempt + 1)
+      _ -> response
+    end
+  end
+
+  defp construct_args(camera) do
+    %{
+      camera_exid: camera.exid,
+      is_online: camera.is_online,
+      url: Camera.snapshot_url(camera),
+      username: Camera.username(camera),
+      password: Camera.password(camera),
+      vendor_exid: Camera.get_vendor_attr(camera, :exid)
+    }
   end
 end
