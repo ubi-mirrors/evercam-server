@@ -97,24 +97,60 @@ defmodule EvercamMediaWeb.CameraController do
 
   def update(conn, %{"id" => exid} = params) do
     caller = conn.assigns[:current_user]
-    camera = Camera.get_full(exid)
+    old_camera = Camera.get_full(exid)
 
-    with :ok <- camera_exists(conn, exid, camera),
-         :ok <- user_has_rights(conn, caller, camera)
+    with :ok <- camera_exists(conn, exid, old_camera),
+         :ok <- user_has_rights(conn, caller, old_camera)
     do
-      camera_changeset = camera_update_changeset(camera, params, caller.email)
-      case Repo.update(camera_changeset) do
-        {:ok, camera} ->
-          Camera.invalidate_camera(camera)
-          camera = Camera.get_full(camera.exid)
-          CameraActivity.log_activity(caller, camera, "edited", %{ip: user_request_ip(conn), agent: get_user_agent(conn)})
-          update_camera_worker(Application.get_env(:evercam_media, :run_spawn), camera.exid)
-          conn
-          |> render("show.json", %{camera: camera, user: caller})
-        {:error, changeset} ->
-          render_error(conn, 400, Util.parse_changeset(changeset))
+      camera_changeset = camera_update_changeset(old_camera, params, caller.email)
+      with true <- camera_changeset.changes == %{} do
+        conn
+        |> render("show.json", %{camera: old_camera, user: caller})
+      else
+        false ->
+          case Repo.update(camera_changeset) do
+            {:ok, camera} ->
+              Camera.invalidate_camera(camera)
+              camera = Camera.get_full(camera.exid)
+              CameraActivity.log_activity(caller, camera, "edited",
+                %{
+                  ip: user_request_ip(conn),
+                  agent: get_user_agent(conn),
+                  cam_settings: add_settings_key(old_camera, camera, camera_changeset.changes)
+                }
+              )
+              update_camera_worker(Application.get_env(:evercam_media, :run_spawn), camera.exid)
+              conn
+              |> render("show.json", %{camera: camera, user: caller})
+            {:error, changeset} ->
+              render_error(conn, 400, Util.parse_changeset(changeset))
+          end
       end
     end
+  end
+
+  defp add_settings_key(old_camera, camera, changes) do
+    case Map.has_key?(changes, :config) do
+      true ->
+        %{
+          old: set_settings(old_camera),
+          new: set_settings(camera)
+        }
+      false ->
+        false
+    end
+  end
+
+  defp set_settings(camera) do
+    %{
+      external_host: Util.deep_get(camera, [:config, "external_host"], ""),
+      external_http_port: Util.deep_get(camera, [:config, "external_http_port"], ""),
+      external_rtsp_port: Util.deep_get(camera, [:config, "external_rtsp_port"], ""),
+      snapshot_url: Util.deep_get(camera, [:config, "snapshots", "jpg"], ""),
+      auth: Util.deep_get(camera, [:config, "auth", "basic"], ""),
+      vendor_model_name: camera.vendor_model.name,
+      vendor_name: camera.vendor_model.vendor.name
+    }
   end
 
   def delete(conn, %{"id" => exid}) do

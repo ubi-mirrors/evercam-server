@@ -104,11 +104,7 @@ defmodule EvercamMedia.CameraControllerTest do
   test 'PATCH /v1/cameras/:id, returns success and the camera details when given valid parameters', context do
     camera_params = %{
       name: "Rename Camera",
-      external_host: "212.78.102.10",
-      external_rtsp_port: "8100",
-      external_http_port: "8100",
-      vendor: "hikvision",
-      is_public: "true"
+      is_public: true
     }
     response =
       build_conn()
@@ -124,8 +120,7 @@ defmodule EvercamMedia.CameraControllerTest do
     assert camera != nil
     assert camera["id"] == context[:camera].exid
     assert camera["name"] == camera_params[:name]
-    assert camera["external"]["host"] == camera_params[:external_host]
-    assert camera["external"]["http"]["port"] == camera_params[:external_http_port]
+    assert camera["is_public"] == camera_params[:is_public]
   end
 
   test 'PATCH /v1/cameras/:id, returns a not found error for a camera that does not exist', context do
