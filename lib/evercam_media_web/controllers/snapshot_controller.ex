@@ -8,7 +8,7 @@ defmodule EvercamMediaWeb.SnapshotController do
   alias EvercamMedia.Util
   alias EvercamMedia.Snapshot.WorkerSupervisor
 
-  @optional_params %{"notes" => nil, "with_data" => false}
+  @optional_params %{"notes" => nil}
 
   def live(conn, %{"id" => camera_exid}) do
     case snapshot_with_user(camera_exid, conn.assigns[:current_user], false) do
@@ -29,16 +29,12 @@ defmodule EvercamMediaWeb.SnapshotController do
     camera = Camera.get_full(camera_exid)
     with true <- Permission.Camera.can_snapshot?(user, camera)
     do
-      case {fetch_latest_snapshot(camera, params), params["with_data"]} do
-        {{200, response}, "true"} ->
+      case fetch_latest_snapshot(camera, params) do
+        {200, response} ->
           data = "data:image/jpeg;base64,#{Base.encode64(response[:image])}"
-
           conn
           |> json(%{created_at: response[:timestamp], notes: response[:notes], data: data})
-        {{200, response}, _} ->
-          conn
-          |> json(%{created_at: response[:timestamp], notes: response[:notes]})
-        {{code, response}, _} ->
+        {code, response} ->
           conn
           |> put_status(code)
           |> json(response)
