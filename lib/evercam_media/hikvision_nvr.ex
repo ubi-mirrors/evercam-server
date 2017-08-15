@@ -1,7 +1,6 @@
 defmodule EvercamMedia.HikvisionNVR do
   require Logger
   alias EvercamMedia.Snapshot.Storage
-  alias EvercamMedia.Repo
 
   @root_dir Application.get_env(:evercam_media, :storage_dir)
 
@@ -58,7 +57,7 @@ defmodule EvercamMedia.HikvisionNVR do
     archive_directory = "#{@root_dir}/archive/"
     File.mkdir_p(archive_directory)
     rtsp_url = "rtsp://#{username}:#{password}@#{ip}:#{port}/Streaming/tracks/#{channel}?starttime=#{starttime}&endtime=#{endtime}"
-    response = Porcelain.shell("ffmpeg -i '#{rtsp_url}' -f mp4 -vcodec copy -an #{archive_directory}#{archive.exid}.mp4", [err: :out]).out
+    Porcelain.shell("ffmpeg -i '#{rtsp_url}' -f mp4 -vcodec copy -an #{archive_directory}#{archive.exid}.mp4", [err: :out]).out
 
     case File.exists?("#{archive_directory}#{archive.exid}.mp4") do
       true ->
@@ -116,13 +115,6 @@ defmodule EvercamMedia.HikvisionNVR do
         save_temporary(chunk)
       _ -> :noop
     end
-  end
-
-  defp publish_stream() do
-    Process.sleep(10000)
-    path = "#{@root_dir}/stream/stream.mp4"
-    "ffmpeg -re -i #{path} -vcodec copy -acodec copy -f flv rtmp://localhost:1935/live/stream"
-    |> Porcelain.spawn_shell
   end
 
   defp kill_published_streams(camera_id, rtsp_url, archive_pids \\ []) do

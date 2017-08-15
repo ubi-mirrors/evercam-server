@@ -219,7 +219,7 @@ defmodule EvercamMediaWeb.ArchiveController do
       end
     end
   end
-  defp start_archive_creation(_mode, _camera, archive, _unix_from, _unix_to, _is_nvr), do: :noop
+  defp start_archive_creation(_mode, _camera, _archive, _unix_from, _unix_to, _is_nvr), do: :noop
 
   defp convert_timestamp(timestamp) do
     timestamp
