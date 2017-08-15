@@ -1,5 +1,7 @@
 defmodule EvercamMedia.HikvisionNVR do
   require Logger
+  alias EvercamMedia.Snapshot.Storage
+  alias EvercamMedia.Repo
 
   @root_dir Application.get_env(:evercam_media, :storage_dir)
 
@@ -40,8 +42,34 @@ defmodule EvercamMedia.HikvisionNVR do
 
   def stop(exid, host, port, username, password) do
     rtsp_url = "rtsp://#{username}:#{password}@#{host}:#{port}/Streaming/tracks/"
-    kill_published_streams(exid, rtsp_url)
+    archive_pids = ffmpeg_pids("#{@root_dir}/archive/")
+    kill_published_streams(exid, rtsp_url, archive_pids)
     {:ok}
+  end
+
+  def extract_clip_from_stream(camera, archive, starttime, endtime) do
+    ip = Camera.host(camera, "external")
+    port = Camera.port(camera, "external", "rtsp")
+    username = Camera.username(camera)
+    password = Camera.password(camera)
+    url = camera.vendor_model.h264_url
+    channel = url |> String.split("/channels/") |> List.last |> String.split("/") |> List.first
+    Archive.update_status(archive, Archive.archive_status.processing)
+    archive_directory = "#{@root_dir}/archive/"
+    File.mkdir_p(archive_directory)
+    rtsp_url = "rtsp://#{username}:#{password}@#{ip}:#{port}/Streaming/tracks/#{channel}?starttime=#{starttime}&endtime=#{endtime}"
+    response = Porcelain.shell("ffmpeg -i '#{rtsp_url}' -f mp4 -vcodec copy -an #{archive_directory}#{archive.exid}.mp4", [err: :out]).out
+
+    case File.exists?("#{archive_directory}#{archive.exid}.mp4") do
+      true ->
+        Storage.save_mp4(camera.exid, archive.exid, archive_directory)
+        File.rm_rf archive_directory
+        Archive.update_status(archive, Archive.archive_status.completed)
+        EvercamMedia.UserMailer.archive_completed(archive, archive.user.email)
+      _ ->
+        Archive.update_status(archive, Archive.archive_status.failed)
+        EvercamMedia.UserMailer.archive_failed(archive, archive.user.email)
+    end
   end
 
   def download_stream(host, port, username, password, url) do
@@ -97,9 +125,10 @@ defmodule EvercamMedia.HikvisionNVR do
     |> Porcelain.spawn_shell
   end
 
-  defp kill_published_streams(camera_id, rtsp_url) do
+  defp kill_published_streams(camera_id, rtsp_url, archive_pids \\ []) do
     rtsp_url
     |> ffmpeg_pids
+    |> Enum.reject(fn(pid) -> Enum.member?(archive_pids, pid) end)
     |> Enum.each(fn(pid) -> Porcelain.shell("kill -9 #{pid}") end)
     File.rm_rf!("/tmp/hls/#{camera_id}/")
   end

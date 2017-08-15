@@ -112,8 +112,10 @@ defmodule EvercamMediaWeb.ArchiveController do
 
   defp create_clip(params, camera, conn, current_user) do
     timezone = camera |> Camera.get_timezone
-    from_date = clip_date(params["from_date"], timezone)
-    to_date = clip_date(params["to_date"], timezone)
+    unix_from = params["from_date"]
+    unix_to = params["to_date"]
+    from_date = clip_date(unix_from, timezone)
+    to_date = clip_date(unix_to, timezone)
     clip_exid = generate_exid(params["title"])
 
     current_date_time =
@@ -157,9 +159,10 @@ defmodule EvercamMediaWeb.ArchiveController do
       true ->
         case Repo.insert(changeset) do
           {:ok, archive} ->
+            archive = archive |> Repo.preload(:camera) |> Repo.preload(:user)
             CameraActivity.log_activity(current_user, camera, "archive created", %{ip: user_request_ip(conn)})
-            start_archive_creation(Application.get_env(:evercam_media, :run_spawn), archive.exid)
-            render(conn |> put_status(:created), ArchiveView, "show.json", %{archive: archive |> Repo.preload(:camera) |> Repo.preload(:user)})
+            start_archive_creation(Application.get_env(:evercam_media, :run_spawn), camera, archive, unix_from, unix_to, params["is_nvr_archive"])
+            render(conn |> put_status(:created), ArchiveView, "show.json", %{archive: archive})
           {:error, changeset} ->
             render_error(conn, 400, Util.parse_changeset(changeset))
         end
@@ -200,18 +203,30 @@ defmodule EvercamMediaWeb.ArchiveController do
     end
   end
 
-  defp start_archive_creation(true, archive_id) do
+  defp start_archive_creation(true, camera, archive, unix_from, unix_to, is_nvr) when is_nvr in [true, "true"] do
+    spawn fn ->
+      EvercamMedia.HikvisionNVR.extract_clip_from_stream(camera, archive, convert_timestamp(unix_from), convert_timestamp(unix_to))
+    end
+  end
+  defp start_archive_creation(true, _camera, archive, _unix_from, _unix_to, _is_nvr) do
     spawn fn ->
       case Process.whereis(:archive_creator) do
         nil ->
           {:ok, pid} = GenStage.start_link(EvercamMedia.ArchiveCreator.ArchiveCreator, {}, name: :archive_creator)
-          GenStage.cast(pid, {:create_archive, archive_id})
+          GenStage.cast(pid, {:create_archive, archive.exid})
         pid ->
-          GenStage.cast(pid, {:create_archive, archive_id})
+          GenStage.cast(pid, {:create_archive, archive.exid})
       end
     end
   end
-  defp start_archive_creation(_mode, _archive_id), do: :noop
+  defp start_archive_creation(_mode, _camera, archive, _unix_from, _unix_to, _is_nvr), do: :noop
+
+  defp convert_timestamp(timestamp) do
+    timestamp
+    |> String.to_integer
+    |> Calendar.DateTime.Parse.unix!
+    |> Calendar.Strftime.strftime!("%Y%m%dT%H%M%SZ")
+  end
 
   defp ensure_camera_exists(nil, exid, conn) do
     render_error(conn, 404, "Camera '#{exid}' not found!")
