@@ -5,11 +5,17 @@ defmodule EvercamMedia.HikvisionNVR do
   @root_dir Application.get_env(:evercam_media, :storage_dir)
 
   def publish_stream_from_rtsp(exid, host, port, username, password, channel, starttime, endtime) do
-    rtsp_url = "rtsp://#{username}:#{password}@#{host}:#{port}/Streaming/tracks/"
-    kill_published_streams(exid, rtsp_url)
-    "ffmpeg -rtsp_transport tcp -i '#{rtsp_url}#{channel}/?starttime=#{starttime}&endtime=#{endtime}' -f lavfi -i aevalsrc=0 -vcodec copy -acodec aac -map 0:0 -map 1:0 -shortest -strict experimental -f flv rtmp://localhost:1935/live/#{exid}"
-    |> Porcelain.spawn_shell
-    {:ok}
+    archive_pids = ffmpeg_pids("#{@root_dir}/#{host}#{port}/archive/")
+    with true <- is_creating_clip(archive_pids) do
+      {:stop}
+    else
+      false ->
+        rtsp_url = "rtsp://#{username}:#{password}@#{host}:#{port}/Streaming/tracks/"
+        kill_published_streams(exid, rtsp_url)
+        "ffmpeg -rtsp_transport tcp -i '#{rtsp_url}#{channel}/?starttime=#{starttime}&endtime=#{endtime}' -f lavfi -i aevalsrc=0 -vcodec copy -acodec aac -map 0:0 -map 1:0 -shortest -strict experimental -f flv rtmp://localhost:1935/live/#{exid}"
+        |> Porcelain.spawn_shell
+        {:ok}
+    end
   end
 
   def get_stream_urls(_exid, host, port, username, password, channel, starttime, endtime) do
@@ -41,7 +47,7 @@ defmodule EvercamMedia.HikvisionNVR do
 
   def stop(exid, host, port, username, password) do
     rtsp_url = "rtsp://#{username}:#{password}@#{host}:#{port}/Streaming/tracks/"
-    archive_pids = ffmpeg_pids("#{@root_dir}/archive/")
+    archive_pids = ffmpeg_pids("#{@root_dir}/#{host}#{port}/archive/")
     kill_published_streams(exid, rtsp_url, archive_pids)
     {:ok}
   end
@@ -54,7 +60,7 @@ defmodule EvercamMedia.HikvisionNVR do
     url = camera.vendor_model.h264_url
     channel = url |> String.split("/channels/") |> List.last |> String.split("/") |> List.first
     Archive.update_status(archive, Archive.archive_status.processing)
-    archive_directory = "#{@root_dir}/archive/"
+    archive_directory = "#{@root_dir}/#{ip}#{port}/archive/"
     File.mkdir_p(archive_directory)
     rtsp_url = "rtsp://#{username}:#{password}@#{ip}:#{port}/Streaming/tracks/"
     kill_published_streams(camera.exid, rtsp_url)
@@ -130,4 +136,7 @@ defmodule EvercamMedia.HikvisionNVR do
     Porcelain.shell("ps -ef | grep ffmpeg | grep '#{rtsp_url}' | grep -v grep | awk '{print $2}'").out
     |> String.split
   end
+
+  defp is_creating_clip([]), do: false
+  defp is_creating_clip(_pids), do: true
 end
