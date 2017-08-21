@@ -174,7 +174,10 @@ defmodule EvercamMediaWeb.CloudRecordingController do
 
           cond do
             Enum.count(starttime_list) > 0 ->
-              times_list = get_times_list(String.contains?(meta_data, "motion"), starttime_list, endtime_list)
+              times_list =
+                String.contains?(meta_data, "motion")
+                |> get_times_list(starttime_list, endtime_list)
+                |> get_off_times_list(convert_timestamp_to_rfc(endtime))
               json(conn, %{times_list: times_list})
             true ->
               render_error(conn, 404, "No recordings found")
@@ -208,14 +211,21 @@ defmodule EvercamMediaWeb.CloudRecordingController do
     end)
   end
 
+  defp get_off_times_list([], _endtime), do: []
+  defp get_off_times_list(times_list, endtime) do
+    last_recording_time = List.last(List.last(times_list))
+    endtime_str = endtime |> String.replace("T", " ") |> String.replace("Z", "")
+    times_list ++ [["#{last_recording_time}",0,"#{endtime_str}"]]
+  end
+
   defp get_timespan_chunk(starttime, endtime, times_list, seconds) when seconds > 0 do
     cond do
-      seconds > 299 ->
+      seconds > 59 ->
         starttime_str = starttime |> Calendar.Strftime.strftime!("%Y-%m-%d %H:%M:%S")
-        endtime_str = starttime |> Calendar.DateTime.advance!(299) |> Calendar.Strftime.strftime!("%Y-%m-%d %H:%M:%S")
+        endtime_str = starttime |> Calendar.DateTime.advance!(59) |> Calendar.Strftime.strftime!("%Y-%m-%d %H:%M:%S")
         times_list = times_list ++ [["#{starttime_str}",1,"#{endtime_str}"]]
-        adv_starttime = Calendar.DateTime.advance!(starttime, 300)
-        get_timespan_chunk(adv_starttime, endtime, times_list, seconds - 300)
+        adv_starttime = Calendar.DateTime.advance!(starttime, 60)
+        get_timespan_chunk(adv_starttime, endtime, times_list, seconds - 60)
       true ->
         starttime_str = starttime |> Calendar.Strftime.strftime!("%Y-%m-%d %H:%M:%S")
         endtime_str = endtime |> Calendar.Strftime.strftime!("%Y-%m-%d %H:%M:%S")
