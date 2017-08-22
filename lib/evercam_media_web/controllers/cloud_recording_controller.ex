@@ -178,6 +178,7 @@ defmodule EvercamMediaWeb.CloudRecordingController do
                 String.contains?(meta_data, "motion")
                 |> get_times_list(starttime_list, endtime_list)
                 |> get_off_times_list(convert_timestamp_to_rfc(endtime))
+                |> get_off_times_start(convert_timestamp_to_rfc(starttime))
               json(conn, %{times_list: times_list})
             true ->
               render_error(conn, 404, "No recordings found")
@@ -209,6 +210,16 @@ defmodule EvercamMediaWeb.CloudRecordingController do
 
       times_list ++ get_timespan_chunk(starttime, endtime, [], seconds)
     end)
+  end
+
+  defp get_off_times_start([], _starttime), do: []
+  defp get_off_times_start(times_list, starttime) do
+    last_recording_time = List.first(List.first(times_list))
+    starttime_str = starttime |> String.replace("T", " ") |> String.replace("Z", "")
+    cond do
+      starttime_str == last_recording_time -> times_list
+      true -> [["#{starttime_str}",0,"#{last_recording_time}"]] ++ times_list
+    end
   end
 
   defp get_off_times_list([], _endtime), do: []
