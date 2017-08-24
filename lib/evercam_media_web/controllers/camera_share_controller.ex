@@ -31,7 +31,7 @@ defmodule EvercamMediaWeb.CameraShareController do
   def create(conn, params) do
     caller = conn.assigns[:current_user]
     camera = Camera.get_full(params["id"])
-    email_array = params["email"]
+    email_array = ensure_list(params["email"])
 
     with :ok <- camera_exists(conn, params["id"], camera),
          :ok <- user_can_create_share(conn, caller, camera)
@@ -70,6 +70,13 @@ defmodule EvercamMediaWeb.CameraShareController do
       conn
       |> put_status(:created)
       |> render(CameraShareView, "all_shares.json", %{shares: total_shares, share_requests: share_requests, errors: errors})
+    end
+  end
+
+  defp ensure_list(email) do
+    case is_binary(email) do
+      true -> email |> List.wrap
+      false -> email
     end
   end
 
