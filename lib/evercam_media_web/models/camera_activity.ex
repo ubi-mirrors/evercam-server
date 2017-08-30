@@ -18,7 +18,7 @@ defmodule CameraActivity do
     field :name, :string
   end
 
-  def log_activity(user, camera, action, extra \\ nil) do
+  def log_activity(user, camera, action, extra \\ nil, done_at \\ Ecto.DateTime.utc) do
     access_token_id = AccessToken.active_token_id_for(user.id)
     params = %{
       camera_id: camera.id,
@@ -27,7 +27,7 @@ defmodule CameraActivity do
       name: User.get_fullname(user),
       action: action,
       extra: extra,
-      done_at: Ecto.DateTime.utc
+      done_at: done_at
     }
     %CameraActivity{}
     |> changeset(params)
