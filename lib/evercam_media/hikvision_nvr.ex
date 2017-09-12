@@ -1,6 +1,7 @@
 defmodule EvercamMedia.HikvisionNVR do
   require Logger
   alias EvercamMedia.Snapshot.Storage
+  alias EvercamMedia.XMLParser
 
   @root_dir Application.get_env(:evercam_media, :storage_dir)
 
@@ -78,6 +79,90 @@ defmodule EvercamMedia.HikvisionNVR do
     end
   end
 
+  def get_stream_info(host, port, username, password, channel) do
+    url = "http://#{host}:#{port}/ISAPI/Streaming/channels/#{channel}"
+    hackney = [basic_auth: {username, password}, pool: :snapshot_pool]
+    case HTTPoison.get(url, [], hackney: hackney) do
+      {:ok, %HTTPoison.Response{body: body}} ->
+        xml = XMLParser.parse_inner_array(body)
+        %{
+          video_encoding: XMLParser.parse_single_element(xml, '/StreamingChannel/Video/videoCodecType'),
+          resolution: get_value(xml, "resolution"),
+          frame_rate: get_value(xml, "framerate"),
+          bitrate_type: get_value(xml, "bitrate_type"),
+          bitrate: get_value(xml, "bitrate"),
+          video_quality: get_value(xml, "videoquality"),
+          smart_code: XMLParser.parse_single_element(xml, '/StreamingChannel/Video/SmartCodec/enabled')
+        }
+      _ -> %{}
+    end
+  end
+
+  def get_device_info(host, port, username, password) do
+    url = "http://#{host}:#{port}/ISAPI/System/deviceInfo"
+    hackney = [basic_auth: {username, password}, pool: :snapshot_pool]
+    case HTTPoison.get(url, [], hackney: hackney) do
+      {:ok, %HTTPoison.Response{body: body}} ->
+        xml = XMLParser.parse_inner_array(body)
+        %{
+          device_name: XMLParser.parse_single_element(xml, '/DeviceInfo/deviceName'),
+          device_id: XMLParser.parse_single_element(xml, '/DeviceInfo/deviceID'),
+          model: XMLParser.parse_single_element(xml, '/DeviceInfo/model'),
+          serial_number: XMLParser.parse_single_element(xml, '/DeviceInfo/serialNumber'),
+          mac_address: XMLParser.parse_single_element(xml, '/DeviceInfo/macAddress'),
+          firmware_version: XMLParser.parse_single_element(xml, '/DeviceInfo/firmwareVersion'),
+          firmware_released_date: XMLParser.parse_single_element(xml, '/DeviceInfo/firmwareReleasedDate'),
+          encoder_version: XMLParser.parse_single_element(xml, '/DeviceInfo/encoderVersion'),
+          encoder_released_date: XMLParser.parse_single_element(xml, '/DeviceInfo/encoderReleasedDate'),
+          device_type: XMLParser.parse_single_element(xml, '/DeviceInfo/deviceType')
+        }
+      _ -> %{}
+    end
+  end
+
+  def get_hdd_info(host, port, username, password) do
+    url = "http://#{host}:#{port}/ISAPI/ContentMgmt/Storage"
+    hackney = [basic_auth: {username, password}, pool: :snapshot_pool]
+    case HTTPoison.get(url, [], hackney: hackney) do
+      {:ok, %HTTPoison.Response{body: body}} ->
+        XMLParser.parse_inner_array(body)
+        |> XMLParser.parse_inner('/storage/hddList/hdd')
+        |> Enum.map(fn(hdd_xml) ->
+          %{
+            id: XMLParser.parse_element(hdd_xml, '/hdd/id'),
+            name: XMLParser.parse_element(hdd_xml, '/hdd/hddName'),
+            path: XMLParser.parse_element(hdd_xml, '/hdd/hddPath'),
+            type: XMLParser.parse_element(hdd_xml, '/hdd/hddType'),
+            status: XMLParser.parse_element(hdd_xml, '/hdd/status'),
+            capacity: get_space(XMLParser.parse_element(hdd_xml, '/hdd/capacity')),
+            free_space: get_space(XMLParser.parse_element(hdd_xml, '/hdd/freeSpace')),
+            property: XMLParser.parse_element(hdd_xml, '/hdd/property')
+          }
+        end)
+      _ -> %{}
+    end
+  end
+
+  def get_vh_info(host, port, username, password, channel) do
+    channel_id = parse_chl_id(channel)
+    url = "http://#{host}:#{port}/ISAPI/ContentMgmt/InputProxy/channels/#{channel_id}/status"
+    hackney = [basic_auth: {username, password}, pool: :snapshot_pool]
+    case HTTPoison.get(url, [], hackney: hackney) do
+      {:ok, %HTTPoison.Response{body: body}} ->
+        xml = XMLParser.parse_inner_array(body)
+        vh_port = get_vh_port(XMLParser.parse_single_element(xml, '/InputProxyChannelStatus/url'))
+        %{
+          ip_address: XMLParser.parse_single_element(xml, '/InputProxyChannelStatus/sourceInputPortDescriptor/ipAddress'),
+          manage_port: XMLParser.parse_single_element(xml, '/InputProxyChannelStatus/sourceInputPortDescriptor/managePortNo'),
+          online: XMLParser.parse_single_element(xml, '/InputProxyChannelStatus/online'),
+          chan_detect_result: XMLParser.parse_single_element(xml, '/InputProxyChannelStatus/chanDetectResult'),
+          vh_port: vh_port,
+          vh_url: "http://#{host}:#{vh_port}"
+        }
+      _ -> %{}
+    end
+  end
+
   def download_stream(host, port, username, password, url) do
     xml = "<?xml version='1.0'?><downloadRequest version='1.0' xmlns='http://urn:selfextension:psiaext-ver10-xsd'>"
     xml = "#{xml}<playbackURI>rtsp://#{host}:#{port}#{url}"
@@ -139,4 +224,63 @@ defmodule EvercamMedia.HikvisionNVR do
 
   defp is_creating_clip([]), do: false
   defp is_creating_clip(_pids), do: true
+
+  defp get_value(xml, "resolution") do
+    width = XMLParser.parse_single_element(xml, '/StreamingChannel/Video/videoResolutionWidth')
+    height = XMLParser.parse_single_element(xml, '/StreamingChannel/Video/videoResolutionHeight')
+    "#{width}x#{height}"
+  end
+  defp get_value(xml, "bitrate_type") do
+    case XMLParser.parse_single_element(xml, '/StreamingChannel/Video/videoQualityControlType') do
+      "VBR" -> "Variable"
+      "CBR" -> "Constant"
+      _ -> ""
+    end
+  end
+  defp get_value(xml, "videoquality") do
+    case XMLParser.parse_single_element(xml, '/StreamingChannel/Video/fixedQuality') do
+      "20" -> "Lowest"
+      "30" -> "Lower"
+      "45" -> "Low"
+      "60" -> "Medium"
+      "75" -> "Higher"
+      "90" -> "Highest"
+      _ -> ""
+    end
+  end
+  defp get_value(xml, "framerate") do
+    case XMLParser.parse_single_element(xml, '/StreamingChannel/Video/maxFrameRate') do
+      "" -> ""
+      "0" -> "Full Frame Rate"
+      "50" -> "1/2"
+      "25" -> "1/4"
+      "12" -> "1/8"
+      "6" -> "1/16"
+      frames when frames > 50 ->
+        Integer.floor_div(String.to_integer(frames), 100)
+    end
+  end
+  defp get_value(xml, "bitrate") do
+    case XMLParser.parse_single_element(xml, '/StreamingChannel/Video/videoQualityControlType') do
+      "VBR" -> XMLParser.parse_single_element(xml, '/StreamingChannel/Video/vbrUpperCap')
+      "CBR" -> XMLParser.parse_single_element(xml, '/StreamingChannel/Video/constantBitRate')
+      _ -> ""
+    end
+  end
+
+  def get_space(size) do
+    "#{Float.floor(String.to_integer(size) / 1024)}Gb"
+  end
+
+  def get_vh_port(url) do
+    url
+    |> String.replace_leading("http://", "")
+    |> String.split(":")
+    |> List.last
+  end
+
+  def parse_chl_id(channel) do
+    String.to_integer(channel) - 1
+    |> Integer.floor_div(100)
+  end
 end

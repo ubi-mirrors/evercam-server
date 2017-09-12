@@ -10,6 +10,12 @@ defmodule EvercamMedia.XMLParser do
     |> parse_single_element(node)
   end
 
+  def parse_inner_array(text) do
+    text
+    |> String.to_char_list
+    |> :xmerl_scan.string
+  end
+
   def parse_xml(text, node) do
     text
     |> String.to_char_list
@@ -18,7 +24,6 @@ defmodule EvercamMedia.XMLParser do
   end
 
   def parse({ xml, _ }, node) do
-    # multiple elements EvercamMedia.XMLParser.parse_xml(str, '/CMSearchResult/matchList/searchMatchItem/timeSpan/startTime')
     elements   = :xmerl_xpath.string(node, xml)
 
     Enum.map(
@@ -35,6 +40,25 @@ defmodule EvercamMedia.XMLParser do
       [element] ->
         [text] = xmlElement(element, :content)
         xmlText(text, :value) |> to_string
+      [] -> ""
+    end
+  end
+
+  def parse_inner({ xml, _ }, node) do
+    elements   = :xmerl_xpath.string(node, xml)
+    Enum.map(elements, fn(element) -> element end)
+  end
+
+  def parse_element(xml_element, node) do
+    case :xmerl_xpath.string(node, xml_element) do
+      [element] -> parse_text(element)
+      [] -> ""
+    end
+  end
+
+  def parse_text(element) do
+    case xmlElement(element, :content) do
+      [text] -> xmlText(text, :value) |> to_string
       [] -> ""
     end
   end

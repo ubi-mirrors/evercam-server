@@ -145,6 +145,11 @@ defmodule EvercamMediaWeb.Router do
       get "/cameras/:id/nvr/stream", CloudRecordingController, :hikvision_nvr
       get "/cameras/:id/nvr/videos", CloudRecordingController, :get_recording_times
 
+      get "/cameras/:id/nvr/stream/info", NVRController, :get_info
+      options "/cameras/:id/nvr/stream/info", NVRController, :nothing
+      get "/cameras/:id/nvr/stream/vhinfo", NVRController, :get_vh_info
+      options "/cameras/:id/nvr/stream/vhinfo", NVRController, :nothing
+
       get "/cameras/:id/apps/motion-detection", MotionDetectionController, :show
     end
 
