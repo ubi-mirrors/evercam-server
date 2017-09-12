@@ -157,7 +157,7 @@ defmodule EvercamMedia.HikvisionNVR do
           online: XMLParser.parse_single_element(xml, '/InputProxyChannelStatus/online'),
           chan_detect_result: XMLParser.parse_single_element(xml, '/InputProxyChannelStatus/chanDetectResult'),
           vh_port: vh_port,
-          vh_url: "http://#{host}:#{vh_port}"
+          vh_url: get_vh_url(host, vh_port)
         }
       _ -> %{}
     end
@@ -282,5 +282,10 @@ defmodule EvercamMedia.HikvisionNVR do
   def parse_chl_id(channel) do
     String.to_integer(channel) - 1
     |> Integer.floor_div(100)
+  end
+
+  def get_vh_url(ip, vh_port) when vh_port in [nil, ""], do: ""
+  def get_vh_url(ip, vh_port) do
+    "http://#{ip}:#{vh_port}"
   end
 end
