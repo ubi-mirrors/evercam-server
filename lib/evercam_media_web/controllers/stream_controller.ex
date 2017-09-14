@@ -117,7 +117,7 @@ defmodule EvercamMediaWeb.StreamController do
   end
 
   defp construct_ffmpeg_command(rtsp_url, token) do
-    "ffmpeg -rtsp_transport tcp -i '#{rtsp_url}' -f lavfi -i aevalsrc=0 -vcodec copy -acodec aac -map 0:0 -map 1:0 -shortest -strict experimental -f flv rtmp://localhost:1935/live/#{token} &"
+    "ffmpeg -rtsp_transport tcp -i '#{rtsp_url}' -f lavfi -i aevalsrc=0 -vcodec copy -acodec aac -map 0:0 -map 1:0 -shortest -strict experimental -f flv rtmp://localhost:1935/live/#{token}"
   end
 
   defp insert_meta_data(rtsp_url, action, camera_id, ip, token) do
