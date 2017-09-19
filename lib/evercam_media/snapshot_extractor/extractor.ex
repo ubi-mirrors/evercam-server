@@ -41,16 +41,12 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
       upload_path = "Construction/#{config.exid}/#{utc_timestamp}/"
       File.mkdir_p(images_directory)
       kill_ffmpeg_pids(config.host, config.port, config.username, config.password)
-      iterate(config, url, start_date, end_date, images_directory, upload_path)
+      {:ok, _, _, status} = Calendar.DateTime.diff(start_date, end_date)
+      iterate(status, config, url, start_date, end_date, images_directory, upload_path)
     end
   end
 
-  defp iterate(_config, _url, start_date, end_date, path, _upload_path) when start_date >= end_date do
-    :timer.sleep(:timer.seconds(5))
-    clean_images(path)
-    Logger.debug "Start date (#{start_date}) greater than end date (#{end_date})."
-  end
-  defp iterate(config, url, start_date, end_date, path, upload_path) do
+  defp iterate(:before, config, url, start_date, end_date, path, upload_path) do
     case scheduled_now?(config.schedule, start_date, "UTC") do
       {:ok, true} ->
         Logger.debug "Extracting snapshot from NVR."
@@ -61,7 +57,13 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
         Logger.error "Error getting scheduler snapshot from NVR."
     end
     next_start_date = start_date |> Calendar.DateTime.advance!(config.interval)
-    iterate(config, url, next_start_date, end_date, path, upload_path)
+    {:ok, _, _, status} = Calendar.DateTime.diff(next_start_date, end_date)
+    iterate(status, config, url, next_start_date, end_date, path, upload_path)
+  end
+  defp iterate(_status, _config, _url, start_date, end_date, path, _upload_path) do
+    :timer.sleep(:timer.seconds(5))
+    clean_images(path)
+    Logger.debug "Start date (#{start_date}) greater than end date (#{end_date})."
   end
 
   defp extract_image(url, start_date, path, upload_path) do
@@ -70,19 +72,21 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
     upload_image_path = "#{upload_path}#{image_name}.jpg"
     startdate_iso = convert_to_iso(start_date)
     enddate_iso = start_date |> Calendar.DateTime.advance!(10) |> convert_to_iso
-    Porcelain.shell("ffmpeg -rtsp_transport tcp -i '#{url}?starttime=#{startdate_iso}&endtime=#{enddate_iso}' -vframes 1 -y #{images_path}").out
-    spawn(fn -> upload_image(images_path, upload_image_path) end)
+    stream_url = "#{url}?starttime=#{startdate_iso}&endtime=#{enddate_iso}"
+    Porcelain.shell("ffmpeg -rtsp_transport tcp -stimeout 15000000 -i '#{stream_url}' -vframes 1 -y #{images_path}").out
+    spawn(fn ->
+      File.exists?(images_path)
+      |> upload_image(images_path, upload_image_path)
+    end)
   end
 
-  defp upload_image(image_path, upload_image_path) do
+  defp upload_image(true, image_path, upload_image_path) do
     case Dropbox.upload_file!(%Dropbox.Client{access_token: System.get_env["DROP_BOX_TOKEN"]}, image_path, upload_image_path) do
-      {:skipping, _reason} ->
-        # :timer.sleep(:timer.seconds(3))
-        # upload_image(image_path, upload_image_path)
-        true
+      {:skipping, _reason} -> true
       _ -> :noop
     end
   end
+  defp upload_image(_status, _image_path, _upload_image_path), do: :noop
 
   defp nvr_url(ip, port, username, password, channel) do
     "rtsp://#{username}:#{password}@#{ip}:#{port}/Streaming/tracks/#{channel}"
