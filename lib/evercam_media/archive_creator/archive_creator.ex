@@ -63,7 +63,7 @@ defmodule EvercamMedia.ArchiveCreator.ArchiveCreator do
         error ->
           Util.error_handler(error)
           failed_creation(archive)
-    end
+      end
     end
   end
   defp get_snapshots_and_create_archive(_state, _archive, _status), do: :noop
