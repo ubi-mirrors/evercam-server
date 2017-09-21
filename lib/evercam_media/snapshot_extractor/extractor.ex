@@ -60,10 +60,26 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
     {:ok, _, _, status} = Calendar.DateTime.diff(next_start_date, end_date)
     iterate(status, config, url, next_start_date, end_date, path, upload_path)
   end
-  defp iterate(_status, _config, _url, start_date, end_date, path, _upload_path) do
+  defp iterate(_status, config, _url, start_date, end_date, path, _upload_path) do
     :timer.sleep(:timer.seconds(5))
+    update_snapshot_extractor(config, path)
     clean_images(path)
     Logger.debug "Start date (#{start_date}) greater than end date (#{end_date})."
+  end
+
+  defp update_snapshot_extractor(config, path) do
+    snapshot_extractor = SnapshotExtractor.by_id(config.id)
+    params = %{status: 12, notes: "Extracted images = #{get_count(path)}"}
+    SnapshotExtractor.update_snapshot_extactor(snapshot_extractor, params)
+  end
+
+  defp get_count(images_path) do
+    case File.exists?(images_path) do
+      true ->
+        Enum.count(File.ls!(images_path))
+      _ ->
+        0
+    end
   end
 
   defp extract_image(url, start_date, path, upload_path) do

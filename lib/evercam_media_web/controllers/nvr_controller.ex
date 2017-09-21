@@ -1,7 +1,9 @@
 defmodule EvercamMediaWeb.NVRController do
   use EvercamMediaWeb, :controller
+  alias EvercamMediaWeb.SnapshotExtractorView
   alias EvercamMediaWeb.ErrorView
   alias EvercamMedia.HikvisionNVR
+  alias EvercamMedia.Repo
 
   @root_dir Application.get_env(:evercam_media, :storage_dir)
 
@@ -85,16 +87,49 @@ defmodule EvercamMediaWeb.NVRController do
           schedule: get_schedule(params["schedule"])
         }
 
-      case Process.whereis(:snapshot_extractor) do
-        nil ->
-          {:ok, pid} = GenStage.start_link(EvercamMedia.SnapshotExtractor.Extractor, {}, name: :snapshot_extractor)
-          pid
-        pid -> pid
+      config
+      |> snapshot_extractor_changeset(camera.id, params["requester"], current_user)
+      |> Repo.insert
+      |> case do
+        {:ok, snapshot_extractor} ->
+          full_snapshot_extractor = Repo.preload(snapshot_extractor, :camera, force: true)
+          spawn(fn -> start_snapshot_extractor(config, snapshot_extractor.id) end)
+          conn
+          |> put_status(:created)
+          |> render(SnapshotExtractorView, "show.json", %{snapshot_extractor: full_snapshot_extractor})
+        {:error, changeset} ->
+          render_error(conn, 400, Util.parse_changeset(changeset))
       end
-      |> GenStage.cast({:snapshot_extractor, config})
-      json(conn, %{"message": "Extractor started."})
     end
   end
+
+  defp snapshot_extractor_changeset(config, id, requester, user) do
+    params =
+      %{
+        camera_id: id,
+        from_date: config.start_date,
+        to_date: config.end_date,
+        interval: config.interval,
+        schedule: config.schedule,
+        status: 11,
+        requestor: get_requester(requester, user)
+      }
+    SnapshotExtractor.changeset(%SnapshotExtractor{}, params)
+  end
+
+  defp start_snapshot_extractor(config, id) do
+    config = Map.put(config, :id, id)
+    case Process.whereis(:snapshot_extractor) do
+      nil ->
+        {:ok, pid} = GenStage.start_link(EvercamMedia.SnapshotExtractor.Extractor, {}, name: :snapshot_extractor)
+        pid
+      pid -> pid
+    end
+    |> GenStage.cast({:snapshot_extractor, config})
+  end
+
+  defp get_requester(value, user) when value in [nil, ""], do: User.get_fullname(user)
+  defp get_requester(value, _user), do: value
 
   defp ensure_camera_exists(nil, exid, conn) do
     conn
