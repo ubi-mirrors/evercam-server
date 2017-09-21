@@ -93,7 +93,10 @@ defmodule EvercamMediaWeb.NVRController do
       |> case do
         {:ok, snapshot_extractor} ->
           full_snapshot_extractor = Repo.preload(snapshot_extractor, :camera, force: true)
-          spawn(fn -> start_snapshot_extractor(config, snapshot_extractor.id) end)
+          spawn(fn ->
+            EvercamMedia.UserMailer.snapshot_extraction_started(full_snapshot_extractor)
+            start_snapshot_extractor(config, full_snapshot_extractor.id)
+          end)
           conn
           |> put_status(:created)
           |> render(SnapshotExtractorView, "show.json", %{snapshot_extractor: full_snapshot_extractor})
@@ -128,7 +131,7 @@ defmodule EvercamMediaWeb.NVRController do
     |> GenStage.cast({:snapshot_extractor, config})
   end
 
-  defp get_requester(value, user) when value in [nil, ""], do: User.get_fullname(user)
+  defp get_requester(value, user) when value in [nil, ""], do: user.email
   defp get_requester(value, _user), do: value
 
   defp ensure_camera_exists(nil, exid, conn) do

@@ -1,0 +1,10 @@
+Extractor has been started with the instructions below for <%= @snapshot_extractor.camera.name %>!
+
+Request was intiated by <%= @snapshot_extractor.requestor %>
+
+From: <%= @from_d %>
+To: <%= @to_d %>
+Interval: <%= @interval %>
+Schedule: <%= inspect @snapshot_extractor.schedule %>
+
+Evercam.io

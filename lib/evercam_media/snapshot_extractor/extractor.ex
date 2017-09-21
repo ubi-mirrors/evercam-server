@@ -36,9 +36,8 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
       start_date = config.start_date
       end_date = config.end_date
       url = nvr_url(config.host, config.port, config.username, config.password, config.channel)
-      utc_timestamp = Calendar.DateTime.now_utc |> Calendar.Strftime.strftime!("%Y-%m-%d-%H-%M-%S")
-      images_directory = "#{@root_dir}/#{config.exid}/extract/#{utc_timestamp}/"
-      upload_path = "Construction/#{config.exid}/#{utc_timestamp}/"
+      images_directory = "#{@root_dir}/#{config.exid}/extract/#{config.id}/"
+      upload_path = "Construction/#{config.exid}/#{config.id}/"
       File.mkdir_p(images_directory)
       kill_ffmpeg_pids(config.host, config.port, config.username, config.password)
       {:ok, _, _, status} = Calendar.DateTime.diff(start_date, end_date)
@@ -69,7 +68,9 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
 
   defp update_snapshot_extractor(config, path) do
     snapshot_extractor = SnapshotExtractor.by_id(config.id)
-    params = %{status: 12, notes: "Extracted images = #{get_count(path)}"}
+    snapshot_count = get_count(path)
+    EvercamMedia.UserMailer.snapshot_extraction_completed(snapshot_extractor, snapshot_count)
+    params = %{status: 12, notes: "Extracted images = #{snapshot_count}"}
     SnapshotExtractor.update_snapshot_extactor(snapshot_extractor, params)
   end
 
@@ -89,7 +90,7 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
     startdate_iso = convert_to_iso(start_date)
     enddate_iso = start_date |> Calendar.DateTime.advance!(10) |> convert_to_iso
     stream_url = "#{url}?starttime=#{startdate_iso}&endtime=#{enddate_iso}"
-    Porcelain.shell("ffmpeg -rtsp_transport tcp -stimeout 15000000 -i '#{stream_url}' -vframes 1 -y #{images_path}").out
+    Porcelain.shell("ffmpeg -rtsp_transport tcp -stimeout 10000000 -i '#{stream_url}' -vframes 1 -y #{images_path}").out
     spawn(fn ->
       File.exists?(images_path)
       |> upload_image(images_path, upload_image_path)

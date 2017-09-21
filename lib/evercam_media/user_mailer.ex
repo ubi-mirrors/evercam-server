@@ -162,6 +162,27 @@ defmodule EvercamMedia.UserMailer do
     end)
   end
 
+  def snapshot_extraction_started(snapshot_extractor) do
+    from_d = get_formatted_date(snapshot_extractor.from_date)
+    to_d = get_formatted_date(snapshot_extractor.to_date)
+    Mailgun.Client.send_email @config,
+      to: snapshot_extractor.requestor,
+      subject: "Snapshot Extraction (Local) started",
+      from: @from,
+      html: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "snapshot_extractor_alert.html", snapshot_extractor: snapshot_extractor, from_d: from_d, to_d: to_d, interval: parse_interval(Integer.floor_div(snapshot_extractor.interval, 60)), year: @year),
+      text: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "snapshot_extractor_alert.txt", snapshot_extractor: snapshot_extractor, from_d: from_d, to_d: to_d, interval: parse_interval(Integer.floor_div(snapshot_extractor.interval, 60)), year: @year)
+  end
+
+  def snapshot_extraction_completed(snapshot_extractor, snap_count) do
+    url = get_dropbox_url(snapshot_extractor)
+    Mailgun.Client.send_email @config,
+      to: snapshot_extractor.requestor,
+      subject: "Snapshot Extraction (Local) Completed",
+      from: @from,
+      html: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "snapshot_extractor_complete.html", camera: snapshot_extractor.camera.name, count: snap_count, dropbox_url: url, year: @year),
+      text: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "snapshot_extractor_complete.txt", camera: snapshot_extractor.camera.name, count: snap_count, dropbox_url: url, year: @year)
+  end
+
   defp get_thumbnail(camera, status \\ "")
   defp get_thumbnail(camera, "online") do
     case camera |> construct_args |> fetch_snapshot do
@@ -221,5 +242,19 @@ defmodule EvercamMedia.UserMailer do
       password: Camera.password(camera),
       vendor_exid: Camera.get_vendor_attr(camera, :exid)
     }
+  end
+
+  defp parse_interval(60), do: "1 Frame Every hour"
+  defp parse_interval(interval) when interval < 60, do: "1 Frame Every #{interval} min"
+  defp parse_interval(interval) when interval > 60, do: "1 Frame Every #{Integer.floor_div(interval, 60)} hours"
+
+  defp get_formatted_date(datetime) do
+    datetime
+    |> Ecto.DateTime.to_erl
+    |> Calendar.Strftime.strftime!("%A, %d %b %Y %H:%M")
+  end
+
+  defp get_dropbox_url(snapshot_extractor) do
+    "https://www.dropbox.com/home/Construction/#{snapshot_extractor.camera.exid}/#{snapshot_extractor.id}"
   end
 end

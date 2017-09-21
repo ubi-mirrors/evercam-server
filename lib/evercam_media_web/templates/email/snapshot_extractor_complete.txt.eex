@@ -1,0 +1,5 @@
+Extractor has been Completed with <%= @count %> images for <%= @camera %>.
+
+You can see required files at DropBox <%= @dropbox_url %>
+
+Evercam.io
