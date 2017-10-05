@@ -57,6 +57,7 @@ defmodule EvercamMedia.Mixfile do
     :new_relic,
     :jazz,
     :gen_stage,
+    :elixir_dropbox
   ]
 
   # Specifies which paths to compile per environment
@@ -94,6 +95,8 @@ defmodule EvercamMedia.Mixfile do
       {:new_relic, github: "azharmalik3/newrelic-elixir", override: true},
       {:jazz, "~> 0.2.1"},
       {:gen_stage, "~> 0.11"},
+      {:poison, "~> 1.5", override: true},
+      {:elixir_dropbox, "~> 0.0.7"},
     ]
   end
 end

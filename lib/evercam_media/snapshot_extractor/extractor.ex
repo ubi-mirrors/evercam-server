@@ -37,7 +37,7 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
       end_date = config.end_date
       url = nvr_url(config.host, config.port, config.username, config.password, config.channel)
       images_directory = "#{@root_dir}/#{config.exid}/extract/#{config.id}/"
-      upload_path = "Construction/#{config.exid}/#{config.id}/"
+      upload_path = "/Construction/#{config.exid}/#{config.id}/"
       File.mkdir_p(images_directory)
       kill_ffmpeg_pids(config.host, config.port, config.username, config.password)
       {:ok, _, _, status} = Calendar.DateTime.diff(start_date, end_date)
@@ -98,8 +98,9 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
   end
 
   defp upload_image(true, image_path, upload_image_path) do
-    case Dropbox.upload_file!(%Dropbox.Client{access_token: System.get_env["DROP_BOX_TOKEN"]}, image_path, upload_image_path) do
-      {:skipping, _reason} -> true
+    client = ElixirDropbox.Client.new(System.get_env["DROP_BOX_TOKEN"])
+    case ElixirDropbox.Files.upload(client, upload_image_path, image_path) do
+      {{:status_code, _}, {:error, error}} -> Logger.debug "Error while uploading. Error: #{inspect error}"
       _ -> :noop
     end
   end
