@@ -56,6 +56,7 @@ defmodule EvercamMediaWeb.CameraView do
         host: Camera.host(camera, "external"),
         http: %{
           port: Camera.port(camera, "external", "http"),
+          nvr_port: Camera.port(camera, "nvr", "http"),
           camera: Camera.external_url(camera, "http"),
           jpg: Camera.snapshot_url(camera, "jpg"),
           mjpg: Camera.snapshot_url(camera, "mjpg"),

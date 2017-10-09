@@ -336,6 +336,8 @@ defmodule EvercamMediaWeb.CameraController do
     |> add_parameter("host", "external_host", params["external_host"])
     |> add_parameter("host", "external_http_port", params["external_http_port"])
     |> add_parameter("host", "external_rtsp_port", params["external_rtsp_port"])
+    |> add_parameter("host", "nvr_http_port", params["nvr_http_port"])
+    |> add_parameter("host", "nvr_rtsp_port", params["nvr_rtsp_port"])
     |> add_parameter("host", "internal_host", params["internal_host"])
     |> add_parameter("host", "internal_http_port", params["internal_http_port"])
     |> add_parameter("host", "internal_rtsp_port", params["internal_rtsp_port"])

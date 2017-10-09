@@ -31,6 +31,7 @@ defmodule VendorModel do
     field :discontinued, :boolean
     field :onvif, :boolean
     field :psia, :boolean
+    field :channel, :integer
     field :config, EvercamMedia.Types.JSON
   end
 
@@ -93,6 +94,16 @@ defmodule VendorModel do
     query
     |> where([vm], like(fragment("lower(?)", vm.name), ^("%#{String.downcase(name)}%")))
   end
+
+  def get_channel(camera, channel) when channel in ["", nil] do
+    camera.vendor_model.jpg_url
+    |> String.downcase
+    |> String.split("/channels/")
+    |> List.last
+    |> String.split("/")
+    |> List.first
+  end
+  def get_channel(_camera, channel), do: channel
 
   def get_url(model, attr \\ "jpg") do
     Util.deep_get(model.config, ["snapshots", "#{attr}"], "")

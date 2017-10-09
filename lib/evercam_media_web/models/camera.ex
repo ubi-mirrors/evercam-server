@@ -206,6 +206,15 @@ defmodule Camera do
     camera.config["#{network}_#{protocol}_port"]
   end
 
+  def get_nvr_port(camera) do
+    external_port = port(camera, "external", "http")
+    case port(camera, "nvr", "http") do
+      "" -> external_port
+      nil -> external_port
+      nvr_port -> nvr_port
+    end
+  end
+
   def rtsp_url(camera, network \\ "external", type \\ "h264", include_auth \\ true) do
     auth = if include_auth, do: "#{auth(camera)}@", else: ""
     path = url_path(camera, type)

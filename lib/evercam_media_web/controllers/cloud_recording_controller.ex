@@ -64,11 +64,10 @@ defmodule EvercamMediaWeb.CloudRecordingController do
     with :ok <- ensure_camera_exists(camera, exid, conn)
     do
       ip = Camera.host(camera, "external")
-      port = Camera.port(camera, "external", "http")
+      port = Camera.get_nvr_port(camera)
       cam_username = Camera.username(camera)
       cam_password = Camera.password(camera)
-      url = camera.vendor_model.h264_url
-      channel = url |> String.split("/channels/") |> List.last |> String.split("/") |> List.first
+      channel = VendorModel.get_channel(camera, camera.vendor_model.channel)
 
       case EvercamMedia.HikvisionNVR.get_recording_days(ip, port, cam_username, cam_password, channel, year, month) do
         {:ok, body} ->
@@ -97,12 +96,11 @@ defmodule EvercamMediaWeb.CloudRecordingController do
     with :ok <- ensure_camera_exists(camera, exid, conn)
     do
       ip = Camera.host(camera, "external")
-      port = Camera.port(camera, "external", "http")
+      port = Camera.get_nvr_port(camera)
       cam_username = Camera.username(camera)
       cam_password = Camera.password(camera)
-      url = camera.vendor_model.h264_url
       timezone = Camera.get_timezone(camera)
-      channel = url |> String.split("/channels/") |> List.last |> String.split("/") |> List.first
+      channel = VendorModel.get_channel(camera, camera.vendor_model.channel)
       date = "#{year}-#{month}-#{day}"
       starttime = "#{date}T00:00:00Z"
       endtime = "#{date}T23:59:59Z"
@@ -130,8 +128,7 @@ defmodule EvercamMediaWeb.CloudRecordingController do
       port = Camera.port(camera, "external", "rtsp")
       cam_username = Camera.username(camera)
       cam_password = Camera.password(camera)
-      url = camera.vendor_model.h264_url
-      channel = url |> String.split("/channels/") |> List.last |> String.split("/") |> List.first
+      channel = VendorModel.get_channel(camera, camera.vendor_model.channel)
       case EvercamMedia.HikvisionNVR.publish_stream_from_rtsp(camera.exid, ip, port, cam_username, cam_password, channel, convert_timestamp(starttime), convert_timestamp(endtime)) do
         {:ok} -> json(conn, %{message: "Streaming started."})
         {:stop} -> render_error(conn, 406, "System creating clip")
@@ -161,11 +158,10 @@ defmodule EvercamMediaWeb.CloudRecordingController do
     with :ok <- ensure_camera_exists(camera, exid, conn)
     do
       ip = Camera.host(camera, "external")
-      port = Camera.port(camera, "external", "http")
+      port = Camera.get_nvr_port(camera)
       cam_username = Camera.username(camera)
       cam_password = Camera.password(camera)
-      url = camera.vendor_model.h264_url
-      channel = url |> String.split("/channels/") |> List.last |> String.split("/") |> List.first
+      channel = VendorModel.get_channel(camera, camera.vendor_model.channel)
       case EvercamMedia.HikvisionNVR.get_stream_urls(camera.exid, ip, port, cam_username, cam_password, channel, convert_timestamp_to_rfc(starttime), convert_timestamp_to_rfc(endtime)) do
         {:ok, body} ->
           starttime_list = EvercamMedia.XMLParser.parse_xml(body, '/CMSearchResult/matchList/searchMatchItem/timeSpan/startTime')
