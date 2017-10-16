@@ -89,6 +89,14 @@ defmodule EvercamMediaWeb.Router do
       post "/cameras/:id/recordings/snapshots", SnapshotController, :create
       get "/cameras/:id/recordings/snapshots/:year/:month/days", SnapshotController, :days
       options "/cameras/:id/recordings/snapshots/:year/:month/days", SnapshotController, :nothing
+
+      get "/cameras/:id/timelapse/recordings/snapshots/:year/:month/days", SnapshotController, :timelapse_days
+      options "/cameras/:id/timelapse/recordings/snapshots/:year/:month/days", SnapshotController, :nothing
+      get "/cameras/:id/timelapse/recordings/snapshots/:year/:month/:day", SnapshotController, :timelapse_snapshots_info
+      options "/cameras/:id/timelapse/recordings/snapshots/:year/:month/:day", SnapshotController, :nothing
+      get "/cameras/:id/timelapse/recordings/snapshots/:timestamp", SnapshotController, :timelapse_show
+      options "/cameras/:id/timelapse/recordings/snapshots/:timestamp", SnapshotController, :nothing
+
       get "/cameras/:id/recordings/snapshots/:year/:month/:day", SnapshotController, :day
       options "/cameras/:id/recordings/snapshots/:year/:month/:day", SnapshotController, :nothing
       get "/cameras/:id/recordings/snapshots/:year/:month/:day/hours", SnapshotController, :hours
@@ -98,6 +106,8 @@ defmodule EvercamMediaWeb.Router do
       get "/cameras/:id/logs", LogController, :show
       get "/cameras/:id/apps/cloud-recording", CloudRecordingController, :show
       post "/cameras/:id/apps/cloud-recording", CloudRecordingController, :create
+      get "/cameras/:id/apps/timelapse-recording", TimelapseRecordingController, :show
+      post "/cameras/:id/apps/timelapse-recording", TimelapseRecordingController, :create
       get "/cameras/:id/shares", CameraShareController, :show
       post "/cameras/:id/shares", CameraShareController, :create
       options "/cameras/:id/shares", CameraShareController, :nothing

@@ -57,7 +57,10 @@ defmodule EvercamMedia.Mixfile do
     :new_relic,
     :jazz,
     :gen_stage,
-    :elixir_dropbox
+    :elixir_dropbox,
+    :ex_aws,
+    :configparser_ex,
+    :sweet_xml
   ]
 
   # Specifies which paths to compile per environment
@@ -97,6 +100,9 @@ defmodule EvercamMedia.Mixfile do
       {:gen_stage, "~> 0.11"},
       {:poison, "~> 1.5", override: true},
       {:elixir_dropbox, "~> 0.0.7"},
+      {:ex_aws, "~> 1.0"},
+      {:configparser_ex, "~> 0.2.1"},
+      {:sweet_xml, "~> 0.6", optional: true}
     ]
   end
 end

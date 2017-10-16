@@ -834,6 +834,41 @@ CREATE SEQUENCE sq_vendors
 
 
 --
+-- Name: timelapse_recordings; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE timelapse_recordings (
+    id integer NOT NULL,
+    camera_id integer NOT NULL,
+    frequency integer NOT NULL,
+    storage_duration integer,
+    schedule json,
+    status character varying(255) NOT NULL,
+    inserted_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+--
+-- Name: timelapse_recordings_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE timelapse_recordings_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: timelapse_recordings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE timelapse_recordings_id_seq OWNED BY timelapse_recordings.id;
+
+
+--
 -- Name: timelapses; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1100,6 +1135,13 @@ ALTER TABLE ONLY snapshot_extractors ALTER COLUMN id SET DEFAULT nextval('snapsh
 
 
 --
+-- Name: timelapse_recordings id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY timelapse_recordings ALTER COLUMN id SET DEFAULT nextval('timelapse_recordings_id_seq'::regclass);
+
+
+--
 -- Name: timelapses id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1295,6 +1337,14 @@ ALTER TABLE ONLY snapmails
 
 ALTER TABLE ONLY snapshot_extractors
     ADD CONSTRAINT snapshot_extractors_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: timelapse_recordings timelapse_recordings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY timelapse_recordings
+    ADD CONSTRAINT timelapse_recordings_pkey PRIMARY KEY (id);
 
 
 --
@@ -1545,6 +1595,14 @@ ALTER TABLE ONLY snapshot_extractors
 
 
 --
+-- Name: timelapse_recordings timelapse_recordings_camera_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY timelapse_recordings
+    ADD CONSTRAINT timelapse_recordings_camera_id_fkey FOREIGN KEY (camera_id) REFERENCES cameras(id);
+
+
+--
 -- Name: timelapses timelapses_camera_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1564,5 +1622,5 @@ ALTER TABLE ONLY timelapses
 -- PostgreSQL database dump complete
 --
 
-INSERT INTO "schema_migrations" (version) VALUES (20160616160229), (20160712101523), (20160720125939), (20160727112052), (20160830055709);
+INSERT INTO "schema_migrations" (version) VALUES (20160616160229), (20160712101523), (20160720125939), (20160727112052), (20160830055709), (20161202114834), (20161202115000), (20161213162000), (20161219130300), (20161221070146), (20161221070226), (20170103162400), (20170112110000), (20170213140200), (20170222114100), (20170414141100), (20170419105000), (20171009070501);
 

@@ -4,6 +4,7 @@ defmodule EvercamMediaWeb.SnapshotController do
   alias EvercamMedia.Snapshot.DBHandler
   alias EvercamMedia.Snapshot.Error
   alias EvercamMedia.Snapshot.Storage
+  alias EvercamMedia.TimelapseRecording.S3
   alias EvercamMedia.Validation
   alias EvercamMedia.Util
   alias EvercamMedia.Snapshot.WorkerSupervisor
@@ -176,6 +177,64 @@ defmodule EvercamMediaWeb.SnapshotController do
 
       conn
       |> json(%{days: days})
+    end
+  end
+
+  def timelapse_days(conn, %{"id" => camera_exid, "year" => year, "month" => month}) do
+    current_user = conn.assigns[:current_user]
+    camera = Camera.get_full(camera_exid)
+
+    with :ok <- ensure_params(:day, conn, {year, month, "01"}),
+         :ok <- ensure_camera_exists(conn, camera_exid, camera),
+         :ok <- ensure_authorized(conn, current_user, camera)
+      do
+      timezone = Camera.get_timezone(camera)
+
+      from = construct_timestamp(year, month, "01", "00:00:00", timezone)
+      number_of_days_in_month =
+        Date.new(String.to_integer(year), String.to_integer(month), 1)
+        |> elem(1)
+        |> Calendar.Date.number_of_days_in_month
+      to =
+        from
+        |> Calendar.DateTime.add!(number_of_days_in_month * 86_400)
+        |> Calendar.DateTime.subtract!(1)
+      days = S3.days(camera_exid, year, month)
+
+      conn
+      |> json(%{days: days})
+    end
+  end
+
+  def timelapse_snapshots_info(conn, %{"id" => camera_exid, "year" => year, "month" => month, "day" => day}) do
+    current_user = conn.assigns[:current_user]
+    camera = Camera.get_full(camera_exid)
+
+    with :ok <- ensure_params(:day, conn, {year, month, day}),
+         :ok <- ensure_camera_exists(conn, camera_exid, camera),
+         :ok <- ensure_authorized(conn, current_user, camera)
+      do
+      snapshots = S3.snapshots_info(camera_exid, year, month, day)
+      json(conn, %{snapshots: snapshots})
+    end
+  end
+
+  def timelapse_show(conn, %{"id" => camera_exid, "timestamp" => timestamp} = params) do
+    camera = Camera.get_full(camera_exid)
+    timestamp = convert_timestamp(timestamp)
+
+    with true <- Permission.Camera.can_list?(conn.assigns[:current_user], camera),
+         {:ok, image} <- S3.load(camera_exid, timestamp) do
+      data = "data:image/jpeg;base64,#{Base.encode64(image)}"
+
+      conn
+      |> json(%{snapshots: [%{created_at: timestamp, data: data}]})
+    else
+      false -> render_error(conn, 403, "Forbidden.")
+      {:error, code, message} -> render_error(conn, code, message)
+      {:error, error} ->
+        Logger.error "[#{camera_exid}] [show_snapshot] [error] [#{inspect error}]"
+        render_error(conn, 500, "We dropped the ball.")
     end
   end
 

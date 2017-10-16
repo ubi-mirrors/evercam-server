@@ -15,6 +15,7 @@ defmodule Camera do
     has_many :access_rights, AccessRight
     has_many :shares, CameraShare
     has_one :cloud_recordings, CloudRecording
+    has_one :timelapse_recordings, TimelapseRecording
     has_one :motion_detections, MotionDetection
 
     field :exid, :string
@@ -38,6 +39,16 @@ defmodule Camera do
     Camera
     |> preload(:cloud_recordings)
     |> preload(:motion_detections)
+    |> preload(:vendor_model)
+    |> preload([vendor_model: :vendor])
+    |> Repo.all
+  end
+
+  def get_timelapse_recording_cameras() do
+    Camera
+    |> join(:inner, [c], tr in TimelapseRecording, tr.camera_id == c.id)
+    |> preload(:timelapse_recordings)
+    |> preload(:owner)
     |> preload(:vendor_model)
     |> preload([vendor_model: :vendor])
     |> Repo.all
@@ -82,6 +93,7 @@ defmodule Camera do
     |> where([cam], cam.owner_id == ^user.id)
     |> preload(:owner)
     |> preload(:cloud_recordings)
+    |> preload(:timelapse_recordings)
     |> preload([vendor_model: :vendor])
     |> Repo.all
   end
@@ -93,6 +105,7 @@ defmodule Camera do
     |> where([cam, cs], cam.id == cs.camera_id)
     |> preload(:owner)
     |> preload(:cloud_recordings)
+    |> preload(:timelapse_recordings)
     |> preload([vendor_model: :vendor])
     |> preload([access_rights: :access_token])
     |> Repo.all
@@ -123,6 +136,7 @@ defmodule Camera do
     |> where([cam], cam.exid == ^String.downcase(exid))
     |> preload(:owner)
     |> preload(:cloud_recordings)
+    |> preload(:timelapse_recordings)
     |> preload(:motion_detections)
     |> preload([vendor_model: :vendor])
     |> preload([access_rights: :access_token])
