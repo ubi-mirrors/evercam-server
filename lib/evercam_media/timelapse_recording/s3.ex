@@ -77,7 +77,6 @@ defmodule EvercamMedia.TimelapseRecording.S3 do
       {:ok, response} -> {:ok, response.body}
       {:error, {:http_error, code, response}} ->
         message = EvercamMedia.XMLParser.parse_single(response.body, '/Error/Message')
-        error_code = code
         {:error, code, message}
     end
   end

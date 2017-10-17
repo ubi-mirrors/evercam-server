@@ -284,7 +284,7 @@ defmodule EvercamMedia.HikvisionNVR do
     |> Integer.floor_div(100)
   end
 
-  def get_vh_url(ip, vh_port) when vh_port in [nil, ""], do: ""
+  def get_vh_url(_ip, vh_port) when vh_port in [nil, ""], do: ""
   def get_vh_url(ip, vh_port) do
     "http://#{ip}:#{vh_port}"
   end

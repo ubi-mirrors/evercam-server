@@ -188,21 +188,9 @@ defmodule EvercamMediaWeb.SnapshotController do
          :ok <- ensure_camera_exists(conn, camera_exid, camera),
          :ok <- ensure_authorized(conn, current_user, camera)
       do
-      timezone = Camera.get_timezone(camera)
 
-      from = construct_timestamp(year, month, "01", "00:00:00", timezone)
-      number_of_days_in_month =
-        Date.new(String.to_integer(year), String.to_integer(month), 1)
-        |> elem(1)
-        |> Calendar.Date.number_of_days_in_month
-      to =
-        from
-        |> Calendar.DateTime.add!(number_of_days_in_month * 86_400)
-        |> Calendar.DateTime.subtract!(1)
       days = S3.days(camera_exid, year, month)
-
-      conn
-      |> json(%{days: days})
+      json(conn, %{days: days})
     end
   end
 
@@ -219,7 +207,7 @@ defmodule EvercamMediaWeb.SnapshotController do
     end
   end
 
-  def timelapse_show(conn, %{"id" => camera_exid, "timestamp" => timestamp} = params) do
+  def timelapse_show(conn, %{"id" => camera_exid, "timestamp" => timestamp}) do
     camera = Camera.get_full(camera_exid)
     timestamp = convert_timestamp(timestamp)
 

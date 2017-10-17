@@ -67,9 +67,6 @@ defmodule TimelapseRecording do
     end
   end
 
-  defp count_sleep(frequency) when frequency in [5, 10], do: 60_000 * frequency
-  defp count_sleep(frequency), do: div(60_000, frequency)
-
   def required_fields do
     @required_fields |> Enum.map(fn(field) -> String.to_atom(field) end)
   end
