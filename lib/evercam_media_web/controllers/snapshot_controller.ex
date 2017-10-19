@@ -202,7 +202,29 @@ defmodule EvercamMediaWeb.SnapshotController do
          :ok <- ensure_camera_exists(conn, camera_exid, camera),
          :ok <- ensure_authorized(conn, current_user, camera)
       do
-      snapshots = S3.snapshots_info(camera_exid, year, month, day)
+      timezone = Camera.get_timezone(camera)
+
+      from = construct_timestamp(year, month, day, "00:00:00", timezone)
+      to = construct_timestamp(year, month, day, "23:59:59", timezone)
+
+      {{fyear, fmonth, fday}, {_, _, _}} = from |> Calendar.DateTime.to_erl
+      {{tyear, tmonth, tday}, {_, _, _}} = to |> Calendar.DateTime.to_erl
+
+      snapshots =
+        cond do
+          "#{fyear}#{fmonth}#{fday}" == "#{tyear}#{tmonth}#{tday}" ->
+            S3.snapshots_info(camera_exid, fyear, fmonth, fday)
+          true ->
+            fro_snapshots =
+              S3.snapshots_info(camera_exid, fyear, fmonth, fday)
+              |> Enum.reject(fn(snapshot) -> check_snap_date(:after, snapshot.created_at, from) == false end)
+
+            to_snapshots =
+              S3.snapshots_info(camera_exid, tyear, tmonth, tday)
+              |> Enum.reject(fn(snapshot) -> check_snap_date(:before, snapshot.created_at, to) == false end)
+            fro_snapshots ++ to_snapshots
+        end
+
       json(conn, %{snapshots: snapshots})
     end
   end
@@ -445,6 +467,19 @@ defmodule EvercamMediaWeb.SnapshotController do
   #######################
   ## Utility functions ##
   #######################
+
+  defp check_snap_date(:after, snapshot_dt, datetime) do
+    case Calendar.DateTime.diff(Calendar.DateTime.Parse.unix!(snapshot_dt), datetime) do
+      {:ok, _, _, :after} -> true
+      _ -> false
+    end
+  end
+  defp check_snap_date(:before, snapshot_dt, datetime) do
+    case Calendar.DateTime.diff(Calendar.DateTime.Parse.unix!(snapshot_dt), datetime) do
+      {:ok, _, _, :before} -> true
+      _ -> false
+    end
+  end
 
   def exec_with_timeout(function, timeout \\ 5) do
     try do
