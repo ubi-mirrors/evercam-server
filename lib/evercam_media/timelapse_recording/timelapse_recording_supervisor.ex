@@ -111,7 +111,7 @@ defmodule EvercamMedia.TimelapseRecording.TimelapseRecordingSupervisor do
           schedule: TimelapseRecording.schedule(camera.timelapse_recordings),
           recording: TimelapseRecording.recording(camera.timelapse_recordings),
           timezone: camera.timezone,
-          url: Camera.snapshot_url(camera),
+          url: Camera.hd_snapshot_url(camera),
           auth: Camera.auth(camera),
           sleep: TimelapseRecording.sleep(camera.timelapse_recordings),
           initial_sleep: TimelapseRecording.initial_sleep(camera.timelapse_recordings),
