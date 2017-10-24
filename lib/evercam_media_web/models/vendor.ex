@@ -33,7 +33,6 @@ defmodule Vendor do
 
   def get_all(query \\ Vendor) do
     query
-    |> preload(:vendor_models)
     |> Repo.all
   end
 

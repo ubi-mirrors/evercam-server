@@ -14,7 +14,6 @@ defmodule EvercamMediaWeb.VendorView do
       id: vendor.exid,
       name: vendor.name,
       known_macs: vendor.known_macs,
-      total_models: Vendor.get_models_count(vendor),
       logo: "https://evercam-public-assets.s3.amazonaws.com/#{vendor.exid}/logo.jpg",
     }
   end
