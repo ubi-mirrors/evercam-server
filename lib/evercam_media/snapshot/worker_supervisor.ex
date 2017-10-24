@@ -17,16 +17,6 @@ defmodule EvercamMedia.Snapshot.WorkerSupervisor do
   alias EvercamMedia.Snapshot.StreamerSupervisor
   alias EvercamMedia.Snapshot.Worker
 
-  @event_handlers [
-    EvercamMedia.Snapshot.BroadcastHandler,
-    # EvercamMedia.Snapshot.CacheHandler,
-    EvercamMedia.Snapshot.DBHandler,
-    EvercamMedia.Snapshot.PollHandler,
-    EvercamMedia.Snapshot.StorageHandler,
-    # EvercamMedia.Snapshot.StatsHandler
-    # EvercamMedia.MotionDetection.ComparatorHandler
-  ]
-
   def start_link() do
     Supervisor.start_link(__MODULE__, :ok, name: __MODULE__)
   end
@@ -100,7 +90,6 @@ defmodule EvercamMedia.Snapshot.WorkerSupervisor do
     {
       :ok,
       %{
-        event_handlers: @event_handlers,
         name: camera.exid |> String.to_atom,
         config: %{
           camera_id: camera.id,

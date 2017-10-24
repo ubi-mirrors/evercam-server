@@ -57,12 +57,13 @@ defmodule EvercamMedia.Timelapse.Timelapser do
   Initialize the timelapse server
   """
   def init(args) do
-    {:ok, event_manager} = GenEvent.start_link
+    {:ok, snapshot_manager} = GenStage.start_link(EvercamMedia.Timelapse.StorageHandler, :ok)
+    {:ok, poll_manager} = GenStage.start_link(EvercamMedia.Timelapse.PollHandler, :ok)
     {:ok, poller} = EvercamMedia.Timelapse.Poller.start_link(args)
-    add_handlers(event_manager, args[:event_handlers])
     args = Map.merge args, %{
       poller: poller,
-      event_manager: event_manager
+      snapshot_manager: snapshot_manager,
+      poll_manager: poll_manager
     }
     {:producer, args}
   end
@@ -108,7 +109,7 @@ defmodule EvercamMedia.Timelapse.Timelapser do
   """
   def handle_cast({:update_timelapse_config, config}, state) do
     updated_config = Map.merge state, config
-    GenEvent.sync_notify(state.event_manager, {:update_timelapse_config, updated_config})
+    GenStage.sync_info(state.poll_manager, {:update_timelapse_config, updated_config})
     {:noreply, [], updated_config}
   end
 
@@ -117,7 +118,7 @@ defmodule EvercamMedia.Timelapse.Timelapser do
   """
   def handle_info({:camera_reply, camera_exid, image, timestamp}, state) do
     data = {camera_exid, timestamp, image}
-    GenEvent.sync_notify(state.event_manager, {:got_snapshot, data})
+    GenStage.sync_info(state.snapshot_manager, {:got_snapshot, data})
     {:noreply, [], state}
   end
 
@@ -131,10 +132,6 @@ defmodule EvercamMedia.Timelapse.Timelapser do
   #####################
   # Private functions #
   #####################
-
-  defp add_handlers(event_manager, event_handlers) do
-    Enum.each(event_handlers, &GenEvent.add_mon_handler(event_manager, &1,[]))
-  end
 
   defp get_config_from_state(:config, state) do
     Map.get(state, :config)

@@ -14,33 +14,41 @@ defmodule EvercamMedia.Snapshot.DBHandler do
     version and not now. This update can be avoided if thumbnails can be dynamically
     served.
   """
-  use GenEvent
+  use GenStage
   require Logger
   alias EvercamMedia.Repo
   alias EvercamMedia.SnapshotRepo
   alias EvercamMedia.Util
   alias EvercamMedia.Snapshot.Error
   alias EvercamMedia.Snapshot.WorkerSupervisor
+  alias EvercamMedia.Snapshot.Storage
 
-  def handle_event({:got_snapshot, data}, state) do
-    {camera_exid, timestamp, _image} = data
-    Logger.debug "[#{camera_exid}] [snapshot_success]"
-    spawn fn -> update_camera_status("#{camera_exid}", timestamp, true) end
-    {:ok, state}
+  def init(:ok) do
+    {:producer_consumer, :ok}
   end
 
-  def handle_event({:snapshot_error, data}, state) do
+  def handle_info({:got_snapshot, data}, state) do
+    {camera_exid, timestamp, image} = data
+    Logger.debug "[#{camera_exid}] [snapshot_success]"
+    spawn fn -> Storage.save(camera_exid, timestamp, image, "Evercam Proxy") end
+    spawn fn -> update_camera_status("#{camera_exid}", timestamp, true) end
+    Util.broadcast_snapshot(camera_exid, image, timestamp)
+    {:noreply, [], state}
+  end
+
+  def handle_info({:snapshot_error, data}, state) do
     try do
       {camera_exid, timestamp, error} = data
       error |> Error.parse |> Error.handle(camera_exid, timestamp, error)
     catch _type, error ->
       Util.error_handler(error)
     end
-    {:ok, state}
+    {:noreply, [], state}
   end
 
-  def handle_event(_, state) do
-    {:ok, state}
+  def handle_info(_, state) do
+    Logger.debug "handle empty"
+    {:noreply, [], state}
   end
 
   def update_camera_status(camera_exid, timestamp, status, error_code \\ "generic", error_weight \\ 0)

@@ -5,16 +5,20 @@ defmodule EvercamMedia.TimelapseRecording.StorageHandler do
 
   require Logger
   alias EvercamMedia.TimelapseRecording.S3
-  use GenEvent
+  use GenStage
 
-  def handle_event({:got_snapshot, data}, state) do
+  def init(:ok) do
+    {:producer_consumer, :ok}
+  end
+
+  def handle_info({:got_snapshot, data}, state) do
     {camera_exid, timestamp, image, bucket_path} = data
     Logger.debug "S3 storage called"
     spawn fn -> S3.save(camera_exid, timestamp, image, bucket_path) end
-    {:ok, state}
+    {:noreply, [], state}
   end
 
-  def handle_event(_, state) do
-    {:ok, state}
+  def handle_info(_, state) do
+    {:noreply, [], state}
   end
 end

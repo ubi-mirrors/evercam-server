@@ -3,17 +3,21 @@ defmodule EvercamMedia.Snapshot.StorageHandler do
   TODO
   """
 
-  use GenEvent
+  use GenStage
   alias EvercamMedia.Snapshot.Storage
   require Logger
 
-  def handle_event({:got_snapshot, data}, state) do
-    {camera_exid, timestamp, image} = data
-    spawn fn -> Storage.save(camera_exid, timestamp, image, "Evercam Proxy") end
-    {:ok, state}
+  def init(:ok) do
+    {:producer_consumer, :ok}
   end
 
-  def handle_event(_, state) do
-    {:ok, state}
+  def handle_info({:got_snapshot, data}, state) do
+    {camera_exid, timestamp, image} = data
+    spawn fn -> Storage.save(camera_exid, timestamp, image, "Evercam Proxy") end
+    {:noreply, [], state}
+  end
+
+  def handle_info(_, state) do
+    {:noreply, [], state}
   end
 end

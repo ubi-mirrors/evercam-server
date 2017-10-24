@@ -4,14 +4,18 @@ defmodule EvercamMedia.Snapshot.PollHandler do
   """
   alias EvercamMedia.Snapshot.Poller
 
-  use GenEvent
+  use GenStage
 
-  def handle_event({:update_camera_config, worker_state}, state) do
-    Poller.update_config(worker_state.poller, worker_state)
-    {:ok, state}
+  def init(:ok) do
+    {:producer_consumer, :ok}
   end
 
-  def handle_event(_, state) do
-    {:ok, state}
+  def handle_info({:update_camera_config, worker_state}, state) do
+    Poller.update_config(worker_state.poller, worker_state)
+    {:noreply, [], state}
+  end
+
+  def handle_info(_, state) do
+    {:noreply, [], state}
   end
 end

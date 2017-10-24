@@ -7,11 +7,6 @@ defmodule EvercamMedia.Snapmail.SnapmailerSupervisor do
   require Logger
   alias EvercamMedia.Snapmail.Snapmailer
 
-  @event_handlers [
-    EvercamMedia.Snapmail.PollHandler,
-    EvercamMedia.Snapmail.StorageHandler
-  ]
-
   def start_link() do
     Supervisor.start_link(__MODULE__, :ok, name: __MODULE__)
   end
@@ -68,7 +63,6 @@ defmodule EvercamMedia.Snapmail.SnapmailerSupervisor do
     {
       :ok,
       %{
-        event_handlers: @event_handlers,
         name: snapmail.exid |> String.to_atom,
         config: %{
           snapmail_id: snapmail.id,

@@ -16,11 +16,6 @@ defmodule EvercamMedia.TimelapseRecording.TimelapseRecordingSupervisor do
   require Logger
   alias EvercamMedia.TimelapseRecording.TimelapseRecordingWorker
 
-  @event_handlers [
-    EvercamMedia.TimelapseRecording.PollHandler,
-    EvercamMedia.TimelapseRecording.StorageHandler,
-  ]
-
   def start_link() do
     Supervisor.start_link(__MODULE__, :ok, name: __MODULE__)
   end
@@ -108,7 +103,6 @@ defmodule EvercamMedia.TimelapseRecording.TimelapseRecordingSupervisor do
     {
       :ok,
       %{
-        event_handlers: @event_handlers,
         name: "timelapse_#{camera.exid}" |> String.to_atom,
         config: %{
           camera_id: camera.id,

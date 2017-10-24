@@ -9,11 +9,6 @@ defmodule EvercamMedia.Timelapse.TimelapserSupervisor do
 
   @root_dir Application.get_env(:evercam_media, :storage_dir)
 
-  @event_handlers [
-    EvercamMedia.Timelapse.PollHandler,
-    EvercamMedia.Timelapse.StorageHandler
-  ]
-
   def start_link() do
     Supervisor.start_link(__MODULE__, :ok, name: __MODULE__)
   end
@@ -80,7 +75,6 @@ defmodule EvercamMedia.Timelapse.TimelapserSupervisor do
     {
       :ok,
       %{
-        event_handlers: @event_handlers,
         name: timelapse.exid |> String.to_atom,
         config: %{
           timelapse_id: timelapse.id,
