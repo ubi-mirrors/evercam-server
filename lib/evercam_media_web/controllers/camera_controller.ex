@@ -5,6 +5,7 @@ defmodule EvercamMediaWeb.CameraController do
   alias EvercamMedia.Repo
   alias EvercamMedia.Snapshot.Storage
   alias EvercamMedia.Snapshot.WorkerSupervisor
+  alias EvercamMedia.TimelapseRecording.TimelapseRecordingSupervisor
   alias EvercamMedia.Snapshot.CamClient
   alias EvercamMedia.Util
   require Logger
@@ -270,6 +271,11 @@ defmodule EvercamMediaWeb.CameraController do
       |> String.to_atom
       |> Process.whereis
       |> WorkerSupervisor.update_worker(camera)
+
+      "timelapse_#{exid}"
+      |> String.to_atom
+      |> Process.whereis
+      |> TimelapseRecordingSupervisor.update_worker(camera)
     end
   end
   defp update_camera_worker(_mode, _exid), do: :noop
@@ -335,6 +341,7 @@ defmodule EvercamMediaWeb.CameraController do
     |> add_parameter("field", :is_public, params["is_public"])
     |> add_parameter("model", :model_id, model)
     |> add_parameter("host", "external_host", params["external_host"])
+    |> add_parameter("host", "secondary_port", params["secondary_port"])
     |> add_parameter("host", "external_http_port", params["external_http_port"])
     |> add_parameter("host", "external_rtsp_port", params["external_rtsp_port"])
     |> add_parameter("host", "nvr_http_port", params["nvr_http_port"])

@@ -166,12 +166,22 @@ defmodule Camera do
     end
   end
 
-  def hd_snapshot_url(camera, type \\ "jpg") do
+  def hd_snapshot_url(camera) do
     cond do
-      external_url(camera) != "" ->
-        "#{external_url(camera)}/Streaming/Channels/1/picture"
+      secondary_url(camera) != "" ->
+        "#{secondary_url(camera)}/Streaming/Channels/1/picture"
       true ->
         ""
+    end
+  end
+
+  def secondary_url(camera, protocol \\ "http") do
+    host = host(camera) |> to_string
+    port = camera.config["secondary_port"]
+    case {host, port} do
+      {"", _} -> ""
+      {host, ""} -> "#{protocol}://#{host}"
+      {host, port} -> "#{protocol}://#{host}:#{port}"
     end
   end
 
