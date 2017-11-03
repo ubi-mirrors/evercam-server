@@ -31,6 +31,7 @@ defmodule EvercamMedia.TimelapseRecording.S3 do
   end
 
   def days(camera_exid, year, month) do
+    month = String.pad_leading("#{month}", 2, "0")
     prefix = "#{camera_exid}/snapshots/#{year}/#{month}/"
     response = ExAws.S3.list_objects("evercam-camera-assets", prefix: prefix, delimiter: "/") |> ExAws.request!
 
@@ -48,6 +49,8 @@ defmodule EvercamMedia.TimelapseRecording.S3 do
   end
 
   def snapshots_info(camera_exid, year, month, day) do
+    month = String.pad_leading("#{month}", 2, "0")
+    day = String.pad_leading("#{day}", 2, "0")
     prefix = "#{camera_exid}/snapshots/#{year}/#{month}/#{day}/"
     response = ExAws.S3.list_objects("evercam-camera-assets", prefix: prefix, delimiter: "/") |> ExAws.request!
 
