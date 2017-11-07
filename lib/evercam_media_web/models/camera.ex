@@ -415,14 +415,14 @@ defmodule Camera do
   end
 
   def valid?("ip_address", value) do
-    case :inet_parse.strict_address(to_char_list(value)) do
+    case :inet_parse.strict_address(to_charlist(value)) do
       {:ok, _} -> true
       {:error, _} -> false
     end
   end
 
   def valid?("domain", value) do
-    :inet_parse.domain(to_char_list(value)) && String.contains?(value, ".")
+    :inet_parse.domain(to_charlist(value)) && String.contains?(value, ".")
   end
 
   defp validate_lng_lat(camera_changeset, nil, nil), do: camera_changeset

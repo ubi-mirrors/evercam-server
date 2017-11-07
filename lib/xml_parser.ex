@@ -5,20 +5,20 @@ defmodule EvercamMedia.XMLParser do
 
   def parse_single(text, node) do
     text
-    |> String.to_char_list
+    |> String.to_charlist
     |> :xmerl_scan.string
     |> parse_single_element(node)
   end
 
   def parse_inner_array(text) do
     text
-    |> String.to_char_list
+    |> String.to_charlist
     |> :xmerl_scan.string
   end
 
   def parse_xml(text, node) do
     text
-    |> String.to_char_list
+    |> String.to_charlist
     |> :xmerl_scan.string
     |> parse(node)
   end

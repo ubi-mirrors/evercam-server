@@ -293,7 +293,7 @@ defmodule EvercamMediaWeb.SnapshotController do
          :ok <- ensure_authorized(conn, current_user, camera)
     do
       timezone = Camera.get_timezone(camera)
-      hour = String.rjust(hour, 2, ?0)
+      hour = String.pad_leading(hour, 2, "0")
       hour_datetime = construct_timestamp(year, month, day, "#{hour}:00:00", timezone)
       snapshots = Storage.hour(camera_exid, hour_datetime)
 

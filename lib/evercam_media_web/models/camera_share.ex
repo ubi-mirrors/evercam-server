@@ -61,7 +61,7 @@ defmodule CameraShare do
     rights
     |> String.downcase
     |> String.split(",", trim: true)
-    |> Enum.map(fn(right) -> String.strip(right) end)
+    |> Enum.map(fn(right) -> String.trim(right) end)
     |> Enum.filter(fn(right) -> AccessRight.valid_right_name?(right) end)
   end
 

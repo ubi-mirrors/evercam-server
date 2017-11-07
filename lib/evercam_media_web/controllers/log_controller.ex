@@ -70,7 +70,7 @@ defmodule EvercamMediaWeb.LogController do
   defp parse_page(page), do: if to_integer(page) < 0, do: 0, else: to_integer(page)
 
   defp parse_types(types) when types in [nil, ""], do: nil
-  defp parse_types(types), do: types |> String.split(",", trim: true) |> Enum.map(&String.strip/1)
+  defp parse_types(types), do: types |> String.split(",", trim: true) |> Enum.map(&String.trim/1)
 
   defp ensure_params(:ok, _conn), do: :ok
   defp ensure_params({:invalid, message}, conn), do: render_error(conn, 400, message)

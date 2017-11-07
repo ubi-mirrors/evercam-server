@@ -17,8 +17,8 @@ defmodule EvercamMedia.Validation.Snapshot do
   end
 
   defp validate(:date, year, month, day) do
-    month = String.rjust(month, 2, ?0)
-    day = String.rjust(day, 2, ?0)
+    month = String.pad_leading(month, 2, "0")
+    day = String.pad_leading(day, 2, "0")
 
     case Calendar.Date.Parse.iso8601("#{year}-#{month}-#{day}") do
       {:ok, _} -> :ok

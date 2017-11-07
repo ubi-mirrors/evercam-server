@@ -310,7 +310,7 @@ defmodule EvercamMediaWeb.UserController do
   defp parse_from(from), do: from |> Calendar.DateTime.Parse.unix! |> Calendar.DateTime.to_erl
 
   defp parse_types(types) when types in [nil, ""], do: nil
-  defp parse_types(types), do: types |> String.split(",", trim: true) |> Enum.map(&String.strip/1)
+  defp parse_types(types), do: types |> String.split(",", trim: true) |> Enum.map(&String.trim/1)
 
   defp ensure_params(:ok, _conn), do: :ok
   defp ensure_params({:invalid, message}, conn), do: render_error(conn, 400, message)

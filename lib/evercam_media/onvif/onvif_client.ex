@@ -13,20 +13,20 @@ defmodule EvercamMedia.ONVIFClient do
     onvif_request = gen_onvif_request(namespace, operation, username, password, parameters)
     case HTTPoison.post(url, onvif_request, ["Content-Type": "application/soap+xml", "SOAPAction": "http://www.w3.org/2003/05/soap-envelope"]) do
       {:ok, response} ->
-        {xml, _rest} = response.body |> to_char_list |> :xmerl_scan.string
+        {xml, _rest} = response.body |> to_charlist |> :xmerl_scan.string
         soap_ns = case elem(xml, 3) do
                 {ns, _} -> ns
                   _ -> "env"
                 end
         if response.status_code == 200 do
-          case "/#{soap_ns}:Envelope/#{soap_ns}:Body/#{namespace}:#{operation}Response" |> to_char_list |> :xmerl_xpath.string(xml) do
-            [] -> {:error, 405, "/#{soap_ns}:Envelope/#{soap_ns}:Body" |> to_char_list |> :xmerl_xpath.string(xml) |> parse_elements}
+          case "/#{soap_ns}:Envelope/#{soap_ns}:Body/#{namespace}:#{operation}Response" |> to_charlist |> :xmerl_xpath.string(xml) do
+            [] -> {:error, 405, "/#{soap_ns}:Envelope/#{soap_ns}:Body" |> to_charlist |> :xmerl_xpath.string(xml) |> parse_elements}
             xpath_string -> {:ok, parse_elements xpath_string}
           end
         else
           Logger.error "Error invoking #{operation}. URL: #{url} auth: #{auth}. Request: #{inspect onvif_request}. Response #{inspect response}."
-          case "/html" |> to_char_list |> :xmerl_xpath.string(xml) do
-            [] ->  {:error, response.status_code, "/#{soap_ns}:Envelope/#{soap_ns}:Body" |> to_char_list |> :xmerl_xpath.string(xml) |> parse_elements}
+          case "/html" |> to_charlist |> :xmerl_xpath.string(xml) do
+            [] ->  {:error, response.status_code, "/#{soap_ns}:Envelope/#{soap_ns}:Body" |> to_charlist |> :xmerl_xpath.string(xml) |> parse_elements}
             contents -> {:error, response.status_code, contents |> parse_elements}
           end
         end
@@ -77,9 +77,9 @@ defmodule EvercamMedia.ONVIFClient do
 
   #### WSSE
 
-  @doc """
-  Provides short for given service
-  """
+  ##########################################
+  #### Provides short for given service ####
+  ##########################################
 
   defp shorten_service(service)
   defp shorten_service("PTZ"), do: "tptz"

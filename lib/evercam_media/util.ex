@@ -33,7 +33,7 @@ defmodule EvercamMedia.Util do
   def jpeg?(_), do: false
 
   def port_open?(address, port) do
-    case :gen_tcp.connect(to_char_list(address), to_integer(port), [:binary, active: false], 1000) do
+    case :gen_tcp.connect(to_charlist(address), to_integer(port), [:binary, active: false], 1000) do
       {:ok, socket} ->
         :gen_tcp.close(socket)
         true

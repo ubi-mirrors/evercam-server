@@ -3,7 +3,7 @@ defmodule EvercamMedia.Snapshot.StatsHandler do
   TODO
   """
 
-  use GenEvent
+  use GenStage
 
   @doc """
   Currently this module is just a placeholder.
@@ -17,13 +17,18 @@ defmodule EvercamMedia.Snapshot.StatsHandler do
   more than 1s, we modify the worker to NOT poll it for every second to get a snapshot even
   if the configuration of the camera says so.
   """
-  def handle_event({:snapshot_error, data}, state) do
-    store_error(:snapshot_error, data)
-    {:ok, state}
+
+  def init(:ok) do
+    {:producer_consumer, :ok}
   end
 
-  def handle_event(_, state) do
-    {:ok, state}
+  def handle_info({:snapshot_error, data}, state) do
+    store_error(:snapshot_error, data)
+    {:noreply, [], state}
+  end
+
+  def handle_info(_, state) do
+    {:noreply, [], state}
   end
 
   defp store_error(:snapshot_error, {camera_exid, timestamp, error}) do
