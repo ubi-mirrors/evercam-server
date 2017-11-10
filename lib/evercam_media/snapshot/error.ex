@@ -3,7 +3,6 @@ defmodule EvercamMedia.Snapshot.Error do
   TODO
   """
   require Logger
-  alias EvercamMedia.Util
   import EvercamMedia.Snapshot.DBHandler, only: [update_camera_status: 5]
 
   def parse(error) do
@@ -40,11 +39,9 @@ defmodule EvercamMedia.Snapshot.Error do
     case reason do
       :system_limit ->
         Logger.error "[#{camera_exid}] [snapshot_error] [system_limit] Traceback."
-        Util.error_handler(error)
         {500, %{message: "Sorry, we dropped the ball."}}
       :emfile ->
         Logger.error "[#{camera_exid}] [snapshot_error] [emfile] Traceback."
-        Util.error_handler(error)
         {500, %{message: "Sorry, we dropped the ball."}}
       :case_clause ->
         Logger.debug "[#{camera_exid}] [snapshot_error] [case_clause]"
