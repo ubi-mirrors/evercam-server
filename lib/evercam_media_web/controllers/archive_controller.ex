@@ -47,9 +47,14 @@ defmodule EvercamMediaWeb.ArchiveController do
   def play(conn, %{"id" => exid, "archive_id" => archive_id}) do
     current_user = conn.assigns[:current_user]
     camera = Camera.get_full(exid)
+    archive = Archive.by_exid(archive_id)
 
     with :ok <- ensure_can_list(current_user, camera, conn) do
-      seaweed_url = Application.get_env(:evercam_media, :seaweedfs_url)
+      archive_date =
+        archive.created_at
+        |> Ecto.DateTime.to_erl
+        |> Calendar.DateTime.from_erl!("UTC")
+      seaweed_url = EvercamMedia.Snapshot.Storage.point_to_seaweed(archive_date)
       conn
       |> redirect(external: "#{seaweed_url}/#{exid}/clips/#{archive_id}.mp4")
     end

@@ -18,6 +18,7 @@ defmodule EvercamMedia.Snapshot.CamClient do
         case args[:vendor_exid] do
           "evercam-capture" -> HTTPClient.get(:basic_auth_android, args[:url], username, password)
           "samsung" -> HTTPClient.get(:digest_auth, args[:url], username, password)
+          "hikvision" -> HTTPClient.get(:digest_auth, args[:url], username, password)
           "ubiquiti" -> HTTPClient.get(:cookie_auth, args[:url], username, password)
           _ -> HTTPClient.get(:basic_auth, args[:url], username, password)
         end

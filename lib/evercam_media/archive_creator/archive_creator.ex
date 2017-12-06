@@ -55,7 +55,7 @@ defmodule EvercamMedia.ArchiveCreator.ArchiveCreator do
             loop_list(snapshots, camera.exid, images_directory, 0)
             create_mp4(archive.exid, images_directory)
             Storage.save_mp4(camera.exid, archive.exid, images_directory)
-            File.rm_rf images_directory
+            # File.rm_rf images_directory
             update_archive(archive, total_snapshots, Archive.archive_status.completed)
             EvercamMedia.UserMailer.archive_completed(archive, archive.user.email)
         end
@@ -82,7 +82,7 @@ defmodule EvercamMedia.ArchiveCreator.ArchiveCreator do
   end
 
   defp create_mp4(id, path) do
-    Porcelain.shell("ffmpeg -r 6 -i #{path}%d.jpg -c:v libx264 -r 6 -preset slow -tune stillimage -bufsize 1000k -pix_fmt yuv420p -y #{path}#{id}.mp4", [err: :out]).out
+    Porcelain.shell("ffmpeg -r 6 -i #{path}%d.jpg -c:v h264_nvenc -r 6 -preset slow -bufsize 1000k -pix_fmt yuv420p -y #{path}#{id}.mp4", [err: :out]).out
   end
 
   defp update_archive(archive, frames, status) do

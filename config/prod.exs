@@ -64,7 +64,8 @@ config :evercam_media,
   storage_dir: "/storage"
 
 config :evercam_media,
-  seaweedfs_url: System.get_env["SEAWEEDFS_URL"]
+  seaweedfs_url: System.get_env["SEAWEEDFS_URL"],
+  seaweedfs_url_1: System.get_env["SEAWEEDFS_URL_1"]
 
 config :quantum, :evercam_media,
   cron: [

@@ -4,6 +4,18 @@ defmodule EvercamMedia.Snapshot.Storage do
 
   @root_dir Application.get_env(:evercam_media, :storage_dir)
   @seaweedfs Application.get_env(:evercam_media, :seaweedfs_url)
+  @seaweedfs_1 Application.get_env(:evercam_media, :seaweedfs_url_1)
+
+  def point_to_seaweed(request_date) do
+    oct_date =
+      {{2017, 10, 31}, {23, 59, 59}}
+      |> Calendar.DateTime.from_erl!("UTC")
+
+    case Calendar.DateTime.diff(request_date, oct_date) do
+      {:ok, _, _, :after} -> @seaweedfs
+      _ -> @seaweedfs_1
+    end
+  end
 
   def latest(camera_exid) do
     Path.wildcard("#{@root_dir}/#{camera_exid}/snapshots/*")
@@ -125,8 +137,8 @@ defmodule EvercamMedia.Snapshot.Storage do
   end
 
   def days(camera_exid, from, to, timezone) do
-    url_base = "#{@seaweedfs}/#{camera_exid}/snapshots"
-    apps_list = get_camera_apps_list(camera_exid)
+    url_base = "#{point_to_seaweed(from)}/#{camera_exid}/snapshots"
+    apps_list = get_camera_apps_list(camera_exid, from)
     from_date = Calendar.Strftime.strftime!(from, "%Y/%m")
     to_date = Calendar.Strftime.strftime!(to, "%Y/%m")
 
@@ -137,6 +149,7 @@ defmodule EvercamMedia.Snapshot.Storage do
       |> Enum.map(fn(day) -> parse_hour(from.year, from.month, day, "00:00:00", timezone) end)
       |> Enum.reject(fn(datetime) -> Calendar.DateTime.before?(datetime, from) end)
 
+    url_base = "#{point_to_seaweed(to)}/#{camera_exid}/snapshots"
     to_days =
       apps_list
       |> Enum.flat_map(fn(app) -> request_from_seaweedfs("#{url_base}/#{app}/#{to_date}/", "Subdirectories", "Name") end)
@@ -150,8 +163,8 @@ defmodule EvercamMedia.Snapshot.Storage do
   end
 
   def hours(camera_exid, from, to, timezone) do
-    url_base = "#{@seaweedfs}/#{camera_exid}/snapshots"
-    apps_list = get_camera_apps_list(camera_exid)
+    url_base = "#{point_to_seaweed(from)}/#{camera_exid}/snapshots"
+    apps_list = get_camera_apps_list(camera_exid, from)
     from_date = Calendar.Strftime.strftime!(from, "%Y/%m/%d")
     to_date = Calendar.Strftime.strftime!(to, "%Y/%m/%d")
 
@@ -162,6 +175,7 @@ defmodule EvercamMedia.Snapshot.Storage do
       |> Enum.map(fn(hour) -> parse_hour(from.year, from.month, from.day, "#{hour}:00:00", timezone) end)
       |> Enum.reject(fn(datetime) -> Calendar.DateTime.before?(datetime, from) end)
 
+    url_base = "#{point_to_seaweed(to)}/#{camera_exid}/snapshots"
     to_hours =
       apps_list
       |> Enum.flat_map(fn(app) -> request_from_seaweedfs("#{url_base}/#{app}/#{to_date}/", "Subdirectories", "Name") end)
@@ -175,8 +189,8 @@ defmodule EvercamMedia.Snapshot.Storage do
   end
 
   def hour(camera_exid, hour) do
-    url_base = "#{@seaweedfs}/#{camera_exid}/snapshots"
-    apps_list = get_camera_apps_list(camera_exid)
+    url_base = "#{point_to_seaweed(hour)}/#{camera_exid}/snapshots"
+    apps_list = get_camera_apps_list(camera_exid, hour)
     hour_datetime = Calendar.Strftime.strftime!(hour, "%Y/%m/%d/%H")
     dir_paths = lookup_dir_paths(camera_exid, apps_list, hour)
 
@@ -203,17 +217,22 @@ defmodule EvercamMedia.Snapshot.Storage do
     from_date = parse_timestamp(from)
     to_date = parse_timestamp(to)
     camera_exid
-    |> get_camera_apps_list
+    |> get_camera_apps_list(from_date)
     |> Enum.flat_map(fn(app) -> do_seaweedfs_load_range(camera_exid, from, app) end)
     |> Enum.reject(fn(snapshot) -> not_is_between?(snapshot.created_at, from_date, to_date) end)
     |> Enum.sort_by(fn(snapshot) -> snapshot.created_at end)
   end
 
   defp do_seaweedfs_load_range(camera_exid, from, app_name) do
-    directory_path = construct_directory_path(camera_exid, from, app_name, "")
-    hour_metadata = metadata_load("#{@seaweedfs}#{directory_path}metadata.json")
+    storage_url =
+      from
+      |> parse_timestamp
+      |> point_to_seaweed
 
-    request_from_seaweedfs("#{@seaweedfs}#{directory_path}?limit=3600", "Files", "name")
+    directory_path = construct_directory_path(camera_exid, from, app_name, "")
+    hour_metadata = metadata_load("#{storage_url}#{directory_path}metadata.json")
+
+    request_from_seaweedfs("#{storage_url}#{directory_path}?limit=3600", "Files", "name")
     |> Enum.reject(fn(file_name) -> file_name == "metadata.json" end)
     |> Enum.map(fn(file_name) ->
       metadata = Util.deep_get(hour_metadata, [file_name, "motion_level"], nil)
@@ -221,8 +240,12 @@ defmodule EvercamMedia.Snapshot.Storage do
     end)
   end
 
-  defp get_camera_apps_list(camera_exid) do
+  defp get_camera_apps_list(camera_exid, request_date \\ nil)
+  defp get_camera_apps_list(camera_exid, nil) do
     request_from_seaweedfs("#{@seaweedfs}/#{camera_exid}/snapshots/", "Subdirectories", "Name")
+  end
+  defp get_camera_apps_list(camera_exid, request_date) do
+    request_from_seaweedfs("#{point_to_seaweed(request_date)}/#{camera_exid}/snapshots/", "Subdirectories", "Name")
   end
 
   defp request_from_seaweedfs(url, type, attribute) do
@@ -261,6 +284,57 @@ defmodule EvercamMedia.Snapshot.Storage do
         end
       {_last_save_date, timestamp, img} -> {:ok, timestamp, img}
     end
+  end
+
+  def import_thumbnail_from_old_server() do
+    Camera.all |> Enum.each(fn(c) ->
+      nov_url = "#{@seaweedfs}/#{c.exid}/snapshots/thumbnail.jpg"
+      oct_url = "#{@seaweedfs_1}/#{c.exid}/snapshots/thumbnail.jpg"
+      case HTTPoison.get(nov_url, [], hackney: [pool: :seaweedfs_download_pool]) do
+        {:ok, %HTTPoison.Response{status_code: 200, body: _snapshot, headers: _header}} ->
+          Logger.info "Alreday have latest thumbnail of camera: #{c.exid}"
+        _error ->
+          case HTTPoison.get(oct_url, [], hackney: [pool: :seaweedfs_download_pool]) do
+            {:ok, %HTTPoison.Response{status_code: 200, body: snapshot, headers: _header}} ->
+              Logger.info "Save thumbnail from oct server. Camera: #{c.exid}"
+              file_path = "/#{c.exid}/snapshots/thumbnail.jpg"
+              case HTTPoison.post(nov_url, {:multipart, [{file_path, snapshot, []}]}, [], hackney: [pool: :seaweedfs_upload_pool]) do
+                {:ok, _} -> :noop
+                {:error, error} -> Logger.info "[thumbnail_import_error] [#{c.exid}] [#{inspect error}]"
+              end
+            _error -> Logger.info "No thumbnail."
+          end
+      end
+    end)
+  end
+
+  def import_oldest_from_old_server() do
+    Camera.all |> Enum.each(fn(c) ->
+      oldest_image_name =
+        "#{@seaweedfs_1}/#{c.exid}/snapshots/?limit=1"
+        |> request_from_seaweedfs("Files", "name")
+        |> Enum.sort(&(&2 > &1))
+        |> List.first
+
+      case oldest_image_name  do
+        nil -> Logger.info "No image found for camera: #{c.exid}"
+        file_id when file_id == "thumbnail.jpg" -> Logger.info "Found thumbnail for camera: #{c.exid}"
+        _ ->
+          Logger.info "Oldest image found for camera: #{c.exid}, image: #{oldest_image_name}"
+          oct_url = "#{@seaweedfs_1}/#{c.exid}/snapshots/#{oldest_image_name}"
+          case HTTPoison.get(oct_url, [], hackney: [pool: :seaweedfs_download_pool]) do
+            {:ok, %HTTPoison.Response{status_code: 200, body: snapshot}} ->
+              nov_url = "#{@seaweedfs}/#{c.exid}/snapshots/#{oldest_image_name}"
+              file_path = "/#{c.exid}/snapshots/#{oldest_image_name}"
+              case HTTPoison.post(nov_url, {:multipart, [{file_path, snapshot, []}]}, [], hackney: [pool: :seaweedfs_upload_pool]) do
+                {:ok, _} -> Logger.info "Save oldest image for camera: #{c.exid}, #{nov_url}"
+                {:error, error} -> Logger.info "[import_oldest_from_old_server] [#{c.exid}] [#{inspect error}]"
+              end
+            _error ->
+              Logger.info "Failed to get oldest snapshot for camera: #{c.exid}"
+          end
+      end
+    end)
   end
 
   def disk_thumbnail_load(camera_exid) do
@@ -563,10 +637,11 @@ defmodule EvercamMedia.Snapshot.Storage do
     end
   end
   def load(camera_exid, timestamp, notes) do
+    img_datetime = Calendar.DateTime.Parse.unix!(timestamp)
     app_name = notes_to_app_name(notes)
     directory_path = construct_directory_path(camera_exid, timestamp, app_name, "")
     file_name = construct_file_name(timestamp)
-    url = @seaweedfs <> directory_path <> file_name
+    url = point_to_seaweed(img_datetime) <> directory_path <> file_name
 
     case HTTPoison.get(url, [], hackney: [pool: :seaweedfs_download_pool]) do
       {:ok, %HTTPoison.Response{status_code: 200, body: snapshot}} ->
