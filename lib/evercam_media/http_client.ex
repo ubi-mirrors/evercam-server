@@ -113,7 +113,7 @@ defmodule EvercamMedia.HTTPClient.DigestAuth do
   end
 
   defp parse_digest_header(auth_head) do
-    case Regex.scan(~r/(\w+\s*)=\"([\w=\s|:\\]+)/, auth_head) do
+    case Regex.scan(~r/(\w+\s*)=\"([\w=\s|()|:\\]+)/, auth_head) do
       [] ->
         raise "Error in digest authentication header: #{auth_head}"
       parsed ->
