@@ -3,7 +3,8 @@ defmodule EvercamMediaWeb.CameraShareView do
   alias EvercamMedia.Util
 
   def render("index.json", %{camera_shares: camera_shares, camera: camera, user: user}) do
-    shares_json = %{shares: render_many(camera_shares, __MODULE__, "camera_share.json")}
+    filtered_shares = camera_shares |> Enum.filter(fn(share) -> share.user != nil end)
+    shares_json = %{shares: render_many(filtered_shares, __MODULE__, "camera_share.json")}
     if Permission.Camera.can_edit?(user, camera) do
       shares_json |> Map.merge(privileged_camera_attributes(camera))
     else
@@ -12,8 +13,9 @@ defmodule EvercamMediaWeb.CameraShareView do
   end
 
   def render("all_shares.json", %{shares: shares, share_requests: share_requests, errors: errors}) do
+    filtered_shares = shares |> Enum.filter(fn(share) -> share.user != nil end)
     %{
-      shares: render_many(shares, __MODULE__, "camera_share.json"),
+      shares: render_many(filtered_shares, __MODULE__, "camera_share.json"),
       share_requests: Enum.map(share_requests, fn(camera_share_request) ->
         %{
           id: camera_share_request.key,

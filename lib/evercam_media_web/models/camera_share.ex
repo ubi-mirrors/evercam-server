@@ -136,6 +136,7 @@ defmodule CameraShare do
     |> where(camera_id: ^camera.id)
     |> preload(:user)
     |> Repo.all
+    |> Enum.filter(fn(share) -> share.user != nil end)
     |> Enum.map(fn(share) -> share.user.id end)
   end
 
