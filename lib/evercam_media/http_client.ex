@@ -30,7 +30,7 @@ defmodule EvercamMedia.HTTPClient do
   def get(:digest_auth, url, username, password) do
     case get(url) do
       {:ok, response} ->
-        get(:digest_auth, response, url, username, password)
+        chooose_auth(response, url, username, password)
       response ->
         response
     end
@@ -59,6 +59,13 @@ defmodule EvercamMedia.HTTPClient do
         cookie
       response ->
         response
+    end
+  end
+
+  defp chooose_auth(response, url, username, password) do
+    case response.headers |> Enum.find(fn({k, v}) -> k == "WWW-Authenticate" && String.starts_with?(v, "Digest")  end) do
+      nil -> get(:basic_auth, url, username, password)
+      _ -> get(:digest_auth, response, url, username, password)
     end
   end
 
