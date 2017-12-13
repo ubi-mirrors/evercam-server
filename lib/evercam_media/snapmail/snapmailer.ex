@@ -183,11 +183,11 @@ defmodule EvercamMedia.Snapmail.Snapmailer do
     current_date = Calendar.DateTime.now_utc
     thumbnail_date = Calendar.DateTime.Parse.unix!(timestamp)
     case Calendar.DateTime.diff(current_date, thumbnail_date) do
-      {:ok, seconds, _, :after} -> is_younder?(seconds)
+      {:ok, seconds, _, :after} -> is_younger?(seconds)
       _ -> false
     end
   end
 
-  defp is_younder?(seconds) when seconds <= 300, do: true
-  defp is_younder?(seconds) when seconds > 300, do: false
+  defp is_younger?(seconds) when seconds <= 300, do: true
+  defp is_younger?(seconds) when seconds > 300, do: false
 end
