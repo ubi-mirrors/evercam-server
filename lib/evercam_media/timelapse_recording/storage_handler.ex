@@ -12,9 +12,9 @@ defmodule EvercamMedia.TimelapseRecording.StorageHandler do
   end
 
   def handle_info({:got_snapshot, data}, state) do
-    {camera_exid, timestamp, image, bucket_path} = data
+    {camera_exid, timestamp, image, _bucket_path} = data
     Logger.debug "S3 storage called"
-    spawn fn -> S3.save(camera_exid, timestamp, image, bucket_path) end
+    spawn fn -> S3.save(camera_exid, timestamp, image, "recordings") end
     {:noreply, [], state}
   end
 

@@ -3,7 +3,6 @@ defmodule EvercamMedia.TimelapseRecording.S3 do
   TODO
   """
   require Logger
-  alias EvercamMedia.TimelapseRecording.TimelapseRecordingSupervisor
   @region Application.get_env(:ex_aws, :region)
 
   def create_bucket(bucket_path) do
@@ -12,22 +11,30 @@ defmodule EvercamMedia.TimelapseRecording.S3 do
     |> ExAws.request!
   end
 
-  def save(camera_exid, timestamp, image, bucket_path) do
+  def save(camera_exid, timestamp, image, _notes, opts \\ []) do
     Logger.debug "[#{camera_exid}] [snapshot_upload] [#{timestamp}]"
-    camera = Camera.get_full(camera_exid)
     directory_path = construct_bucket_path(camera_exid, timestamp)
     file_path = construct_file_name(timestamp)
+    opts = Enum.concat(opts, [content_type: "image/jpeg"])
+    "#{directory_path}#{file_path}"
+    |> do_save(image, opts)
+  end
 
-    case directory_path == bucket_path do
-      true ->
-        ExAws.S3.put_object("evercam-camera-assets", "#{directory_path}#{file_path}", image)
-        |> ExAws.request!
-      false ->
-        create_bucket(directory_path)
-        ExAws.S3.put_object("evercam-camera-assets", "#{directory_path}#{file_path}", image)
-        |> ExAws.request!
-        do_update_bucket_path(camera, directory_path)
-    end
+  def do_save(path, content, opts) do
+    ExAws.S3.put_object("evercam-camera-assets", path, content, opts)
+    |> ExAws.request!
+  end
+
+  def make_file_public(camera_exid, timestamp) do
+    directory_path = construct_bucket_path(camera_exid, timestamp)
+    file_path = construct_file_name(timestamp)
+    do_change_acl("#{directory_path}#{file_path}", [acl: :public_read])
+    Logger.debug "Made file public read #{directory_path}#{file_path}"
+  end
+
+  def do_change_acl(path, acl) do
+    ExAws.S3.put_object_acl("evercam-camera-assets", path, acl)
+    |> ExAws.request!
   end
 
   def days(camera_exid, year, month) do
@@ -74,9 +81,12 @@ defmodule EvercamMedia.TimelapseRecording.S3 do
 
   def load(camera_exid, timestamp) do
     file_path = convert_timestamp_to_path(timestamp)
-    full_path = "#{camera_exid}/snapshots/#{file_path}"
+    "#{camera_exid}/snapshots/#{file_path}"
+    |> do_load
+  end
 
-    case ExAws.S3.get_object("evercam-camera-assets", full_path) |> ExAws.request do
+  def do_load(path) do
+    case ExAws.S3.get_object("evercam-camera-assets", path) |> ExAws.request do
       {:ok, response} -> {:ok, response.body}
       {:error, {:http_error, code, response}} ->
         message = EvercamMedia.XMLParser.parse_single(response.body, '/Error/Message')
@@ -88,13 +98,6 @@ defmodule EvercamMedia.TimelapseRecording.S3 do
     timestamp
     |> Calendar.DateTime.Parse.unix!
     |> Calendar.Strftime.strftime!("%Y/%m/%d/%H_%M_%S.jpg")
-  end
-
-  defp do_update_bucket_path(camera, bucket_path) do
-    "timelapse_#{camera.exid}"
-    |> String.to_atom
-    |> Process.whereis
-    |> TimelapseRecordingSupervisor.update_path_worker(camera, bucket_path)
   end
 
   def construct_bucket_path(camera_exid, timestamp) do

@@ -161,6 +161,12 @@ defmodule EvercamMediaWeb.Router do
       options "/cameras/:id/nvr/stream/vhinfo", NVRController, :nothing
       post "/cameras/:id/nvr/snapshots/extract", NVRController, :extract_snapshots
       options "/cameras/:id/nvr/snapshots/extract", NVRController, :nothing
+
+      get "/cameras/:id/compare/:compare_id", CompareController, :show
+      get "/cameras/:id/compare/:compare_id/animation", CompareController, :load_animation
+      get "/cameras/:id/compare", CompareController, :index
+      post "/cameras/:id/compare", CompareController, :create
+      options "/cameras/:id/compare", CompareController, :nothing
     end
 
     scope "/" do
