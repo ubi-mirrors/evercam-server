@@ -24,7 +24,7 @@ defmodule EvercamMediaWeb.CompareController do
          :ok <- deliver_content(conn, camera_exid, compare_id),
          :ok <- ensure_can_list(current_user, camera, conn)
     do
-      case Compare.by_exid(camera_exid) do
+      case Compare.by_exid(compare_id) do
         nil ->
           render_error(conn, 404, "Compare archive '#{compare_id}' not found!")
         compare_archive ->
