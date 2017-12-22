@@ -21,6 +21,7 @@ defmodule EvercamMediaWeb.CompareController do
     camera = Camera.get_full(camera_exid)
 
     with :ok <- ensure_camera_exists(camera, camera_exid, conn),
+         :ok <- deliver_content(conn, camera_exid, compare_id),
          :ok <- ensure_can_list(current_user, camera, conn)
     do
       case Compare.by_exid(camera_exid) do
@@ -65,18 +66,8 @@ defmodule EvercamMediaWeb.CompareController do
     end
   end
 
-  def load_animation(conn, %{"id" => camera_exid, "compare_id" => compare_id}) do
-    case S3.do_load("#{camera_exid}/compares/#{compare_id}.gif") do
-      {:ok, response} ->
-        conn
-        |> put_resp_header("content-type", "image/gif")
-        |> text(response)
-      {:error, code, message} ->
-        conn
-        |> put_status(code)
-        |> json(message)
-    end
-  end
+  defp get_content_type("gif"), do: "image/gif"
+  defp get_content_type("mp4"), do: "video/mp4"
 
   defp export_image(camera_exid, timestamp, image_base64) do
     decoded_image = decode_image(image_base64)
@@ -95,13 +86,16 @@ defmodule EvercamMediaWeb.CompareController do
     comm_resize_after = "ffmpeg -i #{root}after_image.jpg -s 1280x720 #{root}after_image_resize.jpg"
     logo_comm = "convert #{root}temp.gif -gravity SouthEast -geometry +0+0 null: #{evercam_logo} -layers Composite #{animated_file}"
     animation_comm = "convert #{root}after_image_resize.jpg #{root}before_image_resize.jpg -write mpr:stack -delete 0--1 mpr:stack'[1]' \\( mpr:stack'[0]' -set delay 3 -crop 4x0 -reverse \\) mpr:stack'[0]' \\( mpr:stack'[1]' -set delay 4 -crop 8x0 \\) -set delay 2 -loop 0 #{root}temp.gif"
-    command = "#{comm_resize_before} && #{comm_resize_after} && #{animation_comm} && #{logo_comm}"
+    mp4_command = "ffmpeg -i #{animated_file} #{root}#{compare_id}.mp4"
+    command = "#{comm_resize_before} && #{comm_resize_after} && #{animation_comm} && #{logo_comm} && #{mp4_command}"
 
     case Porcelain.shell(command).out do
       "" ->
-        content = File.read!(animated_file)
-        upload_path = "#{camera_exid}/compares/#{compare_id}.gif"
-        S3.do_save(upload_path, content, [content_type: "image/gif", acl: :public_read])
+        gif_content = File.read!(animated_file)
+        mp4_content = File.read!("#{root}#{compare_id}.mp4")
+        upload_path = "#{camera_exid}/compares/#{compare_id}"
+        S3.do_save("#{upload_path}.gif", gif_content, [content_type: "image/gif", acl: :public_read])
+        S3.do_save("#{upload_path}.mp4", mp4_content, [acl: :public_read])
       _ -> :nothing
     end
     File.rm_rf(root)
@@ -124,6 +118,31 @@ defmodule EvercamMediaWeb.CompareController do
       :ok
     else
       render_error(conn, 401, "Unauthorized.")
+    end
+  end
+
+  defp deliver_content(conn, camera_exid, compare_id) do
+    format =
+      String.split(compare_id, ".")
+      |> Enum.filter(fn(n) -> n == "gif" || n == "mp4" end)
+      |> List.first
+
+    case format do
+      nil -> :ok
+      extension -> load_animation(conn, camera_exid, String.replace(compare_id, [".gif", ".mp4"], ""), extension)
+    end
+  end
+
+  defp load_animation(conn, camera_exid, compare_id, format) do
+    case S3.do_load("#{camera_exid}/compares/#{compare_id}.#{format}") do
+      {:ok, response} ->
+        conn
+        |> put_resp_header("content-type", get_content_type(format))
+        |> text(response)
+      {:error, code, message} ->
+        conn
+        |> put_status(code)
+        |> json(message)
     end
   end
 
