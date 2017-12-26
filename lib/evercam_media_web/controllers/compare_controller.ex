@@ -89,18 +89,29 @@ defmodule EvercamMediaWeb.CompareController do
     mp4_command = "ffmpeg -i #{animated_file} #{root}#{compare_id}.mp4"
     command = "#{comm_resize_before} && #{comm_resize_after} && #{animation_comm} && #{logo_comm} && #{mp4_command}"
 
-    case Porcelain.shell(command).out do
-      "" ->
-        gif_content = File.read!(animated_file)
-        mp4_content = File.read!("#{root}#{compare_id}.mp4")
-        upload_path = "#{camera_exid}/compares/#{compare_id}"
-        S3.do_save("#{upload_path}.gif", gif_content, [content_type: "image/gif", acl: :public_read])
-        S3.do_save("#{upload_path}.mp4", mp4_content, [acl: :public_read])
-      _ -> :nothing
+    try do
+      case Porcelain.shell(command).out do
+        "" ->
+          gif_content = File.read!(animated_file)
+          mp4_content = File.read!("#{root}#{compare_id}.mp4")
+          upload_path = "#{camera_exid}/compares/#{compare_id}"
+          S3.do_save("#{upload_path}.gif", gif_content, [content_type: "image/gif", acl: :public_read])
+          S3.do_save("#{upload_path}.mp4", mp4_content, [acl: :public_read])
+          update_compare(compare_id, 1)
+        _ -> update_compare(compare_id, 2)
+      end
+    catch _type, _error ->
+      update_compare(compare_id, 2)
     end
     File.rm_rf(root)
   end
   defp create_animated(_animation, _camera_exid, _compare_id, _before_image, _after_image), do: :nothing
+
+  defp update_compare(compare_id, status) do
+    compare = Compare.by_exid(compare_id)
+    compare_changeset = Compare.changeset(compare, %{status: status})
+    Repo.update(compare_changeset)
+  end
 
   defp decode_image(image_base64) do
     image_base64
@@ -134,16 +145,17 @@ defmodule EvercamMediaWeb.CompareController do
   end
 
   defp load_animation(conn, camera_exid, compare_id, format) do
-    case S3.do_load("#{camera_exid}/compares/#{compare_id}.#{format}") do
-      {:ok, response} ->
-        conn
-        |> put_resp_header("content-type", get_content_type(format))
-        |> text(response)
-      {:error, code, message} ->
-        conn
-        |> put_status(code)
-        |> json(message)
-    end
+    {content_type, content} =
+      case S3.do_load("#{camera_exid}/compares/#{compare_id}.#{format}") do
+        {:ok, response} ->
+          {get_content_type(format), response}
+        {:error, _, _} ->
+          evercam_logo_loader = Path.join(Application.app_dir(:evercam_media), "priv/static/images/evercam-logo-loader.gif")
+          {"image/gif", File.read!(evercam_logo_loader)}
+      end
+    conn
+    |> put_resp_header("content-type", content_type)
+    |> text(content)
   end
 
   defp add_parameter(params, _field, _key, nil), do: params

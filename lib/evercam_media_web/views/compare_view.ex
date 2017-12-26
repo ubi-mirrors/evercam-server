@@ -21,8 +21,15 @@ defmodule EvercamMediaWeb.CompareView do
       requester_email: Util.deep_get(compare, [:camera, :owner, :email], ""),
       before: Util.ecto_datetime_to_unix(compare.before_date),
       after: Util.ecto_datetime_to_unix(compare.after_date),
-      created_at: Util.ecto_datetime_to_unix(compare.inserted_at),
       embed_code: compare.embed_code,
+      gif_url: "#{EvercamMediaWeb.Endpoint.static_url}/v1/cameras/#{compare.camera.exid}/compare/#{compare.exid}.gif",
+      mp4_url: "#{EvercamMediaWeb.Endpoint.static_url}/v1/cameras/#{compare.camera.exid}/compare/#{compare.exid}.mp4",
+      Status: status(compare.status),
+      created_at: Util.ecto_datetime_to_unix(compare.inserted_at)
     }
   end
+
+  defp status(0), do: "Processing"
+  defp status(1), do: "Done"
+  defp status(2), do: "Failed"
 end

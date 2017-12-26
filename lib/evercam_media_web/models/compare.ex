@@ -4,8 +4,10 @@ defmodule Compare do
   import Ecto.Query
   alias EvercamMedia.Repo
 
-  @required_fields ~w(camera_id name before_date after_date embed_code)
+  @required_fields ~w(camera_id name before_date after_date embed_code status)
   @optional_fields ~w(exid create_animation)
+
+  @status %{processing: 0, completed: 1, failed: 2}
 
   schema "compares" do
     belongs_to :camera, Camera, foreign_key: :camera_id
@@ -16,6 +18,7 @@ defmodule Compare do
     field :after_date, Ecto.DateTime
     field :embed_code, :string
     field :create_animation, :boolean
+    field :status, :integer, default: 0
     timestamps(type: Ecto.DateTime, default: Ecto.DateTime.utc)
   end
 
