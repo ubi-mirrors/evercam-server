@@ -86,7 +86,7 @@ defmodule EvercamMediaWeb.CompareController do
     comm_resize_after = "ffmpeg -i #{root}after_image.jpg -s 1280x720 #{root}after_image_resize.jpg"
     logo_comm = "convert #{root}temp.gif -gravity SouthEast -geometry +0+0 null: #{evercam_logo} -layers Composite #{animated_file}"
     animation_comm = "convert #{root}after_image_resize.jpg #{root}before_image_resize.jpg -write mpr:stack -delete 0--1 mpr:stack'[1]' \\( mpr:stack'[0]' -set delay 3 -crop 4x0 -reverse \\) mpr:stack'[0]' \\( mpr:stack'[1]' -set delay 4 -crop 8x0 \\) -set delay 2 -loop 0 #{root}temp.gif"
-    mp4_command = "ffmpeg -i #{animated_file} #{root}#{compare_id}.mp4"
+    mp4_command = "ffmpeg -f gif -i #{animated_file} -pix_fmt yuv420p -c:v h264_nvenc -movflags +faststart -filter:v crop='floor(in_w/2)*2:floor(in_h/2)*2' #{root}#{compare_id}.mp4"
     command = "#{comm_resize_before} && #{comm_resize_after} && #{animation_comm} && #{logo_comm} && #{mp4_command}"
 
     try do
