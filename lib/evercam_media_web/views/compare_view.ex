@@ -22,8 +22,8 @@ defmodule EvercamMediaWeb.CompareView do
       before: Util.ecto_datetime_to_unix(compare.before_date),
       after: Util.ecto_datetime_to_unix(compare.after_date),
       embed_code: compare.embed_code,
-      gif_url: "#{EvercamMediaWeb.Endpoint.static_url}/v1/cameras/#{compare.camera.exid}/compare/#{compare.exid}.gif",
-      mp4_url: "#{EvercamMediaWeb.Endpoint.static_url}/v1/cameras/#{compare.camera.exid}/compare/#{compare.exid}.mp4",
+      gif_url: "#{EvercamMediaWeb.Endpoint.static_url}/v1/cameras/#{compare.camera.exid}/compares/#{compare.exid}.gif",
+      mp4_url: "#{EvercamMediaWeb.Endpoint.static_url}/v1/cameras/#{compare.camera.exid}/compares/#{compare.exid}.mp4",
       Status: status(compare.status),
       created_at: Util.ecto_datetime_to_unix(compare.inserted_at)
     }
