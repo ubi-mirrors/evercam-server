@@ -146,7 +146,7 @@ defmodule EvercamMedia.Snapmail.Snapmailer do
         case try_snapshot(camera, 1) do
           {:ok, image, true} ->
             send worker, {:camera_reply, camera.camera_exid, image, timestamp}
-            %{exid: camera.camera_exid, name: camera.name, data: image}
+            %{exid: camera.camera_exid, name: camera.name, data: image, image_timestamp: timestamp}
           {:ok, image, false} -> %{exid: camera.camera_exid, name: camera.name, data: image}
           {:error, _error} -> %{exid: camera.camera_exid, name: camera.name, data: nil}
         end

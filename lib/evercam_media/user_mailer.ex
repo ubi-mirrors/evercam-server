@@ -1,6 +1,7 @@
 defmodule EvercamMedia.UserMailer do
   alias EvercamMedia.Snapshot.Storage
   alias EvercamMedia.Snapshot.CamClient
+  import SnapmailLogs, only: [save_snapmail: 4]
 
   @config Application.get_env(:evercam_media, :mailgun)
   @from Application.get_env(:evercam_media, EvercamMediaWeb.Endpoint)[:email]
@@ -160,6 +161,9 @@ defmodule EvercamMedia.UserMailer do
         html: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "snapmail.html", id: id, recipient: recipient, notify_time: notify_time, camera_images: camera_images, year: @year),
         text: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "snapmail.txt", id: id, recipient: recipient, notify_time: notify_time, camera_images: camera_images, year: @year)
     end)
+    image_timestamp = attachments |> List.first |> Map.get(:image_timestamp)
+    save_snapmail(recipients, "Your Scheduled SnapMail @ #{notify_time}",
+      Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "snapmail.html", id: id, recipient: "history_user", notify_time: notify_time, camera_images: camera_images, year: @year), "#{image_timestamp}")
   end
 
   def snapshot_extraction_started(snapshot_extractor) do
@@ -217,7 +221,7 @@ defmodule EvercamMedia.UserMailer do
     camera_images
     |> Enum.map(fn(camera_image) ->
       if !!camera_image.data do
-        %{content: camera_image.data, filename: "#{camera_image.exid}.jpg"}
+        %{content: camera_image.data, filename: "#{camera_image.exid}.jpg", image_timestamp: camera_image.image_timestamp}
       end
     end)
     |> Enum.reject(fn(content) -> content == nil end)
