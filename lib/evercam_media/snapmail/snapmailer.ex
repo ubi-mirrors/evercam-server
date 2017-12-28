@@ -146,18 +146,18 @@ defmodule EvercamMedia.Snapmail.Snapmailer do
         case try_snapshot(camera, 1) do
           {:ok, image, true} ->
             send worker, {:camera_reply, camera.camera_exid, image, timestamp}
-            %{exid: camera.camera_exid, name: camera.name, data: image, image_timestamp: timestamp}
+            %{exid: camera.camera_exid, name: camera.name, data: image}
           {:ok, image, false} -> %{exid: camera.camera_exid, name: camera.name, data: image}
           {:error, _error} -> %{exid: camera.camera_exid, name: camera.name, data: nil}
         end
       end)
-      |> send_snapmail(state)
+      |> send_snapmail(state, timestamp)
     end
   end
 
-  defp send_snapmail([], _state), do: :noop
-  defp send_snapmail(images_list, state) do
-    EvercamMedia.UserMailer.snapmail(state.name, state.config.notify_time, state.config.recipients, images_list)
+  defp send_snapmail([], _state, _timestamp), do: :noop
+  defp send_snapmail(images_list, state, timestamp) do
+    EvercamMedia.UserMailer.snapmail(state.name, state.config.notify_time, state.config.recipients, images_list, timestamp)
   end
 
   defp try_snapshot(camera, 3) do
