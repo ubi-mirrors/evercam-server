@@ -56,9 +56,8 @@ defmodule EvercamMediaWeb.CompareController do
             compare
             |> Repo.preload(:camera)
             |> Repo.preload([camera: :owner])
-          spawn fn -> export_image(camera_exid, String.to_integer(params["before"]), params["before_image"]) end
-          spawn fn -> export_image(camera_exid, String.to_integer(params["after"]), params["after_image"]) end
-          spawn fn -> create_animated(params["create_animation"], camera_exid, compare.exid, params["before_image"], params["after_image"]) end
+
+          start_export(Application.get_env(:evercam_media, :run_spawn), camera_exid, compare.exid, params)
           render(conn |> put_status(:created), CompareView, "show.json", %{compare: created_compare})
         {:error, changeset} ->
           render_error(conn, 400, Util.parse_changeset(changeset))
@@ -69,7 +68,14 @@ defmodule EvercamMediaWeb.CompareController do
   defp get_content_type("gif"), do: "image/gif"
   defp get_content_type("mp4"), do: "video/mp4"
 
-  defp export_image(camera_exid, timestamp, image_base64) do
+  defp start_export(true, camera_exid, compare_exid, params) do
+    spawn fn -> do_export_image(camera_exid, String.to_integer(params["before"]), params["before_image"]) end
+    spawn fn -> do_export_image(camera_exid, String.to_integer(params["after"]), params["after_image"]) end
+    spawn fn -> create_animated(params["create_animation"], camera_exid, compare_exid, params["before_image"], params["after_image"]) end
+  end
+  defp start_export(_is_run, _camera_exid, _compare_exid, _params), do: :nothing
+
+  defp do_export_image(camera_exid, timestamp, image_base64) do
     decoded_image = decode_image(image_base64)
     S3.save(camera_exid, timestamp, decoded_image, "compare", [acl: :public_read])
   end

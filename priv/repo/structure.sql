@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.6.5
--- Dumped by pg_dump version 9.6.5
+-- Dumped from database version 9.6.6
+-- Dumped by pg_dump version 10.0
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -507,6 +507,44 @@ ALTER SEQUENCE cloud_recordings_id_seq OWNED BY cloud_recordings.id;
 
 
 --
+-- Name: compares; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE compares (
+    id integer NOT NULL,
+    exid character varying(255) NOT NULL,
+    name character varying(255) NOT NULL,
+    before_date timestamp without time zone NOT NULL,
+    after_date timestamp without time zone NOT NULL,
+    embed_code character varying(255) NOT NULL,
+    create_animation boolean DEFAULT false,
+    camera_id integer NOT NULL,
+    inserted_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL,
+    status integer DEFAULT 0 NOT NULL
+);
+
+
+--
+-- Name: compares_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE compares_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: compares_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE compares_id_seq OWNED BY compares.id;
+
+
+--
 -- Name: sq_countries; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -693,6 +731,40 @@ CREATE SEQUENCE snapmail_cameras_id_seq
 --
 
 ALTER SEQUENCE snapmail_cameras_id_seq OWNED BY snapmail_cameras.id;
+
+
+--
+-- Name: snapmail_logs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE snapmail_logs (
+    id integer NOT NULL,
+    recipients text,
+    subject text,
+    body text,
+    image_timestamp text,
+    inserted_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+--
+-- Name: snapmail_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE snapmail_logs_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: snapmail_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE snapmail_logs_id_seq OWNED BY snapmail_logs.id;
 
 
 --
@@ -1093,6 +1165,13 @@ ALTER TABLE ONLY cloud_recordings ALTER COLUMN id SET DEFAULT nextval('cloud_rec
 
 
 --
+-- Name: compares id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY compares ALTER COLUMN id SET DEFAULT nextval('compares_id_seq'::regclass);
+
+
+--
 -- Name: licences id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1118,6 +1197,13 @@ ALTER TABLE ONLY motion_detections ALTER COLUMN id SET DEFAULT nextval('motion_d
 --
 
 ALTER TABLE ONLY snapmail_cameras ALTER COLUMN id SET DEFAULT nextval('snapmail_cameras_id_seq'::regclass);
+
+
+--
+-- Name: snapmail_logs id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY snapmail_logs ALTER COLUMN id SET DEFAULT nextval('snapmail_logs_id_seq'::regclass);
 
 
 --
@@ -1228,6 +1314,14 @@ ALTER TABLE ONLY cloud_recordings
 
 
 --
+-- Name: compares compares_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY compares
+    ADD CONSTRAINT compares_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: licences licences_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1321,6 +1415,14 @@ ALTER TABLE ONLY schema_migrations
 
 ALTER TABLE ONLY snapmail_cameras
     ADD CONSTRAINT snapmail_cameras_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: snapmail_logs snapmail_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY snapmail_logs
+    ADD CONSTRAINT snapmail_logs_pkey PRIMARY KEY (id);
 
 
 --
@@ -1462,6 +1564,13 @@ CREATE UNIQUE INDEX cloud_recordings_camera_id_index ON cloud_recordings USING b
 
 
 --
+-- Name: compare_exid_unique_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX compare_exid_unique_index ON compares USING btree (exid);
+
+
+--
 -- Name: country_code_unique_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1536,6 +1645,14 @@ CREATE UNIQUE INDEX user_email_unique_index ON users USING btree (email);
 --
 
 CREATE UNIQUE INDEX user_username_unique_index ON users USING btree (username);
+
+
+--
+-- Name: compares compares_camera_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY compares
+    ADD CONSTRAINT compares_camera_id_fkey FOREIGN KEY (camera_id) REFERENCES cameras(id);
 
 
 --
@@ -1622,5 +1739,5 @@ ALTER TABLE ONLY timelapses
 -- PostgreSQL database dump complete
 --
 
-INSERT INTO "schema_migrations" (version) VALUES (20160616160229), (20160712101523), (20160720125939), (20160727112052), (20160830055709), (20161202114834), (20161202115000), (20161213162000), (20161219130300), (20161221070146), (20161221070226), (20170103162400), (20170112110000), (20170213140200), (20170222114100), (20170414141100), (20170419105000), (20171009070501);
+INSERT INTO "schema_migrations" (version) VALUES (20160616160229), (20160712101523), (20160720125939), (20160727112052), (20160830055709), (20161202114834), (20161202115000), (20161213162000), (20161219130300), (20161221070146), (20161221070226), (20170103162400), (20170112110000), (20170213140200), (20170222114100), (20170414141100), (20170419105000), (20171009070501), (20171213120725), (20171220062816), (20171222101825);
 
