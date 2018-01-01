@@ -5,6 +5,9 @@ defmodule EvercamMedia.HikvisionNVR do
 
   @root_dir Application.get_env(:evercam_media, :storage_dir)
 
+  @doc """
+  Publish camera RTSP stream to RTMP server from NVR
+  """
   def publish_stream_from_rtsp(exid, host, port, username, password, channel, starttime, endtime) do
     archive_pids = ffmpeg_pids("#{@root_dir}/#{host}#{port}/archive/")
     with true <- is_creating_clip(archive_pids) do
@@ -19,6 +22,9 @@ defmodule EvercamMedia.HikvisionNVR do
     end
   end
 
+  @doc """
+  Give all recorded stream URLs of camera from NVR
+  """
   def get_stream_urls(_exid, host, port, username, password, channel, starttime, endtime) do
     xml = "<?xml version='1.0' encoding='utf-8'?><CMSearchDescription><searchID>C5954E12-60B0-0001-954E-999096EF7420</searchID><trackList>"
     xml = "#{xml}<trackID>#{channel}</trackID></trackList><timeSpanList><timeSpan><startTime>#{starttime}</startTime><endTime>#{endtime}</endTime>"
@@ -34,6 +40,9 @@ defmodule EvercamMedia.HikvisionNVR do
     end
   end
 
+  @doc """
+  Give all days which have recordings on NVR
+  """
   def get_recording_days(host, port, username, password, channel, year, month) do
     xml = "<?xml version='1.0' encoding='utf-8'?><trackDailyParam><year>#{year}</year><monthOfYear>#{month}</monthOfYear></trackDailyParam>"
 
@@ -46,6 +55,9 @@ defmodule EvercamMedia.HikvisionNVR do
     end
   end
 
+  @doc """
+  Stop running ffmpeg of published RTSP stream
+  """
   def stop(exid, host, port, username, password) do
     rtsp_url = "rtsp://#{username}:#{password}@#{host}:#{port}/Streaming/tracks/"
     archive_pids = ffmpeg_pids("#{@root_dir}/#{host}#{port}/archive/")
@@ -53,6 +65,9 @@ defmodule EvercamMedia.HikvisionNVR do
     {:ok}
   end
 
+  @doc """
+  Extract clip from NVR recordings
+  """
   def extract_clip_from_stream(camera, archive, starttime, endtime) do
     ip = Camera.host(camera, "external")
     port = Camera.port(camera, "external", "rtsp")
@@ -79,6 +94,9 @@ defmodule EvercamMedia.HikvisionNVR do
     end
   end
 
+  @doc """
+  Give complete stream info of specific channel
+  """
   def get_stream_info(host, port, username, password, channel) do
     url = "http://#{host}:#{port}/ISAPI/Streaming/channels/#{channel}"
     hackney = [basic_auth: {username, password}, pool: :snapshot_pool]
@@ -98,6 +116,9 @@ defmodule EvercamMedia.HikvisionNVR do
     end
   end
 
+  @doc """
+  Give NVR device info
+  """
   def get_device_info(host, port, username, password) do
     url = "http://#{host}:#{port}/ISAPI/System/deviceInfo"
     hackney = [basic_auth: {username, password}, pool: :snapshot_pool]
@@ -120,6 +141,9 @@ defmodule EvercamMedia.HikvisionNVR do
     end
   end
 
+  @doc """
+  Give HDD info attached with NVR
+  """
   def get_hdd_info(host, port, username, password) do
     url = "http://#{host}:#{port}/ISAPI/ContentMgmt/Storage"
     hackney = [basic_auth: {username, password}, pool: :snapshot_pool]
@@ -143,6 +167,9 @@ defmodule EvercamMedia.HikvisionNVR do
     end
   end
 
+  @doc """
+  Give VH info from NVR
+  """
   def get_vh_info(host, port, username, password, channel) do
     channel_id = parse_chl_id(channel)
     url = "http://#{host}:#{port}/ISAPI/ContentMgmt/InputProxy/channels/#{channel_id}/status"
@@ -163,6 +190,9 @@ defmodule EvercamMedia.HikvisionNVR do
     end
   end
 
+  @doc """
+  Download recorded file from NVR in mp4 format
+  """
   def download_stream(host, port, username, password, url) do
     xml = "<?xml version='1.0'?><downloadRequest version='1.0' xmlns='http://urn:selfextension:psiaext-ver10-xsd'>"
     xml = "#{xml}<playbackURI>rtsp://#{host}:#{port}#{url}"
