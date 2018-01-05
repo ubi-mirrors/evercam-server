@@ -41,6 +41,7 @@ defmodule EvercamMediaWeb.CompareController do
          :ok <- ensure_camera_exists(camera, camera_exid, conn)
     do
       compare_params = %{
+        requested_by: current_user.id,
         camera_id: camera.id,
         name: params["name"],
         before_date: convert_to_datetime(params["before"]),
@@ -55,12 +56,31 @@ defmodule EvercamMediaWeb.CompareController do
           created_compare =
             compare
             |> Repo.preload(:camera)
-            |> Repo.preload([camera: :owner])
+            |> Repo.preload(:user)
 
           start_export(Application.get_env(:evercam_media, :run_spawn), camera_exid, compare.exid, params)
           render(conn |> put_status(:created), CompareView, "show.json", %{compare: created_compare})
         {:error, changeset} ->
           render_error(conn, 400, Util.parse_changeset(changeset))
+      end
+    end
+  end
+
+  def delete(conn, %{"id" => camera_exid, "compare_id" => compare_id}) do
+    current_user = conn.assigns[:current_user]
+    camera = Camera.get_full(camera_exid)
+
+    with :ok <- ensure_camera_exists(camera, camera_exid, conn),
+         :ok <- ensure_can_edit(current_user, camera, conn)
+    do
+      CameraActivity.log_activity(current_user, camera, "archive deleted", %{ip: user_request_ip(conn)})
+      case Compare.by_exid(compare_id) do
+        nil ->
+          render_error(conn, 404, "Compare archive '#{compare_id}' not found!")
+        compare_archive ->
+          Compare.delete_by_exid(compare_archive.exid)
+          delete_files(compare_archive, camera_exid)
+          json(conn, %{})
       end
     end
   end
@@ -119,6 +139,18 @@ defmodule EvercamMediaWeb.CompareController do
     Repo.update(compare_changeset)
   end
 
+  defp delete_files(compare, camera_exid) do
+    spawn(fn ->
+      before_date = Util.ecto_datetime_to_unix(compare.before_date)
+      after_date = Util.ecto_datetime_to_unix(compare.after_date)
+      animation_path = "#{camera_exid}/compares/#{compare.exid}"
+      before_image = "#{S3.construct_bucket_path(camera_exid, before_date)}#{S3.construct_file_name(before_date)}"
+      after_image = "#{S3.construct_bucket_path(camera_exid, after_date)}#{S3.construct_file_name(after_date)}"
+      files = ["#{after_image}", "#{before_image}", "#{animation_path}.gif", "#{animation_path}.mp4"]
+      S3.delete_object(files)
+    end)
+  end
+
   defp decode_image(image_base64) do
     image_base64
     |> String.replace_leading("data:image/jpeg;base64,", "")
@@ -132,6 +164,14 @@ defmodule EvercamMediaWeb.CompareController do
 
   defp ensure_can_list(current_user, camera, conn) do
     if current_user && Permission.Camera.can_list?(current_user, camera) do
+      :ok
+    else
+      render_error(conn, 401, "Unauthorized.")
+    end
+  end
+
+  defp ensure_can_edit(current_user, camera, conn) do
+    if current_user && Permission.Camera.can_edit?(current_user, camera) do
       :ok
     else
       render_error(conn, 401, "Unauthorized.")

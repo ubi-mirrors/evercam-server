@@ -4,13 +4,14 @@ defmodule Compare do
   import Ecto.Query
   alias EvercamMedia.Repo
 
-  @required_fields ~w(camera_id name before_date after_date embed_code status)
+  @required_fields ~w(camera_id name before_date after_date embed_code status requested_by)
   @optional_fields ~w(exid create_animation)
 
-  @status %{processing: 0, completed: 1, failed: 2}
+  # @status %{processing: 0, completed: 1, failed: 2}
 
   schema "compares" do
     belongs_to :camera, Camera, foreign_key: :camera_id
+    belongs_to :user, User, foreign_key: :requested_by
 
     field :exid, :string
     field :name, :string
@@ -26,7 +27,7 @@ defmodule Compare do
     Compare
     |> where(camera_id: ^camera_id)
     |> preload(:camera)
-    |> preload([camera: :owner])
+    |> preload(:user)
     |> Repo.all
   end
 
@@ -34,7 +35,7 @@ defmodule Compare do
     Compare
     |> where(exid: ^String.downcase(exid))
     |> preload(:camera)
-    |> preload([camera: :owner])
+    |> preload(:user)
     |> Repo.one
   end
 

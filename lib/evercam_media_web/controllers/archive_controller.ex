@@ -21,7 +21,9 @@ defmodule EvercamMediaWeb.ArchiveController do
         |> Archive.with_status_if_given(status)
         |> Archive.get_all_with_associations
 
-      render(conn, ArchiveView, "index.json", %{archives: archives})
+      compare_archives = Compare.get_by_camera(camera.id)
+
+      render(conn, ArchiveView, "index.json", %{archives: archives, compares: compare_archives})
     end
   end
 
@@ -105,7 +107,7 @@ defmodule EvercamMediaWeb.ArchiveController do
 
     with :ok <- valid_params(conn, params),
          :ok <- ensure_camera_exists(camera, exid, conn),
-         :ok <- ensure_can_delete(current_user, camera, conn),
+         :ok <- ensure_can_edit(current_user, camera, conn),
          :ok <- ensure_archive(conn, archive_id)
     do
       Archive.delete_by_exid(archive_id)
@@ -246,8 +248,8 @@ defmodule EvercamMediaWeb.ArchiveController do
     end
   end
 
-  defp ensure_can_delete(current_user, camera, conn) do
-    if current_user && Permission.Camera.can_delete?(current_user, camera) do
+  defp ensure_can_edit(current_user, camera, conn) do
+    if current_user && Permission.Camera.can_edit?(current_user, camera) do
       :ok
     else
       render_error(conn, 401, "Unauthorized.")

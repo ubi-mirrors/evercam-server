@@ -2,8 +2,11 @@ defmodule EvercamMediaWeb.ArchiveView do
   use EvercamMediaWeb, :view
   alias EvercamMedia.Util
 
-  def render("index.json", %{archives: archives}) do
-    %{archives: render_many(archives, __MODULE__, "archive.json")}
+  def render("index.json", %{archives: archives, compares: compares}) do
+    archives_list = render_many(archives, __MODULE__, "archive.json")
+    compares_list =
+      Enum.map(compares, fn(compare) -> render_compare_archive(compare) end)
+    %{archives: archives_list ++ compares_list}
   end
 
   def render("show.json", %{archive: nil}), do: %{archives: []}
@@ -25,7 +28,29 @@ defmodule EvercamMediaWeb.ArchiveView do
       requester_email: Util.deep_get(archive, [:user, :email], ""),
       embed_time: archive.embed_time,
       frames: archive.frames,
-      public: archive.public
+      public: archive.public,
+      embed_code: "",
+      type: "Clip"
+    }
+  end
+
+  def render_compare_archive(compare) do
+    %{
+      id: compare.exid,
+      camera_id: compare.camera.exid,
+      title: compare.name,
+      from_date: Util.ecto_datetime_to_unix(compare.before_date),
+      to_date: Util.ecto_datetime_to_unix(compare.after_date),
+      created_at: Util.ecto_datetime_to_unix(compare.inserted_at),
+      status: compare_status(compare.status),
+      requested_by: Util.deep_get(compare, [:user, :username], ""),
+      requester_name: User.get_fullname(compare.user),
+      requester_email: Util.deep_get(compare, [:user, :email], ""),
+      embed_time: false,
+      frames: 2,
+      public: true,
+      embed_code: compare.embed_code,
+      type: "Compare"
     }
   end
 
@@ -33,4 +58,8 @@ defmodule EvercamMediaWeb.ArchiveView do
   defp status(1), do: "Processing"
   defp status(2), do: "Completed"
   defp status(3), do: "Failed"
+
+  defp compare_status(0), do: "Processing"
+  defp compare_status(1), do: "Completed"
+  defp compare_status(2), do: "Failed"
 end

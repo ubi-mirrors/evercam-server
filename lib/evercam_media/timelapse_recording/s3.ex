@@ -20,6 +20,11 @@ defmodule EvercamMedia.TimelapseRecording.S3 do
     |> do_save(image, opts)
   end
 
+  def delete_object(files) do
+    ExAws.S3.delete_multiple_objects("evercam-camera-assets", files)
+    |> ExAws.request!
+  end
+
   def do_save(path, content, opts) do
     ExAws.S3.put_object("evercam-camera-assets", path, content, opts)
     |> ExAws.request!
