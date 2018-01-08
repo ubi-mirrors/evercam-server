@@ -71,17 +71,13 @@ defmodule EvercamMediaWeb.CompareController do
     camera = Camera.get_full(camera_exid)
 
     with :ok <- ensure_camera_exists(camera, camera_exid, conn),
-         :ok <- ensure_can_edit(current_user, camera, conn)
+         {:ok, compare} <- compare_exists(conn, compare_id),
+         :ok <- ensure_can_delete(current_user, camera, conn, compare.user.username)
     do
-      CameraActivity.log_activity(current_user, camera, "archive deleted", %{ip: user_request_ip(conn)})
-      case Compare.by_exid(compare_id) do
-        nil ->
-          render_error(conn, 404, "Compare archive '#{compare_id}' not found!")
-        compare_archive ->
-          Compare.delete_by_exid(compare_archive.exid)
-          delete_files(compare_archive, camera_exid)
-          json(conn, %{})
-      end
+      Compare.delete_by_exid(compare.exid)
+      CameraActivity.log_activity(current_user, camera, "compare deleted", %{ip: user_request_ip(conn)})
+      delete_files(compare, camera_exid)
+      json(conn, %{})
     end
   end
 
@@ -170,11 +166,22 @@ defmodule EvercamMediaWeb.CompareController do
     end
   end
 
-  defp ensure_can_edit(current_user, camera, conn) do
-    if current_user && Permission.Camera.can_edit?(current_user, camera) do
-      :ok
-    else
-      render_error(conn, 401, "Unauthorized.")
+  defp ensure_can_delete(nil, _camera, conn, _requester), do: render_error(conn, 401, "Unauthorized.")
+  defp ensure_can_delete(current_user, camera, conn, requester) do
+    case Permission.Camera.can_edit?(current_user, camera) do
+      true -> :ok
+      false ->
+        case current_user.username do
+          username when username == requester -> :ok
+          _ -> render_error(conn, 401, "Unauthorized.")
+        end
+    end
+  end
+
+  defp compare_exists(conn, compare_id) do
+    case Compare.by_exid(compare_id) do
+      nil -> render_error(conn, 404, "Compare '#{compare_id}' not found!")
+      %Compare{} = compare -> {:ok, compare}
     end
   end
 

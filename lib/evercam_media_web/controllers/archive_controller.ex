@@ -101,14 +101,13 @@ defmodule EvercamMediaWeb.ArchiveController do
     end
   end
 
-  def delete(conn, %{"id" => exid, "archive_id" => archive_id} = params) do
+  def delete(conn, %{"id" => exid, "archive_id" => archive_id}) do
     current_user = conn.assigns[:current_user]
     camera = Camera.get_full(exid)
 
-    with :ok <- valid_params(conn, params),
-         :ok <- ensure_camera_exists(camera, exid, conn),
-         :ok <- ensure_can_edit(current_user, camera, conn),
-         :ok <- ensure_archive(conn, archive_id)
+    with :ok <- ensure_camera_exists(camera, exid, conn),
+         {:ok, archive} <- archive_exists(conn, archive_id),
+         :ok <- ensure_can_delete(current_user, camera, conn, archive.user.username)
     do
       Archive.delete_by_exid(archive_id)
       spawn(fn -> delete_archive(camera.exid, archive_id) end)
@@ -248,14 +247,6 @@ defmodule EvercamMediaWeb.ArchiveController do
     end
   end
 
-  defp ensure_can_edit(current_user, camera, conn) do
-    if current_user && Permission.Camera.can_edit?(current_user, camera) do
-      :ok
-    else
-      render_error(conn, 401, "Unauthorized.")
-    end
-  end
-
   defp valid_params(conn, params) do
     if present?(params["id"]) && present?(params["archive_id"]) do
       :ok
@@ -267,10 +258,22 @@ defmodule EvercamMediaWeb.ArchiveController do
   defp present?(param) when param in [nil, ""], do: false
   defp present?(_param), do: true
 
-  defp ensure_archive(conn, archive_id) do
+  defp archive_exists(conn, archive_id) do
     case Archive.by_exid(archive_id) do
       nil -> render_error(conn, 404, "Archive '#{archive_id}' not found!")
-      _ -> :ok
+      %Archive{} = archive -> {:ok, archive}
+    end
+  end
+
+  defp ensure_can_delete(nil, _camera, conn, _requester), do: render_error(conn, 401, "Unauthorized.")
+  defp ensure_can_delete(current_user, camera, conn, requester) do
+    case Permission.Camera.can_edit?(current_user, camera) do
+      true -> :ok
+      false ->
+        case current_user.username do
+          username when username == requester -> :ok
+          _ -> render_error(conn, 403, "Unauthorized.")
+        end
     end
   end
 
