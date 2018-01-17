@@ -99,6 +99,14 @@ defmodule EvercamMedia.TimelapseRecording.S3 do
     end
   end
 
+  def load_compare_thumbnail(camera_exid, compare_id) do
+    get_url = "#{camera_exid}/compares/thumb-#{compare_id}.jpg"
+    case ExAws.S3.get_object("evercam-camera-assets", get_url) |> ExAws.request do
+      {:ok, response} -> response.body
+      {:error, {:http_error, _code, _response}} -> EvercamMedia.Util.unavailable
+    end
+  end
+
   defp convert_timestamp_to_path(timestamp) do
     timestamp
     |> Calendar.DateTime.Parse.unix!

@@ -109,7 +109,8 @@ defmodule EvercamMediaWeb.CompareController do
     logo_comm = "convert #{root}temp.gif -gravity SouthEast -geometry +15+15 null: #{evercam_logo} -layers Composite #{animated_file}"
     animation_comm = "convert #{root}after_image_resize.jpg #{root}before_image_resize.jpg -write mpr:stack -delete 0--1 mpr:stack'[1]' \\( mpr:stack'[0]' -set delay 3 -crop 4x0 -reverse \\) mpr:stack'[0]' \\( mpr:stack'[1]' -set delay 4 -crop 8x0 \\) -set delay 2 -loop 0 #{root}temp.gif"
     mp4_command = "ffmpeg -f gif -i #{animated_file} -pix_fmt yuv420p -c:v h264_nvenc -movflags +faststart -filter:v crop='floor(in_w/2)*2:floor(in_h/2)*2' #{root}#{compare_id}.mp4"
-    command = "#{comm_resize_before} && #{comm_resize_after} && #{animation_comm} && #{logo_comm} && #{mp4_command}"
+    thumbnail = "ffmpeg -i #{root}#{compare_id}.mp4 -vframes 1 -vf scale=640:-1 -y #{root}thumb-#{compare_id}.jpg"
+    command = "#{comm_resize_before} && #{comm_resize_after} && #{animation_comm} && #{logo_comm} && #{mp4_command} && #{thumbnail}"
 
     try do
       case Porcelain.shell(command).out do
@@ -119,6 +120,7 @@ defmodule EvercamMediaWeb.CompareController do
           upload_path = "#{camera_exid}/compares/#{compare_id}"
           S3.do_save("#{upload_path}.gif", gif_content, [content_type: "image/gif", acl: :public_read])
           S3.do_save("#{upload_path}.mp4", mp4_content, [acl: :public_read])
+          S3.do_save("#{camera_exid}/compares/thumb-#{compare_id}.jpg", File.read!("#{root}thumb-#{compare_id}.jpg"), [content_type: "image/jpg", acl: :public_read])
           update_compare(compare_id, 1)
         _ -> update_compare(compare_id, 2)
       end

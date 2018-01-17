@@ -30,7 +30,8 @@ defmodule EvercamMediaWeb.ArchiveView do
       frames: archive.frames,
       public: archive.public,
       embed_code: "",
-      type: "Clip"
+      type: "Clip",
+      thumbnail: "data:image/jpeg;base64,#{Base.encode64(EvercamMedia.Snapshot.Storage.load_archive_thumbnail(archive.camera.exid, archive.exid))}"
     }
   end
 
@@ -50,7 +51,8 @@ defmodule EvercamMediaWeb.ArchiveView do
       frames: 2,
       public: true,
       embed_code: compare.embed_code,
-      type: "Compare"
+      type: "Compare",
+      thumbnail: "data:image/jpeg;base64,#{Base.encode64(EvercamMedia.TimelapseRecording.S3.load_compare_thumbnail(compare.camera.exid, compare.exid))}"
     }
   end
 

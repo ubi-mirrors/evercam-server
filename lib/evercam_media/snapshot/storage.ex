@@ -576,6 +576,32 @@ defmodule EvercamMedia.Snapshot.Storage do
     ConCache.dirty_put(:camera_thumbnail, camera_exid, {last_save_date, timestamp, image})
   end
 
+  def load_archive_thumbnail(camera_exid, archive_id) do
+    file_path = "/#{camera_exid}/clips/thumb-#{archive_id}.jpg"
+    get_url = "#{@seaweedfs}#{file_path}"
+    case HTTPoison.get("#{get_url}", [], hackney: [pool: :seaweedfs_download_pool]) do
+      {:ok, %HTTPoison.Response{status_code: 200, body: body}} -> body
+      {:ok, %HTTPoison.Response{status_code: 404}} -> Util.unavailable
+      {:error, %HTTPoison.Error{reason: _reason}} -> Util.unavailable
+    end
+  end
+
+  def save_archive_thumbnail(camera_exid, archive_id, path) do
+    file_path = "/#{camera_exid}/clips/thumb-#{archive_id}.jpg"
+    post_url = "#{@seaweedfs}#{file_path}"
+
+    "#{path}thumb-#{archive_id}.jpg"
+    |> File.open([:read, :binary, :raw], fn(file) -> IO.binread(file, :all) end)
+    |> case do
+      {:ok, content} ->
+        case HTTPoison.post(post_url, {:multipart, [{file_path, content, []}]}, [], hackney: [pool: :seaweedfs_upload_pool]) do
+          {:ok, _response} -> :noop
+          {:error, error} -> Logger.info "[save_archive_thumbnail] [#{camera_exid}] [#{archive_id}] [#{inspect error}]"
+        end
+      {:error, _error} -> {:error, "Failed to read video file."}
+    end
+  end
+
   def save_mp4(camera_exid, archive_id, path) do
     "#{path}/#{archive_id}.mp4"
     |> File.open([:read, :binary, :raw], fn(file) -> IO.binread(file, :all) end)
