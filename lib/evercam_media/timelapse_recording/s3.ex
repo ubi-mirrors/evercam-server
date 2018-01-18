@@ -103,7 +103,7 @@ defmodule EvercamMedia.TimelapseRecording.S3 do
     get_url = "#{camera_exid}/compares/thumb-#{compare_id}.jpg"
     case ExAws.S3.get_object("evercam-camera-assets", get_url) |> ExAws.request do
       {:ok, response} -> response.body
-      {:error, {:http_error, _code, _response}} -> EvercamMedia.Util.unavailable
+      {:error, _} -> EvercamMedia.Util.unavailable
     end
   end
 
