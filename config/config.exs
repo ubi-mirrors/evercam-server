@@ -45,6 +45,9 @@ config :evercam_media,
   storage_dir: "storage"
 
 config :evercam_media,
+  files_dir: "data"
+
+config :evercam_media,
   seaweedfs_url: "http://localhost:8888",
   seaweedfs_url_1: "http://localhost:8888"
 

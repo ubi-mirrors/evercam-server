@@ -2,7 +2,7 @@ defmodule EvercamMediaWeb.ArchiveController do
   use EvercamMediaWeb, :controller
   alias EvercamMediaWeb.ArchiveView
   alias EvercamMedia.Util
-  import EvercamMedia.Snapshot.Storage, only: [delete_archive: 2]
+  alias EvercamMedia.Snapshot.Storage
   require Logger
 
   @status %{pending: 0, processing: 1, completed: 2, failed: 3}
@@ -69,7 +69,7 @@ defmodule EvercamMediaWeb.ArchiveController do
     with :ok <- ensure_camera_exists(camera, exid, conn),
          :ok <- ensure_can_list(current_user, camera, conn)
     do
-      create_clip(params, camera, conn, current_user)
+      create_clip(params, camera, conn, current_user, params["type"])
     end
   end
 
@@ -110,44 +110,47 @@ defmodule EvercamMediaWeb.ArchiveController do
          :ok <- ensure_can_delete(current_user, camera, conn, archive.user.username)
     do
       Archive.delete_by_exid(archive_id)
-      spawn(fn -> delete_archive(camera.exid, archive_id) end)
+      spawn(fn -> Storage.delete_archive(camera.exid, archive_id) end)
       CameraActivity.log_activity(current_user, camera, "archive deleted", %{ip: user_request_ip(conn)})
       json(conn, %{})
     end
   end
 
-  defp create_clip(params, camera, conn, current_user) do
+  defp create_clip(params, camera, conn, current_user, "url") do
+    changeset = archive_changeset(params, camera, current_user, @status.completed)
+    case Repo.insert(changeset) do
+      {:ok, archive} ->
+        archive = archive |> Repo.preload(:camera) |> Repo.preload(:user)
+        CameraActivity.log_activity(current_user, camera, "saved media URL", %{ip: user_request_ip(conn)})
+        render(conn |> put_status(:created), ArchiveView, "show.json", %{archive: archive})
+      {:error, changeset} ->
+        render_error(conn, 400, Util.parse_changeset(changeset))
+    end
+  end
+  defp create_clip(params, camera, conn, current_user, "file") do
+    changeset = archive_changeset(params, camera, current_user, @status.completed)
+    case Repo.insert(changeset) do
+      {:ok, archive} ->
+        archive = archive |> Repo.preload(:camera) |> Repo.preload(:user)
+        CameraActivity.log_activity(current_user, camera, "file uploaded", %{ip: user_request_ip(conn)})
+        copy_uploaded_file(Application.get_env(:evercam_media, :run_spawn), camera.exid, archive.exid, params["file_url"])
+        render(conn |> put_status(:created), ArchiveView, "show.json", %{archive: archive})
+      {:error, changeset} ->
+        render_error(conn, 400, Util.parse_changeset(changeset))
+    end
+  end
+  defp create_clip(params, camera, conn, current_user, _type) do
     timezone = camera |> Camera.get_timezone
     unix_from = params["from_date"]
     unix_to = params["to_date"]
     from_date = clip_date(unix_from, timezone)
     to_date = clip_date(unix_to, timezone)
-    clip_exid = generate_exid(params["title"])
+
+    changeset = archive_changeset(params, camera, current_user, @status.pending)
 
     current_date_time =
       Calendar.DateTime.now_utc
       |> Calendar.DateTime.to_erl
-    user_id =
-      params["requested_by"]
-      |> User.by_username
-      |> Util.deep_get([:id], "")
-
-    params =
-      params
-      |> Map.delete("id")
-      |> Map.delete("api_id")
-      |> Map.delete("api_key")
-      |> Map.merge(%{
-        "requested_by" => user_id,
-        "camera_id" => camera.id,
-        "title" => params["title"],
-        "from_date" => from_date,
-        "to_date" => to_date,
-        "status" => @status.pending,
-        "exid" => clip_exid
-      })
-
-    changeset = Archive.changeset(%Archive{}, params)
 
     cond do
       !changeset.valid? ->
@@ -173,6 +176,32 @@ defmodule EvercamMediaWeb.ArchiveController do
             render_error(conn, 400, Util.parse_changeset(changeset))
         end
     end
+  end
+
+  defp archive_changeset(params, camera, current_user, status) do
+    timezone = camera |> Camera.get_timezone
+    unix_from = params["from_date"]
+    unix_to = params["to_date"]
+    from_date = clip_date(unix_from, timezone)
+    to_date = clip_date(unix_to, timezone)
+    clip_exid = generate_exid(params["title"])
+
+    archive_params =
+      params
+      |> Map.delete("id")
+      |> Map.delete("api_id")
+      |> Map.delete("api_key")
+      |> Map.merge(%{
+        "requested_by" => current_user.id,
+        "camera_id" => camera.id,
+        "title" => params["title"],
+        "from_date" => from_date,
+        "to_date" => to_date,
+        "status" => status,
+        "exid" => clip_exid,
+        "url" => params["url"]
+      })
+    Archive.changeset(%Archive{}, archive_params)
   end
 
   defp update_clip(conn, _camera, params, archive_id) do
@@ -226,6 +255,16 @@ defmodule EvercamMediaWeb.ArchiveController do
     end
   end
   defp start_archive_creation(_mode, _camera, _archive, _unix_from, _unix_to, _is_nvr), do: :noop
+
+  defp copy_uploaded_file(true, camera_id, archive_id, url) do
+    spawn fn ->
+      Storage.save_archive_file(camera_id, archive_id, url)
+      filename = url |> String.split("/") |> List.last
+      File.rm("#{filename}.bin")
+      File.rm("#{filename}.info")
+    end
+  end
+  defp copy_uploaded_file(_mode, _camera_id, _archive_id, _url), do: :noop
 
   defp convert_timestamp(timestamp) do
     timestamp

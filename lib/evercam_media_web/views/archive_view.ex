@@ -30,7 +30,8 @@ defmodule EvercamMediaWeb.ArchiveView do
       frames: archive.frames,
       public: archive.public,
       embed_code: "",
-      type: "Clip",
+      type: get_type(archive.url),
+      media_url: archive.url,
       thumbnail: "data:image/jpeg;base64,#{Base.encode64(EvercamMedia.Snapshot.Storage.load_archive_thumbnail(archive.camera.exid, archive.exid))}"
     }
   end
@@ -55,6 +56,9 @@ defmodule EvercamMediaWeb.ArchiveView do
       thumbnail: "data:image/jpeg;base64,#{Base.encode64(EvercamMedia.TimelapseRecording.S3.load_compare_thumbnail(compare.camera.exid, compare.exid))}"
     }
   end
+
+  defp get_type(media_url) when media_url in [nil, ""], do: "Clip"
+  defp get_type(media_url), do: "URL"
 
   defp status(0), do: "Pending"
   defp status(1), do: "Processing"

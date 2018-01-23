@@ -602,6 +602,21 @@ defmodule EvercamMedia.Snapshot.Storage do
     end
   end
 
+  def save_archive_file(camera_exid, archive_id, url) do
+    case HTTPoison.get("#{url}", [], hackney: [pool: :seaweedfs_download_pool]) do
+      {:ok, %HTTPoison.Response{status_code: 200, body: content, headers: header}} ->
+        {_, content_type} = List.keyfind(header, "Content-Type", 0)
+        file_extension = content_type |> String.split("/") |> List.last
+        file_path = "/#{camera_exid}/clips/#{archive_id}.#{file_extension}"
+        post_url = "#{@seaweedfs}#{file_path}"
+        case HTTPoison.post(post_url, {:multipart, [{file_path, content, []}]}, [], hackney: [pool: :seaweedfs_upload_pool]) do
+          {:ok, _response} -> :noop
+          {:error, error} -> Logger.info "[save_archive_file] [#{camera_exid}] [#{archive_id}] [#{inspect error}]"
+        end
+      {:error, _} -> :noop
+    end
+  end
+
   def save_mp4(camera_exid, archive_id, path) do
     "#{path}/#{archive_id}.mp4"
     |> File.open([:read, :binary, :raw], fn(file) -> IO.binread(file, :all) end)
