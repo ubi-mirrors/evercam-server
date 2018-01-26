@@ -141,10 +141,16 @@ defmodule EvercamMediaWeb.SnapshotController do
 
     with true <- Permission.Camera.can_list?(conn.assigns[:current_user], camera),
         {:ok, image, notes} <- Storage.load(camera_exid, timestamp, params["notes"]) do
-      data = "data:image/jpeg;base64,#{Base.encode64(image)}"
 
-      conn
-      |> json(%{snapshots: [%{created_at: timestamp, notes: notes, data: data}]})
+      case params["view"] do
+        "true" ->
+          conn
+          |> put_resp_header("content-type", "image/jpeg")
+          |> text(image)
+        _ ->
+          data = "data:image/jpeg;base64,#{Base.encode64(image)}"
+          json(conn, %{snapshots: [%{created_at: timestamp, notes: notes, data: data}]})
+      end
     else
       false -> render_error(conn, 403, "Forbidden.")
       {:error, :not_found} -> render_error(conn, 404, "Snapshot not found.")
