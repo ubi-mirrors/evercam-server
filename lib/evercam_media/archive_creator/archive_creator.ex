@@ -71,15 +71,17 @@ defmodule EvercamMedia.ArchiveCreator.ArchiveCreator do
   defp get_snapshots_and_create_archive(_state, _archive, _status), do: :noop
 
   def loop_list([snap | rest], camera_exid, path, index) do
-    download_snapshot(snap, camera_exid, path, index)
-    loop_list(rest, camera_exid, path, index + 1)
+    next_index = download_snapshot(snap, camera_exid, path, index)
+    loop_list(rest, camera_exid, path, next_index)
   end
   def loop_list([], _camera_exid, _path, _index), do: :noop
 
   def download_snapshot(snap, camera_exid, path, index) do
     case Storage.load(camera_exid, snap.created_at, snap.notes) do
-      {:ok, image, _notes} -> File.write("#{path}#{index}.jpg", image)
-      {:error, _error} -> :noop
+      {:ok, image, _notes} ->
+        File.write("#{path}#{index}.jpg", image)
+        index + 1
+      {:error, error} -> index
     end
   end
 
