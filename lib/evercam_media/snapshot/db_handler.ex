@@ -88,16 +88,17 @@ defmodule EvercamMedia.Snapshot.DBHandler do
 
   def change_camera_status(camera, timestamp, status, error_code \\ nil) do
     do_pause_camera(camera, 20000)
+    datetime =
+      timestamp
+      |> Calendar.DateTime.Parse.unix!
+      |> Calendar.DateTime.to_erl
+      |> Ecto.DateTime.cast!
+    log_camera_status(camera, status, datetime, error_code)
+
     try do
-      datetime =
-        timestamp
-        |> Calendar.DateTime.Parse.unix!
-        |> Calendar.DateTime.to_erl
-        |> Ecto.DateTime.cast!
       params = construct_camera(datetime, status, camera.is_online == status)
       changeset = Camera.changeset(camera, params)
       camera = Repo.update!(changeset)
-      log_camera_status(camera, status, datetime, error_code)
       broadcast_change_to_users(camera)
       Camera.invalidate_camera(camera)
     catch _type, error ->
@@ -115,26 +116,33 @@ defmodule EvercamMedia.Snapshot.DBHandler do
   def log_camera_status(camera, false, datetime, error_code), do: do_log_camera_status(camera, "offline", datetime, %{reason: error_code})
 
   defp do_log_camera_status(camera, status, datetime, extra \\ nil) do
-    spawn fn ->
-      case ConCache.get(:current_camera_status, camera.exid) |> declare_camera_status(camera) |> humanize_status == status do
-        false ->
-          ConCache.dirty_put(:current_camera_status, camera.exid, camera.is_online)
-          parameters = %{camera_id: camera.id, camera_exid: camera.exid, action: status, done_at: datetime, extra: extra}
-          changeset = CameraActivity.changeset(%CameraActivity{}, parameters)
-          SnapshotRepo.insert(changeset)
-          send_notification(status, camera, camera.alert_emails)
-        true -> ConCache.dirty_put(:current_camera_status, camera.exid, camera.is_online)
-      end
+    case ConCache.get(:current_camera_status, camera.exid) do
+      nil ->
+        ConCache.dirty_put(:current_camera_status, camera.exid, declare_camera_status(status))
+        insert_a_log(camera, status, datetime, extra)
+      _ ->
+        log_status_from_concache(ConCache.get(:current_camera_status, camera.exid), camera, status, datetime, extra)
     end
   end
 
-  defp declare_camera_status(nil, camera) do
-    case camera.is_online do
-      true -> false
-      false -> true
+  defp log_status_from_concache(cache_value, camera, status, datetime, extra) do
+    case cache_value |> humanize_status == status do
+      true -> :noop
+      false ->
+        ConCache.dirty_put(:current_camera_status, camera.exid, declare_camera_status(status))
+        insert_a_log(camera, status, datetime, extra)
     end
   end
-  defp declare_camera_status(status, _camera), do: status
+
+  defp insert_a_log(camera, status, datetime, extra) do
+    parameters = %{camera_id: camera.id, camera_exid: camera.exid, action: status, done_at: datetime, extra: extra}
+    changeset = CameraActivity.changeset(%CameraActivity{}, parameters)
+    SnapshotRepo.insert(changeset)
+    send_notification(status, camera, camera.alert_emails)
+  end
+
+  defp declare_camera_status("online"), do: true
+  defp declare_camera_status("offline"), do: false
 
   defp humanize_status(true), do: "online"
   defp humanize_status(false), do: "offline"
