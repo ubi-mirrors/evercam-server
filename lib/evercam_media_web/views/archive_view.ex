@@ -30,9 +30,10 @@ defmodule EvercamMediaWeb.ArchiveView do
       frames: archive.frames,
       public: archive.public,
       embed_code: "",
-      type: get_type(archive.url),
+      file_name: archive.file_name,
+      type: get_type(archive.url, archive.file_name),
       media_url: archive.url,
-      thumbnail: "data:image/jpeg;base64,#{Base.encode64(EvercamMedia.Snapshot.Storage.load_archive_thumbnail(archive.camera.exid, archive.exid))}"
+      thumbnail_url: "#{EvercamMediaWeb.Endpoint.static_url}/v1/cameras/#{archive.camera.exid}/archives/#{archive.exid}/thumbnail?type=clip"
     }
   end
 
@@ -51,14 +52,23 @@ defmodule EvercamMediaWeb.ArchiveView do
       embed_time: false,
       frames: 2,
       public: true,
+      file_name: "",
+      media_url: "",
       embed_code: compare.embed_code,
       type: "Compare",
-      thumbnail: "data:image/jpeg;base64,#{Base.encode64(EvercamMedia.TimelapseRecording.S3.load_compare_thumbnail(compare.camera.exid, compare.exid))}"
+      thumbnail_url: "#{EvercamMediaWeb.Endpoint.static_url}/v1/cameras/#{compare.camera.exid}/archives/#{compare.exid}/thumbnail?type=compare"
     }
   end
 
-  defp get_type(media_url) when media_url in [nil, ""], do: "Clip"
-  defp get_type(media_url), do: "URL"
+  defp get_type(media_url, file_name) when media_url in [nil, ""] do
+    cond do
+      file_name != nil && file_name != "" ->
+        "File"
+      true ->
+        "Clip"
+    end
+  end
+  defp get_type(_media_url, _file_name), do: "URL"
 
   defp status(0), do: "Pending"
   defp status(1), do: "Processing"

@@ -123,6 +123,7 @@ defmodule EvercamMediaWeb.Router do
       get "/cameras/:id/archives", ArchiveController, :index
       get "/cameras/:id/archives/:archive_id", ArchiveController, :show
       get "/cameras/:id/archives/:archive_id/play", ArchiveController, :play
+      get "/cameras/:id/archives/:archive_id/thumbnail", ArchiveController, :thumbnail
       delete "/cameras/:id/archives/:archive_id", ArchiveController, :delete
       post "/cameras/:id/archives", ArchiveController, :create
       options "/cameras/:id/archives", ArchiveController, :nothing

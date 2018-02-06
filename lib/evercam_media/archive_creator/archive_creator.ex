@@ -81,7 +81,7 @@ defmodule EvercamMedia.ArchiveCreator.ArchiveCreator do
       {:ok, image, _notes} ->
         File.write("#{path}#{index}.jpg", image)
         index + 1
-      {:error, error} -> index
+      {:error, _error} -> index
     end
   end
 

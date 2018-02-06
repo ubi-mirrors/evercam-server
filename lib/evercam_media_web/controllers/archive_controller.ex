@@ -3,6 +3,8 @@ defmodule EvercamMediaWeb.ArchiveController do
   alias EvercamMediaWeb.ArchiveView
   alias EvercamMedia.Util
   alias EvercamMedia.Snapshot.Storage
+  import Ecto.Changeset
+  import EvercamMedia.TimelapseRecording.S3, only: [load_compare_thumbnail: 2]
   require Logger
 
   @status %{pending: 0, processing: 1, completed: 2, failed: 3}
@@ -60,6 +62,18 @@ defmodule EvercamMediaWeb.ArchiveController do
       conn
       |> redirect(external: "#{seaweed_url}/#{exid}/clips/#{archive_id}.mp4")
     end
+  end
+
+  def thumbnail(conn, %{"id" => exid, "archive_id" => archive_id, "type" => media_type}) do
+    data =
+      case media_type do
+        "clip" -> Storage.load_archive_thumbnail(exid, archive_id)
+        "compare" -> load_compare_thumbnail(exid, archive_id)
+        _ -> Util.unavailable
+      end
+    conn
+    |> put_resp_header("content-type", "image/jpeg")
+    |> text(data)
   end
 
   def create(conn, %{"id" => exid} = params) do
@@ -129,11 +143,14 @@ defmodule EvercamMediaWeb.ArchiveController do
   end
   defp create_clip(params, camera, conn, current_user, "file") do
     changeset = archive_changeset(params, camera, current_user, @status.completed)
+    exid = get_field(changeset, :exid)
+    changeset = put_change(changeset, :file_name, "#{exid}.#{params["file_extension"]}")
+
     case Repo.insert(changeset) do
       {:ok, archive} ->
         archive = archive |> Repo.preload(:camera) |> Repo.preload(:user)
         CameraActivity.log_activity(current_user, camera, "file uploaded", %{ip: user_request_ip(conn)})
-        copy_uploaded_file(Application.get_env(:evercam_media, :run_spawn), camera.exid, archive.exid, params["file_url"])
+        copy_uploaded_file(Application.get_env(:evercam_media, :run_spawn), camera.exid, archive.exid, params["file_url"], params["file_extension"])
         render(conn |> put_status(:created), ArchiveView, "show.json", %{archive: archive})
       {:error, changeset} ->
         render_error(conn, 400, Util.parse_changeset(changeset))
@@ -256,15 +273,12 @@ defmodule EvercamMediaWeb.ArchiveController do
   end
   defp start_archive_creation(_mode, _camera, _archive, _unix_from, _unix_to, _is_nvr), do: :noop
 
-  defp copy_uploaded_file(true, camera_id, archive_id, url) do
+  defp copy_uploaded_file(true, camera_id, archive_id, url, extension) do
     spawn fn ->
-      Storage.save_archive_file(camera_id, archive_id, url)
-      filename = url |> String.split("/") |> List.last
-      File.rm("#{filename}.bin")
-      File.rm("#{filename}.info")
+      Storage.save_archive_file(camera_id, archive_id, url, extension)
     end
   end
-  defp copy_uploaded_file(_mode, _camera_id, _archive_id, _url), do: :noop
+  defp copy_uploaded_file(_mode, _camera_id, _archive_id, _url, _extension), do: :noop
 
   defp convert_timestamp(timestamp) do
     timestamp
