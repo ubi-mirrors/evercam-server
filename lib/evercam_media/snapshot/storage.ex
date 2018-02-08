@@ -581,8 +581,8 @@ defmodule EvercamMedia.Snapshot.Storage do
     get_url = "#{@seaweedfs}#{file_path}"
     case HTTPoison.get("#{get_url}", [], hackney: [pool: :seaweedfs_download_pool]) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} -> body
-      {:ok, %HTTPoison.Response{status_code: 404}} -> Util.unavailable
-      {:error, %HTTPoison.Error{reason: _reason}} -> Util.unavailable
+      {:ok, %HTTPoison.Response{status_code: 404}} -> Util.default_thumbnail
+      {:error, %HTTPoison.Error{reason: _reason}} -> Util.default_thumbnail
     end
   end
 
@@ -606,6 +606,8 @@ defmodule EvercamMedia.Snapshot.Storage do
     case HTTPoison.get("#{url}", [], hackney: [pool: :seaweedfs_download_pool]) do
       {:ok, %HTTPoison.Response{status_code: 200, body: content}} ->
         file_path = "/#{camera_exid}/clips/#{archive_id}.#{extension}"
+        File.mkdir_p("#{@root_dir}/#{archive_id}/")
+        File.write("#{@root_dir}/#{archive_id}/#{archive_id}.#{extension}", content)
         post_url = "#{@seaweedfs}#{file_path}"
         case HTTPoison.post(post_url, {:multipart, [{file_path, content, []}]}, [], hackney: [pool: :seaweedfs_upload_pool]) do
           {:ok, _response} -> :noop

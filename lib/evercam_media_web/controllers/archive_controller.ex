@@ -69,7 +69,7 @@ defmodule EvercamMediaWeb.ArchiveController do
       case media_type do
         "clip" -> Storage.load_archive_thumbnail(exid, archive_id)
         "compare" -> load_compare_thumbnail(exid, archive_id)
-        _ -> Util.unavailable
+        _ -> Util.default_thumbnail
       end
     conn
     |> put_resp_header("content-type", "image/jpeg")
@@ -276,9 +276,21 @@ defmodule EvercamMediaWeb.ArchiveController do
   defp copy_uploaded_file(true, camera_id, archive_id, url, extension) do
     spawn fn ->
       Storage.save_archive_file(camera_id, archive_id, url, extension)
+      create_thumbnail(camera_id, archive_id, extension)
     end
   end
   defp copy_uploaded_file(_mode, _camera_id, _archive_id, _url, _extension), do: :noop
+
+  defp create_thumbnail(camera_id, archive_id, extension) do
+    root_dir = "#{Application.get_env(:evercam_media, :storage_dir)}/#{archive_id}/"
+    file_path = "#{root_dir}#{archive_id}.#{extension}"
+    case Porcelain.shell("convert -thumbnail 640x480 -background white -alpha remove \"#{file_path}\"[0] #{root_dir}thumb-#{archive_id}.jpg", [err: :out]).out do
+      "" -> :noop
+      _ -> Porcelain.shell("ffmpeg -i #{file_path} -vframes 1 -vf scale=640:-1 -y #{root_dir}thumb-#{archive_id}.jpg", [err: :out]).out
+    end
+    Storage.save_archive_thumbnail(camera_id, archive_id, root_dir)
+    File.rm_rf(root_dir)
+  end
 
   defp convert_timestamp(timestamp) do
     timestamp

@@ -21,6 +21,14 @@ defmodule EvercamMedia.Util do
     end)
   end
 
+  def default_thumbnail do
+    ConCache.dirty_get_or_store(:snapshot_error, "default_thumbnail", fn() ->
+      Application.app_dir(:evercam_media)
+      |> Path.join("priv/static/images/default-thumbnail.jpg")
+      |> File.read!
+    end)
+  end
+
   def storage_unavailable do
     ConCache.dirty_get_or_store(:snapshot_error, "storage_unavailable", fn() ->
       Application.app_dir(:evercam_media)
