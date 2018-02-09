@@ -370,6 +370,7 @@ defmodule EvercamMediaWeb.ArchiveController do
   defp generate_exid(title) do
     clip_exid =
       title
+      |> Util.slugify
       |> String.replace(~r/\W/, "")
       |> String.downcase
       |> String.slice(0..5)

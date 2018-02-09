@@ -441,6 +441,7 @@ defmodule Camera do
       camera_name ->
         camera_id =
           camera_name
+          |> Util.slugify
           |> String.replace(" ", "")
           |> String.replace("-", "")
           |> String.downcase

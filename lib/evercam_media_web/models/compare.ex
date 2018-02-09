@@ -65,6 +65,7 @@ defmodule Compare do
       name ->
         compare_exid =
           name
+          |> EvercamMedia.Util.slugify
           |> String.replace(" ", "")
           |> String.replace("-", "")
           |> String.downcase

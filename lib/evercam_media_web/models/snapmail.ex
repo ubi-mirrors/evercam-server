@@ -174,6 +174,7 @@ defmodule Snapmail do
       subject ->
         camera_id =
           subject
+          |> EvercamMedia.Util.slugify
           |> String.replace(" ", "")
           |> String.replace("-", "")
           |> String.downcase

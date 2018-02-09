@@ -123,4 +123,8 @@ defmodule EvercamMedia.Util do
       msg -> msg
     end)
   end
+
+  def slugify(string) do
+    string |> String.normalize(:nfd) |> String.replace(~r/[^A-z0-9-\s]/u, "")
+  end
 end
