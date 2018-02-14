@@ -67,8 +67,9 @@ defmodule EvercamMedia.CreateArchiveThumbnail do
         File.mkdir_p(path)
         File.write("#{path}/#{compare.exid}.mp4", response)
         create_thumbnail(compare.exid, path)
-        S3.do_save("#{compare.camera.exid}/compares/thumb-#{compare.exid}.jpg", File.read!("#{path}thumb-#{compare.id}.jpg"), [content_type: "image/jpg", acl: :public_read])
+        S3.do_save("#{compare.camera.exid}/compares/thumb-#{compare.exid}.jpg", File.read!("#{path}thumb-#{compare.exid}.jpg"), [content_type: "image/jpg", acl: :public_read])
         Logger.info "Thumbnail for compare (#{compare.exid}) created and saved to S3."
+        File.rm_rf path
       {:error, _, _} -> Logger.info "Failed to download compare (#{compare.exid})."
     end
   end
