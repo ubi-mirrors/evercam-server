@@ -500,7 +500,7 @@ defmodule Camera do
 
   def delete_changeset(camera, params \\ :invalid) do
     camera
-    |> cast(params, @required_fields, @optional_fields)
+    |> cast(params, @required_fields ++ @optional_fields)
   end
 
   def required_fields do
