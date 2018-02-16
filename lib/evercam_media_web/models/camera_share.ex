@@ -93,8 +93,9 @@ defmodule CameraShare do
 
   def user_camera_share(camera, user) do
     CameraShare
-    |> where(camera_id: ^camera.id)
     |> where(user_id: ^user.id)
+    |> or_where(sharer_id: ^user.id)
+    |> where(camera_id: ^camera.id)
     |> preload(:user)
     |> preload(:sharer)
     |> preload(:camera)
