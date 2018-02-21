@@ -67,6 +67,14 @@ config :ex_aws,
   secret_access_key: System.get_env["SECRET_ACCESS_KEY"],
   region: "eu-west-1"
 
+config :evercam_media, :phoenix_swagger,
+  swagger_files: %{
+    "priv/static/swagger.json" => [
+      router: EvercamMediaWeb.Router,
+      endpoint: EvercamMediaWeb.Endpoint
+    ]
+  }
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env}.exs"

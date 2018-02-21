@@ -13,6 +13,23 @@ defmodule EvercamMediaWeb.Router do
     plug CORSPlug, origin: ["*"]
   end
 
+  def swagger_info do
+    %{
+      info: %{
+        version: "1.0",
+        title: "Evercam Server"
+      },
+      host: "media.evercam.io"
+    }
+  end
+
+  scope "/v1/swagger" do
+  forward "/", PhoenixSwagger.Plug.SwaggerUI,
+    otp_app: :evercam_media,
+    swagger_file: "swagger.json",
+    disable_validator: true
+end
+
   pipeline :auth do
     plug EvercamMediaWeb.AuthenticationPlug
   end
@@ -169,6 +186,9 @@ defmodule EvercamMediaWeb.Router do
       options "/cameras/:id/compares", CompareController, :nothing
       delete "/cameras/:id/compares/:compare_id", CompareController, :delete
       options "/cameras/:id/compares/:compare_id", CompareController, :delete
+
+      post "/sdk/nvr/reboot", SDKController, :nvr_reboot
+      options "/sdk/nvr/reboot", SDKController, :nothing
     end
 
     scope "/" do

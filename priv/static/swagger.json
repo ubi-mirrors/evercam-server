@@ -1,0 +1,70 @@
+{
+  "swagger": "2.0",
+  "paths": {
+    "/v1/sdk/nvr/reboot": {
+      "post": {
+        "tags": [
+          "SDK"
+        ],
+        "summary": "Reboot nvr.",
+        "responses": {
+          "201": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_id",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_key",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "ip",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "port",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "user",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "password",
+            "in": "query",
+            "description": ""
+          }
+        ],
+        "operationId": "EvercamMediaWeb.SDKController.nvr_reboot",
+        "description": "Nvr credentials for rebooting."
+      }
+    }
+  },
+  "info": {
+    "version": "1.0",
+    "title": "Evercam Server"
+  },
+  "host": "media.evercam.io",
+  "definitions": {}
+}

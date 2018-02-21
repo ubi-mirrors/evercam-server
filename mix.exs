@@ -14,7 +14,10 @@ defmodule EvercamMedia.Mixfile do
   end
 
   defp aliases do
-    [clean: ["clean"]]
+    [
+      clean: ["clean"],
+      swagger: ["phx.swagger.generate priv/static/swagger.json --router EvercamMediaWeb.Router --endpoint EvercamMediaWeb.Endpoint"]
+    ]
   end
 
   def application do
@@ -59,7 +62,9 @@ defmodule EvercamMedia.Mixfile do
     :elixir_dropbox,
     :ex_aws,
     :configparser_ex,
-    :sweet_xml
+    :sweet_xml,
+    :phoenix_swagger,
+    :ex_json_schema
   ]
 
   # Specifies which paths to compile per environment
@@ -100,7 +105,9 @@ defmodule EvercamMedia.Mixfile do
       {:elixir_dropbox, "~> 0.0.7"},
       {:ex_aws, "~> 1.1.5"},
       {:configparser_ex, "~> 0.2.1"},
-      {:sweet_xml, "~> 0.6", optional: true}
+      {:sweet_xml, "~> 0.6", optional: true},
+      {:phoenix_swagger, "~> 0.7.0"},
+      {:ex_json_schema, "~> 0.5"}
     ]
   end
 end
