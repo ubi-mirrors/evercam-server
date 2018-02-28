@@ -66,7 +66,7 @@
                   <br>
                   <% message_list = @message |> String.split("\n", trim: true) %>
                   <%= for message <- message_list do %>
-                    <div style="margin-bottom: 12px;margin-left: 40px;"><%= message %></div>
+                    <div style="margin-bottom: 12px;margin-left: 40px;"><%= raw message %></div>
                   <% end %>
                 </div>
               </p>
