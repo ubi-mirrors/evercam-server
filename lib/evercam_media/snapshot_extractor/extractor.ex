@@ -37,7 +37,13 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
       end_date = config.end_date
       url = nvr_url(config.host, config.port, config.username, config.password, config.channel)
       images_directory = "#{@root_dir}/#{config.exid}/extract/#{config.id}/"
-      upload_path = "/Construction/#{config.exid}/#{config.id}/"
+      upload_path =
+        case config.requester do
+          "marklensmen@gmail.com" ->
+            "/Construction/#{config.exid}/#{config.id}/"
+          _ ->
+            "/Construction2/#{config.exid}/#{config.id}/"
+        end
       File.mkdir_p(images_directory)
       kill_ffmpeg_pids(config.host, config.port, config.username, config.password)
       {:ok, _, _, status} = Calendar.DateTime.diff(start_date, end_date)
