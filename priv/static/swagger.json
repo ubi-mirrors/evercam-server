@@ -1,6 +1,65 @@
 {
   "swagger": "2.0",
   "paths": {
+    "/v1/users": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "User signup.",
+        "responses": {
+          "201": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "firstname",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "lastname",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "username",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "email",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "password",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "token",
+            "in": "query",
+            "description": ""
+          }
+        ],
+        "operationId": "EvercamMediaWeb.UserController.create",
+        "description": "User credentials for signup."
+      }
+    },
     "/v1/sdk/nvr/reboot": {
       "post": {
         "tags": [
