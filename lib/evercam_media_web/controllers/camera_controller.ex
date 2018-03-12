@@ -1,5 +1,6 @@
 defmodule EvercamMediaWeb.CameraController do
   use EvercamMediaWeb, :controller
+  use PhoenixSwagger
   alias EvercamMediaWeb.CameraView
   alias EvercamMediaWeb.ErrorView
   alias EvercamMedia.Repo
@@ -24,6 +25,19 @@ defmodule EvercamMediaWeb.CameraController do
         }
         json(conn, response)
     end
+  end
+
+  swagger_path :index do
+    get "/v1/cameras"
+    description "Retruns all public and private cameras."
+    summary "Returns all cameras."
+    parameters do
+      api_id :query, :string, "", required: true
+      api_key :query, :string, "", required: true
+    end
+    tag "Cameras"
+    response 200, "Success"
+    response 401, "Invalid API keys"
   end
 
   def index(conn, params) do
@@ -56,6 +70,21 @@ defmodule EvercamMediaWeb.CameraController do
       |> put_status(404)
       |> render(ErrorView, "error.json", %{message: "Not found."})
     end
+  end
+
+  swagger_path :show do
+    get "/v1/cameras/{id}"
+    description "Returns the camera details."
+    summary "Find camera by ID."
+    parameters do
+      id :path, :string, "Camera id that needs to be fetched.", required: true
+      api_id :query, :string, "", required: true
+      api_key :query, :string, "", required: true
+    end
+    tag "Cameras"
+    response 200, "Success"
+    response 404, "Camera not found"
+    response 401, "Invalid API keys"
   end
 
   def show(conn, params) do

@@ -56,7 +56,7 @@ defmodule EvercamMediaWeb.UserController do
       username :query, :string, "", required: true
       email :query, :string, "", required: true
       password :query, :string, "", required: true
-      token :query, :string, "", required: true
+      token :query, :string, "Please use your token according to your platform (WEB, IOS, ANDROID)", required: true
     end
     tag "Users"
     response 201, "Success"

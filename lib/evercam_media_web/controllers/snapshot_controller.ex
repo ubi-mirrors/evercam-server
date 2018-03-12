@@ -1,5 +1,6 @@
 defmodule EvercamMediaWeb.SnapshotController do
   use EvercamMediaWeb, :controller
+  use PhoenixSwagger
   alias EvercamMedia.Snapshot.CamClient
   alias EvercamMedia.Snapshot.DBHandler
   alias EvercamMedia.Snapshot.Error
@@ -10,6 +11,22 @@ defmodule EvercamMediaWeb.SnapshotController do
   alias EvercamMedia.Snapshot.WorkerSupervisor
 
   @optional_params %{"notes" => nil}
+
+  swagger_path :live do
+    get "/v1/cameras/{id}/live/snapshot"
+    description "Caputre and returns the latest jpeg image."
+    summary "Take the snapshot of a live camera."
+    parameters do
+      id :path, :string, "Camera id to snapshot.", required: true
+      api_id :query, :string, "", required: true
+      api_key :query, :string, "", required: true
+    end
+    tag "Cameras"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+    response 403, "Forbidden camera access"
+    response 504, "Camera didn't respond with a jpeg"
+  end
 
   def live(conn, %{"id" => camera_exid}) do
     case snapshot_with_user(camera_exid, conn.assigns[:current_user], false) do
@@ -133,6 +150,33 @@ defmodule EvercamMediaWeb.SnapshotController do
     else
       false -> render_error(conn, 403, "Forbidden.")
     end
+  end
+
+  swagger_path :show do
+    get "/v1/cameras/{id}/recordings/snapshots/{timestamp}"
+    description "Caputre and returns the jpeg image."
+    summary "Take the snapshot of a recording camera."
+    parameters do
+      id :path, :string, "Camera id to snapshot.", required: true
+      timestamp :path, :string, "Format: unix timestamp", required: true
+      notes :query,
+            :string, "
+            - Evercam Proxy = Recording
+            - Evercam Thumbnail = Thumbnail
+            - Evercam Timelapse = Timelapse
+            - Evercam SnapMail = SnapMail
+            - Others = Archives",
+            required: true,
+            enum: ["Evercam Proxy", "Evercam Thumbnail", "Evercam Timelapse", "Evercam SnapMail", "Others"]
+      api_id :query, :string, "", required: true
+      api_key :query, :string, "", required: true
+      view :query, :boolean, "", required: true
+    end
+    tag "Cameras"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+    response 403, "Forbidden"
+    response 404, "Snapshot not found"
   end
 
   def show(conn, %{"id" => camera_exid, "timestamp" => timestamp} = params) do
