@@ -33,8 +33,8 @@ defmodule EvercamMedia.Zoho do
     end
   end
 
-  def update_camera(cameras) do
-    url = "#{@zoho_url}xml/CustomModule4/insertRecords?authtoken=#{@zoho_auth_token}&scope=crmapi&newFormat=2"
+  def update_camera(cameras, id) do
+    url = "#{@zoho_url}xml/CustomModule4/updateRecords?authtoken=#{@zoho_auth_token}&id=#{id}&scope=crmapi&newFormat=2"
     headers = ["Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded"]
     camera_xml = create_request_xml(cameras, "xmlData=<Cameras>", 1)
     camera_xml = "#{camera_xml}</Cameras>"
@@ -69,8 +69,13 @@ defmodule EvercamMedia.Zoho do
 
   defp create_request_xml([camera | rest], camera_xml, index) do
     url_to_nvr = "http://#{Camera.host(camera, "external")}:#{Camera.get_nvr_port(camera)}"
+    evercam_type =
+      case camera.owner.username do
+        "smartcities" -> "Smart Cities"
+        _ -> "Construction"
+      end
     camera_xml = "#{camera_xml}<row no=\"#{index}\"><FL val=\"Camera Name\">#{camera.name}</FL><FL val=\"Evercam ID\">#{camera.exid}</FL>
-      <FL val=\"URL to NVR\">#{url_to_nvr}</FL><FL val=\"Passwords\">#{Camera.password(camera)}</FL></row>"
+      <FL val=\"Evercam Type\">#{evercam_type}</FL><FL val=\"URL to NVR\">#{url_to_nvr}</FL><FL val=\"Passwords\">#{Camera.password(camera)}</FL></row>"
 
     create_request_xml(rest, camera_xml, index + 1)
   end

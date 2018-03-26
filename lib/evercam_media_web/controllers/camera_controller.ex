@@ -151,6 +151,7 @@ defmodule EvercamMediaWeb.CameraController do
                 }
               )
               update_camera_worker(Application.get_env(:evercam_media, :run_spawn), camera.exid)
+              update_camera_to_zoho(Application.get_env(:evercam_media, :run_spawn), camera, caller.username)
               conn
               |> render("show.json", %{camera: camera, user: caller})
             {:error, changeset} ->
@@ -248,6 +249,18 @@ defmodule EvercamMediaWeb.CameraController do
     end
   end
   defp add_camera_to_zoho(_mode, _camera, _user_id), do: :noop
+
+  defp update_camera_to_zoho(true, camera, user_id) when user_id in ["garda", "gardashared", "construction", "oldconstruction", "smartcities"] do
+    spawn fn ->
+      case Zoho.get_camera(camera.exid) do
+        {:nodata, _} -> Logger.info "[update_camera_to_zoho] [#{camera.exid}] [Camera does not exists]"
+        {:ok, zoho_camera} ->
+          record_id = zoho_camera |> List.first |> Map.fetch!("content")
+          Zoho.update_camera([camera], record_id)
+      end
+    end
+  end
+  defp update_camera_to_zoho(_mode, _camera, _user_id), do: :noop
 
   defp check_params(params) do
     with :ok <- validate("address", params["address"]),
