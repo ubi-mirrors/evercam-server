@@ -1,5 +1,6 @@
 defmodule EvercamMediaWeb.CameraController do
   use EvercamMediaWeb, :controller
+  use PhoenixSwagger
   alias EvercamMediaWeb.CameraView
   alias EvercamMediaWeb.ErrorView
   alias EvercamMedia.Repo
@@ -24,6 +25,19 @@ defmodule EvercamMediaWeb.CameraController do
         }
         json(conn, response)
     end
+  end
+
+  swagger_path :index do
+    get "/v1/cameras"
+    description "Retruns all public and private cameras."
+    summary "Returns all cameras."
+    parameters do
+      api_id :query, :string, "", required: true
+      api_key :query, :string, "", required: true
+    end
+    tag "Cameras"
+    response 200, "Success"
+    response 401, "Invalid API keys"
   end
 
   def index(conn, params) do
@@ -56,6 +70,21 @@ defmodule EvercamMediaWeb.CameraController do
       |> put_status(404)
       |> render(ErrorView, "error.json", %{message: "Not found."})
     end
+  end
+
+  swagger_path :show do
+    get "/v1/cameras/{id}"
+    description "Returns the camera details."
+    summary "Find camera by ID."
+    parameters do
+      id :path, :string, "Camera id that needs to be fetched.", required: true
+      api_id :query, :string, "", required: true
+      api_key :query, :string, "", required: true
+    end
+    tag "Cameras"
+    response 200, "Success"
+    response 404, "Camera not found"
+    response 401, "Invalid API keys"
   end
 
   def show(conn, params) do
@@ -218,7 +247,7 @@ defmodule EvercamMediaWeb.CameraController do
       end
     end
   end
-  defp add_camera_to_zoho(_mode, _camera, user_id), do: :noop
+  defp add_camera_to_zoho(_mode, _camera, _user_id), do: :noop
 
   defp check_params(params) do
     with :ok <- validate("address", params["address"]),
@@ -431,18 +460,21 @@ defmodule EvercamMediaWeb.CameraController do
 
   defp delete_camera_worker(camera) do
     MetaData.delete_by_camera_id(camera.id)
+    SnapmailCamera.delete_by_camera_id(camera.id)
+    SnapshotExtractor.delete_by_camera_id(camera.id)
+    Timelapse.delete_by_camera_id(camera.id)
     CloudRecording.delete_by_camera_id(camera.id)
     CameraShare.delete_by_camera_id(camera.id)
     CameraShareRequest.delete_by_camera_id(camera.id)
     Archive.delete_by_camera(camera.id)
-    Timelapse.delete_by_camera_id(camera.id)
+    Compare.delete_by_camera(camera.id)
     Camera.delete_by_id(camera.id)
   end
 
   defp delete_snapshot_worker(camera) do
     Camera.invalidate_camera(camera)
-    Storage.delete_everything_for(camera.exid)
     CameraActivity.delete_by_camera_id(camera.id)
+    Storage.delete_everything_for(camera.exid)
   end
 
   defp create_thumbnail(camera, mac_address) do

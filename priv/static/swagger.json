@@ -1,6 +1,65 @@
 {
   "swagger": "2.0",
   "paths": {
+    "/v1/users": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "User signup.",
+        "responses": {
+          "201": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "firstname",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "lastname",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "username",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "email",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "password",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "token",
+            "in": "query",
+            "description": "Please use your token according to your platform (WEB, IOS, ANDROID)"
+          }
+        ],
+        "operationId": "EvercamMediaWeb.UserController.create",
+        "description": "User credentials for signup."
+      }
+    },
     "/v1/sdk/nvr/reboot": {
       "post": {
         "tags": [
@@ -58,6 +117,206 @@
         ],
         "operationId": "EvercamMediaWeb.SDKController.nvr_reboot",
         "description": "Nvr credentials for rebooting."
+      }
+    },
+    "/v1/cameras/{id}/recordings/snapshots/{timestamp}": {
+      "get": {
+        "tags": [
+          "Cameras"
+        ],
+        "summary": "Take the snapshot of a recording camera.",
+        "responses": {
+          "404": {
+            "description": "Snapshot not found"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Camera id to snapshot."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "timestamp",
+            "in": "path",
+            "description": "Format: unix timestamp"
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "notes",
+            "in": "query",
+            "enum": [
+              "Evercam Proxy",
+              "Evercam Thumbnail",
+              "Evercam Timelapse",
+              "Evercam SnapMail",
+              "Others"
+            ],
+            "description": "\n            - Evercam Proxy = Recording\n            - Evercam Thumbnail = Thumbnail\n            - Evercam Timelapse = Timelapse\n            - Evercam SnapMail = SnapMail\n            - Others = Archives"
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_id",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_key",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "boolean",
+            "required": true,
+            "name": "view",
+            "in": "query",
+            "description": ""
+          }
+        ],
+        "operationId": "EvercamMediaWeb.SnapshotController.show",
+        "description": "Caputre and returns the jpeg image."
+      }
+    },
+    "/v1/cameras/{id}/live/snapshot": {
+      "get": {
+        "tags": [
+          "Cameras"
+        ],
+        "summary": "Take the snapshot of a live camera.",
+        "responses": {
+          "504": {
+            "description": "Camera didn't respond with a jpeg"
+          },
+          "403": {
+            "description": "Forbidden camera access"
+          },
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Camera id to snapshot."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_id",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_key",
+            "in": "query",
+            "description": ""
+          }
+        ],
+        "operationId": "EvercamMediaWeb.SnapshotController.live",
+        "description": "Caputre and returns the latest jpeg image."
+      }
+    },
+    "/v1/cameras/{id}": {
+      "get": {
+        "tags": [
+          "Cameras"
+        ],
+        "summary": "Find camera by ID.",
+        "responses": {
+          "404": {
+            "description": "Camera not found"
+          },
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Camera id that needs to be fetched."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_id",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_key",
+            "in": "query",
+            "description": ""
+          }
+        ],
+        "operationId": "EvercamMediaWeb.CameraController.show",
+        "description": "Returns the camera details."
+      }
+    },
+    "/v1/cameras": {
+      "get": {
+        "tags": [
+          "Cameras"
+        ],
+        "summary": "Returns all cameras.",
+        "responses": {
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_id",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_key",
+            "in": "query",
+            "description": ""
+          }
+        ],
+        "operationId": "EvercamMediaWeb.CameraController.index",
+        "description": "Retruns all public and private cameras."
       }
     }
   },

@@ -1,5 +1,6 @@
 defmodule EvercamMediaWeb.UserController do
   use EvercamMediaWeb, :controller
+  use PhoenixSwagger
   alias EvercamMediaWeb.UserView
   alias EvercamMediaWeb.LogView
   alias EvercamMediaWeb.ErrorView
@@ -43,6 +44,22 @@ defmodule EvercamMediaWeb.UserController do
       conn
       |> render(UserView, "credentials.json", %{user: user})
     end
+  end
+
+  swagger_path :create do
+    post "/v1/users"
+    description "User credentials for signup."
+    summary "User signup."
+    parameters do
+      firstname :query, :string, "", required: true
+      lastname :query, :string, "", required: true
+      username :query, :string, "", required: true
+      email :query, :string, "", required: true
+      password :query, :string, "", required: true
+      token :query, :string, "Please use your token according to your platform (WEB, IOS, ANDROID)", required: true
+    end
+    tag "Users"
+    response 201, "Success"
   end
 
   def create(conn, params) do
