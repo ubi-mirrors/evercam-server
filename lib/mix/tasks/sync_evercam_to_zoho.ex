@@ -19,11 +19,11 @@ defmodule EvercamMedia.SyncEvercamToZoho do
 
   def sync_camera_sharees(email_or_username) do
     user = User.by_username_or_email(email_or_username)
-    cameras = Camera.for(u, false)
+    cameras = Camera.for(user, false)
     camera_ids = Enum.map(cameras, fn(camera) -> camera.id end)
 
     CameraShare
-    |> where([cs]], cs.user_id in ^camera_ids)
+    |> where([cs], cs.user_id in ^camera_ids)
     |> Repo.all
 
     # {users, emails} =
@@ -57,6 +57,4 @@ defmodule EvercamMedia.SyncEvercamToZoho do
     #   Logger.debug user.email
     # end)
   end
-
-  defp
 end
