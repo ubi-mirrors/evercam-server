@@ -13,19 +13,18 @@ defmodule EvercamMediaWeb.SnapshotController do
   @optional_params %{"notes" => nil}
 
   swagger_path :live do
-    get "/v1/cameras/{id}/live/snapshot"
-    description "Caputre and returns the latest jpeg image."
-    summary "Take the snapshot of a live camera."
+    get "/cameras/{id}/live/snapshot"
+    summary "Returns the latest jpeg image from live camera."
     parameters do
-      id :path, :string, "Camera id to snapshot.", required: true
-      api_id :query, :string, "", required: true
-      api_key :query, :string, "", required: true
+      id :path, :string, "Unique identifier.", required: true
+      api_id :query, :string, "The Evercam API id for the requester.", required: true
+      api_key :query, :string, "The Evercam API key for the requester.", required: true
     end
     tag "Cameras"
     response 200, "Success"
     response 401, "Invalid API keys"
     response 403, "Forbidden camera access"
-    response 504, "Camera didn't respond with a jpeg"
+    response 504, "Camera does not respond with a jpeg"
   end
 
   def live(conn, %{"id" => camera_exid}) do
@@ -78,6 +77,21 @@ defmodule EvercamMediaWeb.SnapshotController do
     end
   end
 
+  swagger_path :thumbnail do
+    get "/cameras/{id}/thumbnail"
+    summary "Returns the latest thumbnail jpeg image."
+    parameters do
+      id :path, :string, "Unique identifier.", required: true
+      api_id :query, :string, "The Evercam API id for the requester.", required: true
+      api_key :query, :string, "The Evercam API key for the requester.", required: true
+    end
+    tag "Cameras"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+    response 403, "Forbidden camera access"
+    response 404, "Camera didn't respond with a jpeg"
+  end
+
   def thumbnail(conn, %{"id" => camera_exid}) do
     case snapshot_thumbnail(camera_exid, conn.assigns[:current_user], true) do
       {200, response} ->
@@ -90,6 +104,21 @@ defmodule EvercamMediaWeb.SnapshotController do
         |> put_resp_header("content-type", "image/jpeg")
         |> text(response[:image])
     end
+  end
+
+  swagger_path :latest do
+    get "/cameras/{id}/recordings/snapshots/latest"
+    summary "Returns the latest snapshot image in base64 format."
+    parameters do
+      id :path, :string, "Unique identifier for the camera.", required: true
+      api_id :query, :string, "The Evercam API id for the requester.", required: true
+      api_key :query, :string, "The Evercam API key for the requester.", required: true
+    end
+    tag "Recordings"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+    response 403, "Forbidden camera access"
+    response 404, "Camera didn't respond with a base64 image "
   end
 
   def latest(conn, %{"id" => camera_exid} = _params) do
@@ -106,6 +135,21 @@ defmodule EvercamMediaWeb.SnapshotController do
     end
   end
 
+  swagger_path :oldest do
+    get "/cameras/{id}/recordings/snapshots/oldest"
+    summary "Returns the oldest snapshot image in base64 format."
+    parameters do
+      id :path, :string, "Unique identifier for the camera.", required: true
+      api_id :query, :string, "The Evercam API id for the requester.", required: true
+      api_key :query, :string, "The Evercam API key for the requester.", required: true
+    end
+    tag "Recordings"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+    response 403, "Forbidden camera access"
+    response 404, "Camera does not respond with a base64 image "
+  end
+
   def oldest(conn, %{"id" => camera_exid} = _params) do
     case old_snapshot(camera_exid, conn.assigns[:current_user]) do
       {200, response} ->
@@ -118,6 +162,21 @@ defmodule EvercamMediaWeb.SnapshotController do
         |> put_status(code)
         |> json(response)
     end
+  end
+
+  swagger_path :nearest do
+    get "/cameras/{id}/recordings/snapshots/{timestamp}/nearest"
+    summary "Returns the nearest snapshot image in base64 format."
+    parameters do
+      id :path, :string, "Unique identifier for the camera.", required: true
+      timestamp :path, :string, "Unix timestamp", required: true
+      api_id :query, :string, "The Evercam API id for the requester.", required: true
+      api_key :query, :string, "The Evercam API key for the requester.", required: true
+    end
+    tag "Recordings"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+    response 403, "Forbidden camera access"
   end
 
   def nearest(conn, %{"id" => camera_exid, "timestamp" => timestamp} = _params) do
@@ -134,6 +193,25 @@ defmodule EvercamMediaWeb.SnapshotController do
     else
       false -> render_error(conn, 403, "Forbidden.")
     end
+  end
+
+  swagger_path :index do
+    get "/cameras/{id}/recordings/snapshots"
+    summary "Returns the list of all snapshots currently stored for this camera."
+    parameters do
+      id :path, :string, "Unique identifier for the camera.", required: true
+      from :query, :string, "Unix timestamp", required: true
+      to :query, :string, "Unix timestamp", required: true
+      limit :query, :integer, "", required: true, default: 3600
+      page :query, :integer, "", required: true, default: 1
+      api_id :query, :string, "The Evercam API id for the requester.", required: true
+      api_key :query, :string, "The Evercam API key for the requester.", required: true
+    end
+    tag "Recordings"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+    response 403, "Forbidden camera access"
+    response 500, "Internal Server Error"
   end
 
   def index(conn, %{"id" => camera_exid, "from" => from, "to" => to, "limit" => "3600", "page" => _page}) do
@@ -153,12 +231,11 @@ defmodule EvercamMediaWeb.SnapshotController do
   end
 
   swagger_path :show do
-    get "/v1/cameras/{id}/recordings/snapshots/{timestamp}"
-    description "Caputre and returns the jpeg image."
-    summary "Take the snapshot of a recording camera."
+    get "/cameras/{id}/recordings/snapshots/{timestamp}"
+    summary "Returns the jpeg image of given timestamp."
     parameters do
-      id :path, :string, "Camera id to snapshot.", required: true
-      timestamp :path, :string, "Format: unix timestamp", required: true
+      id :path, :string, "Unique identifier for the camera.", required: true
+      timestamp :path, :string, "Unix timestamp", required: true
       notes :query,
             :string, "
             - Evercam Proxy = Recording
@@ -168,11 +245,11 @@ defmodule EvercamMediaWeb.SnapshotController do
             - Others = Archives",
             required: true,
             enum: ["Evercam Proxy", "Evercam Thumbnail", "Evercam Timelapse", "Evercam SnapMail", "Others"]
-      api_id :query, :string, "", required: true
-      api_key :query, :string, "", required: true
+      api_id :query, :string, "The Evercam API id for the requester.", required: true
+      api_key :query, :string, "The Evercam API key for the requester.", required: true
       view :query, :boolean, "", required: true
     end
-    tag "Cameras"
+    tag "Recordings"
     response 200, "Success"
     response 401, "Invalid API keys"
     response 403, "Forbidden"
@@ -202,6 +279,24 @@ defmodule EvercamMediaWeb.SnapshotController do
         Logger.error "[#{camera_exid}] [show_snapshot] [error] [#{inspect error}]"
         render_error(conn, 500, "We dropped the ball.")
     end
+  end
+
+  swagger_path :days do
+    get "/cameras/{id}/recordings/snapshots/{year}/{month}/{day}/hours"
+    description "Returns all recorded days."
+    summary "Find the recorded days in a month"
+    parameters do
+      id :path, :string, "Unique identifier for the camera.", required: true
+      year :path, :string, "Year, for example 2013", required: true
+      month :path, :string, "Month, for example 12", required: true
+      api_id :query, :string, "The Evercam API id for the requester.", required: true
+      api_key :query, :string, "The Evercam API key for the requester.", required: true
+    end
+    tag "Recordings"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+    response 403, "Forbidden camera access"
+    response 404, "Camera does not exist"
   end
 
   def days(conn, %{"id" => camera_exid, "year" => year, "month" => month}) do
@@ -298,6 +393,23 @@ defmodule EvercamMediaWeb.SnapshotController do
     end
   end
 
+  swagger_path :day do
+    get "/cameras/{id}/recordings/snapshots/{year}/{month}/{day}"
+    summary "Check availability of recording."
+    parameters do
+      id :path, :string, "Unique identifier for the camera.", required: true
+      year :path, :string, "Year, for example 2013", required: true
+      month :path, :string, "Month, for example 12", required: true
+      day :path, :string, "Day, for example 15", required: true
+      api_id :query, :string, "The Evercam API id for the requester.", required: true
+      api_key :query, :string, "The Evercam API key for the requester.", required: true
+    end
+    tag "Recordings"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+    response 404, "Camera does not exist"
+  end
+
   def day(conn, %{"id" => camera_exid, "year" => year, "month" => month, "day" => day}) do
     current_user = conn.assigns[:current_user]
     camera = Camera.get_full(camera_exid)
@@ -316,6 +428,24 @@ defmodule EvercamMediaWeb.SnapshotController do
     end
   end
 
+  swagger_path :hours do
+    get "/cameras/{id}/recordings/snapshots/{year}/{month}/{day}/hours"
+    summary "Returns all recorded hours in a day."
+    parameters do
+      id :path, :string, "Unique identifier for the camera.", required: true
+      year :path, :string, "Year, for example 2013", required: true
+      month :path, :string, "Month, for example 12", required: true
+      day :path, :string, "Day, for example 16", required: true
+      api_id :query, :string, "The Evercam API id for the requester.", required: true
+      api_key :query, :string, "The Evercam API key for the requester.", required: true
+    end
+    tag "Recordings"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+    response 403, "Forbidden camera access"
+    response 404, "Camera does not exist"
+  end
+
   def hours(conn, %{"id" => camera_exid, "year" => year, "month" => month, "day" => day}) do
     current_user = conn.assigns[:current_user]
     camera = Camera.get_full(camera_exid)
@@ -332,6 +462,24 @@ defmodule EvercamMediaWeb.SnapshotController do
       conn
       |> json(%{hours: hours})
     end
+  end
+
+  swagger_path :hour do
+    get "/cameras/{id}/recordings/snapshots/{year}/{month}/{day}/{hour}"
+    summary "Returns the hourly snapshots."
+    parameters do
+      id :path, :string, "Unique identifier for the camera.", required: true
+      year :path, :string, "Year, for example 2013", required: true
+      month :path, :string, "Month, for example 12", required: true
+      day :path, :string, "Day, for example 10", required: true
+      hour :path, :string, "Hour, for example 13", required: true
+      api_id :query, :string, "The Evercam API id for the requester.", required: true
+      api_key :query, :string, "The Evercam API key for the requester.", required: true
+    end
+    tag "Recordings"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+    response 404, "Camera does not exist"
   end
 
   def hour(conn, %{"id" => camera_exid, "year" => year, "month" => month, "day" => day, "hour" => hour}) do

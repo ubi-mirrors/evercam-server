@@ -160,6 +160,7 @@ defmodule EvercamMedia.Snapshot.Storage do
     Enum.concat(from_days, to_days)
     |> Enum.map(fn(datetime) -> datetime.day end)
     |> Enum.sort
+    |> Enum.uniq
   end
 
   def hours(camera_exid, from, to, timezone) do
@@ -186,6 +187,7 @@ defmodule EvercamMedia.Snapshot.Storage do
     Enum.concat(from_hours, to_hours)
     |> Enum.map(fn(datetime) -> datetime.hour end)
     |> Enum.sort
+    |> Enum.uniq
   end
 
   def hour(camera_exid, hour) do
