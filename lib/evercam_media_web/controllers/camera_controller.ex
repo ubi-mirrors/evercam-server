@@ -198,6 +198,8 @@ defmodule EvercamMediaWeb.CameraController do
         discoverable: false,
         is_public: false
       }
+      renamed_camera = Map.put(camera, :name, "#{camera.name} (Deleted)")
+      update_camera_to_zoho(Application.get_env(:evercam_media, :run_spawn), renamed_camera, caller.username)
       camera
       |> Camera.delete_changeset(camera_params)
       |> Repo.update!
