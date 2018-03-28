@@ -16,6 +16,8 @@ defmodule EvercamMediaWeb.UserView do
           created_at: Util.ecto_datetime_to_unix(user.created_at),
           updated_at: Util.ecto_datetime_to_unix(user.updated_at),
           confirmed_at: Util.ecto_datetime_to_unix(user.confirmed_at),
+          intercom_hmac_ios: Util.create_HMAC(user.username, System.get_env["INTERCOM_IOS_KEY"]),
+          intercom_hmac_android: Util.create_HMAC(user.username, System.get_env["INTERCOM_ANDROID_KEY"])
         }
       ]
     }

@@ -58,12 +58,24 @@ defmodule EvercamMedia.Zoho do
           _ ->
             zoho_contact =
               case Util.deep_get(json_response, ["response", "result", "Contacts", "row"]) do
-                %{"FL" => contact} -> contact |> List.first
+                %{"FL" => contact} -> contact
                 contacts -> contacts |> List.first |> Util.deep_get(["FL"])
               end
             {:ok, zoho_contact}
         end
       _ -> {:error, response}
+    end
+  end
+
+  def insert_contact(cameras) do
+    url = "#{@zoho_url}xml/Contacts/insertRecords?authtoken=#{@zoho_auth_token}&scope=crmapi&newFormat=2"
+    headers = ["Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded"]
+    camera_xml = create_request_xml(cameras, "xmlData=<Cameras>", 1)
+    camera_xml = "#{camera_xml}</Cameras>"
+
+    case HTTPoison.post!(url, camera_xml, headers) do
+      %HTTPoison.Response{body: body} -> {:ok, body}
+      _ -> {:error}
     end
   end
 

@@ -79,20 +79,6 @@ defmodule EvercamMediaWeb.CameraShareRequestController do
     end
   end
 
-  # Delete after complete test
-  defp has_caller(conn, user, camera, nil) do
-    caller_has_permission(conn, user, camera)
-  end
-  defp has_caller(_conn, _user, _camera, _key), do: :ok
-
-  defp caller_has_permission(conn, user, camera) do
-    if Permission.Camera.can_edit?(user, camera) do
-      :ok
-    else
-      render_error(conn, 401, "Unauthorized.")
-    end
-  end
-
   defp has_share_request(conn, email, camera, nil) do
     share_request_exists(conn, email, camera)
   end
@@ -108,10 +94,6 @@ defmodule EvercamMediaWeb.CameraShareRequestController do
       nil -> render_error(conn, 404, "Share request not found.")
       %CameraShareRequest{} = camera_share_request -> {:ok, camera_share_request}
     end
-  end
-
-  defp user_can_list(conn, user, camera) do
-    if Permission.Camera.can_share?(user, camera), do: :ok, else: render_error(conn, 401, "Unauthorized.")
   end
 
   defp camera_exists(conn, camera_exid, nil), do: render_error(conn, 404, "The #{camera_exid} camera does not exist.")

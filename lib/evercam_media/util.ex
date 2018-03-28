@@ -127,4 +127,10 @@ defmodule EvercamMedia.Util do
   def slugify(string) do
     string |> String.normalize(:nfd) |> String.replace(~r/[^A-z0-9-\s]/u, "")
   end
+
+  def create_HMAC(username, intercom_key) do
+    :crypto.hmac(:sha256, intercom_key, username)
+    |> Base.encode16
+    |> String.downcase
+  end
 end
