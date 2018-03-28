@@ -28,12 +28,11 @@ defmodule EvercamMediaWeb.CameraController do
   end
 
   swagger_path :index do
-    get "/v1/cameras"
-    description "Retruns all public and private cameras."
-    summary "Returns all cameras."
+    get "/cameras"
+    summary "Returns all public and private cameras."
     parameters do
-      api_id :query, :string, "", required: true
-      api_key :query, :string, "", required: true
+      api_id :query, :string, "The Evercam API id for the requester.", required: true
+      api_key :query, :string, "The Evercam API key for the requester.", required: true
     end
     tag "Cameras"
     response 200, "Success"
@@ -73,13 +72,12 @@ defmodule EvercamMediaWeb.CameraController do
   end
 
   swagger_path :show do
-    get "/v1/cameras/{id}"
-    description "Returns the camera details."
-    summary "Find camera by ID."
+    get "/cameras/{id}"
+    summary "Returns the camera details."
     parameters do
-      id :path, :string, "Camera id that needs to be fetched.", required: true
-      api_id :query, :string, "", required: true
-      api_key :query, :string, "", required: true
+      id :path, :string, "Unique identifier", required: true
+      api_id :query, :string, "The Evercam API id for the requester.", required: true
+      api_key :query, :string, "The Evercam API key for the requester.", required: true
     end
     tag "Cameras"
     response 200, "Success"

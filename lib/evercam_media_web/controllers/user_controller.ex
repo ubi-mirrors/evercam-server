@@ -47,8 +47,7 @@ defmodule EvercamMediaWeb.UserController do
   end
 
   swagger_path :create do
-    post "/v1/users"
-    description "User credentials for signup."
+    post "/users"
     summary "User signup."
     parameters do
       firstname :query, :string, "", required: true

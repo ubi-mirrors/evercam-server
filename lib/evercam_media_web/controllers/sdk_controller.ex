@@ -3,8 +3,7 @@ defmodule EvercamMediaWeb.SDKController do
   use PhoenixSwagger
 
   swagger_path :nvr_reboot do
-    post "/v1/sdk/nvr/reboot"
-    description "Nvr credentials for rebooting."
+    post "/sdk/nvr/reboot"
     summary "Reboot nvr."
     parameters do
       api_id :query, :string, "", required: true

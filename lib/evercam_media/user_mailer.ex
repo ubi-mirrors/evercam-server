@@ -258,6 +258,9 @@ defmodule EvercamMedia.UserMailer do
   end
 
   defp get_dropbox_url(snapshot_extractor) do
-    "https://www.dropbox.com/home/Construction/#{snapshot_extractor.camera.exid}/#{snapshot_extractor.id}"
+    "https://www.dropbox.com/home/#{construction_request(snapshot_extractor.requestor)}/#{snapshot_extractor.camera.exid}/#{snapshot_extractor.id}"
   end
+
+  defp construction_request("marklensmen@gmail.com"), do: "Construction"
+  defp construction_request(_), do: "Construction2"
 end

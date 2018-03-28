@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "paths": {
-    "/v1/users": {
+    "/users": {
       "post": {
         "tags": [
           "Users"
@@ -57,10 +57,10 @@
           }
         ],
         "operationId": "EvercamMediaWeb.UserController.create",
-        "description": "User credentials for signup."
+        "description": ""
       }
     },
-    "/v1/sdk/nvr/reboot": {
+    "/sdk/nvr/reboot": {
       "post": {
         "tags": [
           "SDK"
@@ -116,15 +116,318 @@
           }
         ],
         "operationId": "EvercamMediaWeb.SDKController.nvr_reboot",
-        "description": "Nvr credentials for rebooting."
+        "description": ""
       }
     },
-    "/v1/cameras/{id}/recordings/snapshots/{timestamp}": {
+    "/cameras/{id}/thumbnail": {
       "get": {
         "tags": [
           "Cameras"
         ],
-        "summary": "Take the snapshot of a recording camera.",
+        "summary": "Returns the latest thumbnail jpeg image.",
+        "responses": {
+          "404": {
+            "description": "Camera didn't respond with a jpeg"
+          },
+          "403": {
+            "description": "Forbidden camera access"
+          },
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.SnapshotController.thumbnail",
+        "description": ""
+      }
+    },
+    "/cameras/{id}/recordings/snapshots/{year}/{month}/{day}/{hour}": {
+      "get": {
+        "tags": [
+          "Recordings"
+        ],
+        "summary": "Returns the hourly snapshots.",
+        "responses": {
+          "404": {
+            "description": "Camera does not exist"
+          },
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for the camera."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "year",
+            "in": "path",
+            "description": "Year, for example 2013"
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "month",
+            "in": "path",
+            "description": "Month, for example 12"
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "day",
+            "in": "path",
+            "description": "Day, for example 10"
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "hour",
+            "in": "path",
+            "description": "Hour, for example 13"
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.SnapshotController.hour",
+        "description": ""
+      }
+    },
+    "/cameras/{id}/recordings/snapshots/{year}/{month}/{day}/hours": {
+      "get": {
+        "tags": [
+          "Recordings"
+        ],
+        "summary": "Returns all recorded hours in a day.",
+        "responses": {
+          "404": {
+            "description": "Camera does not exist"
+          },
+          "403": {
+            "description": "Forbidden camera access"
+          },
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for the camera."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "year",
+            "in": "path",
+            "description": "Year, for example 2013"
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "month",
+            "in": "path",
+            "description": "Month, for example 12"
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "day",
+            "in": "path",
+            "description": "Day, for example 16"
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.SnapshotController.hours",
+        "description": ""
+      }
+    },
+    "/cameras/{id}/recordings/snapshots/{year}/{month}/{day}": {
+      "get": {
+        "tags": [
+          "Recordings"
+        ],
+        "summary": "Check availability of recording.",
+        "responses": {
+          "404": {
+            "description": "Camera does not exist"
+          },
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for the camera."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "year",
+            "in": "path",
+            "description": "Year, for example 2013"
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "month",
+            "in": "path",
+            "description": "Month, for example 12"
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "day",
+            "in": "path",
+            "description": "Day, for example 15"
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.SnapshotController.day",
+        "description": ""
+      }
+    },
+    "/cameras/{id}/recordings/snapshots/{timestamp}/nearest": {
+      "get": {
+        "tags": [
+          "Recordings"
+        ],
+        "summary": "Returns the nearest snapshot image in base64 format.",
+        "responses": {
+          "403": {
+            "description": "Forbidden camera access"
+          },
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for the camera."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "timestamp",
+            "in": "path",
+            "description": "Unix timestamp"
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.SnapshotController.nearest",
+        "description": ""
+      }
+    },
+    "/cameras/{id}/recordings/snapshots/{timestamp}": {
+      "get": {
+        "tags": [
+          "Recordings"
+        ],
+        "summary": "Returns the jpeg image of given timestamp.",
         "responses": {
           "404": {
             "description": "Snapshot not found"
@@ -145,14 +448,14 @@
             "required": true,
             "name": "id",
             "in": "path",
-            "description": "Camera id to snapshot."
+            "description": "Unique identifier for the camera."
           },
           {
             "type": "string",
             "required": true,
             "name": "timestamp",
             "in": "path",
-            "description": "Format: unix timestamp"
+            "description": "Unix timestamp"
           },
           {
             "type": "string",
@@ -173,14 +476,14 @@
             "required": true,
             "name": "api_id",
             "in": "query",
-            "description": ""
+            "description": "The Evercam API id for the requester."
           },
           {
             "type": "string",
             "required": true,
             "name": "api_key",
             "in": "query",
-            "description": ""
+            "description": "The Evercam API key for the requester."
           },
           {
             "type": "boolean",
@@ -191,18 +494,18 @@
           }
         ],
         "operationId": "EvercamMediaWeb.SnapshotController.show",
-        "description": "Caputre and returns the jpeg image."
+        "description": ""
       }
     },
-    "/v1/cameras/{id}/live/snapshot": {
+    "/cameras/{id}/recordings/snapshots/oldest": {
       "get": {
         "tags": [
-          "Cameras"
+          "Recordings"
         ],
-        "summary": "Take the snapshot of a live camera.",
+        "summary": "Returns the oldest snapshot image in base64 format.",
         "responses": {
-          "504": {
-            "description": "Camera didn't respond with a jpeg"
+          "404": {
+            "description": "Camera does not respond with a base64 image "
           },
           "403": {
             "description": "Forbidden camera access"
@@ -220,33 +523,251 @@
             "required": true,
             "name": "id",
             "in": "path",
-            "description": "Camera id to snapshot."
+            "description": "Unique identifier for the camera."
           },
           {
             "type": "string",
             "required": true,
             "name": "api_id",
             "in": "query",
-            "description": ""
+            "description": "The Evercam API id for the requester."
           },
           {
             "type": "string",
             "required": true,
             "name": "api_key",
             "in": "query",
-            "description": ""
+            "description": "The Evercam API key for the requester."
           }
         ],
-        "operationId": "EvercamMediaWeb.SnapshotController.live",
-        "description": "Caputre and returns the latest jpeg image."
+        "operationId": "EvercamMediaWeb.SnapshotController.oldest",
+        "description": ""
       }
     },
-    "/v1/cameras/{id}": {
+    "/cameras/{id}/recordings/snapshots/latest": {
+      "get": {
+        "tags": [
+          "Recordings"
+        ],
+        "summary": "Returns the latest snapshot image in base64 format.",
+        "responses": {
+          "404": {
+            "description": "Camera didn't respond with a base64 image "
+          },
+          "403": {
+            "description": "Forbidden camera access"
+          },
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for the camera."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.SnapshotController.latest",
+        "description": ""
+      }
+    },
+    "/cameras/{id}/recordings/snapshots": {
+      "get": {
+        "tags": [
+          "Recordings"
+        ],
+        "summary": "Returns the list of all snapshots currently stored for this camera.",
+        "responses": {
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "403": {
+            "description": "Forbidden camera access"
+          },
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for the camera."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "from",
+            "in": "query",
+            "description": "Unix timestamp"
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "to",
+            "in": "query",
+            "description": "Unix timestamp"
+          },
+          {
+            "type": "integer",
+            "required": true,
+            "name": "limit",
+            "in": "query",
+            "description": "",
+            "default": 3600
+          },
+          {
+            "type": "integer",
+            "required": true,
+            "name": "page",
+            "in": "query",
+            "description": "",
+            "default": 1
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.SnapshotController.index",
+        "description": ""
+      }
+    },
+    "/cameras/{id}/logs": {
       "get": {
         "tags": [
           "Cameras"
         ],
-        "summary": "Find camera by ID.",
+        "summary": "Returns the logs.",
+        "responses": {
+          "404": {
+            "description": "Camera didn't found"
+          },
+          "403": {
+            "description": "Forbidden camera access"
+          },
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.LogController.show",
+        "description": ""
+      }
+    },
+    "/cameras/{id}/live/snapshot": {
+      "get": {
+        "tags": [
+          "Cameras"
+        ],
+        "summary": "Returns the latest jpeg image from live camera.",
+        "responses": {
+          "504": {
+            "description": "Camera does not respond with a jpeg"
+          },
+          "403": {
+            "description": "Forbidden camera access"
+          },
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.SnapshotController.live",
+        "description": ""
+      }
+    },
+    "/cameras/{id}": {
+      "get": {
+        "tags": [
+          "Cameras"
+        ],
+        "summary": "Returns the camera details.",
         "responses": {
           "404": {
             "description": "Camera not found"
@@ -264,33 +785,33 @@
             "required": true,
             "name": "id",
             "in": "path",
-            "description": "Camera id that needs to be fetched."
+            "description": "Unique identifier"
           },
           {
             "type": "string",
             "required": true,
             "name": "api_id",
             "in": "query",
-            "description": ""
+            "description": "The Evercam API id for the requester."
           },
           {
             "type": "string",
             "required": true,
             "name": "api_key",
             "in": "query",
-            "description": ""
+            "description": "The Evercam API key for the requester."
           }
         ],
         "operationId": "EvercamMediaWeb.CameraController.show",
-        "description": "Returns the camera details."
+        "description": ""
       }
     },
-    "/v1/cameras": {
+    "/cameras": {
       "get": {
         "tags": [
           "Cameras"
         ],
-        "summary": "Returns all cameras.",
+        "summary": "Returns all public and private cameras.",
         "responses": {
           "401": {
             "description": "Invalid API keys"
@@ -305,18 +826,18 @@
             "required": true,
             "name": "api_id",
             "in": "query",
-            "description": ""
+            "description": "The Evercam API id for the requester."
           },
           {
             "type": "string",
             "required": true,
             "name": "api_key",
             "in": "query",
-            "description": ""
+            "description": "The Evercam API key for the requester."
           }
         ],
         "operationId": "EvercamMediaWeb.CameraController.index",
-        "description": "Retruns all public and private cameras."
+        "description": ""
       }
     }
   },
@@ -324,6 +845,6 @@
     "version": "1.0",
     "title": "Evercam Server"
   },
-  "host": "media.evercam.io",
+  "host": "media.evercam.io/v1",
   "definitions": {}
 }

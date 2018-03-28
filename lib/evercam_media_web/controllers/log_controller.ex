@@ -1,5 +1,6 @@
 defmodule EvercamMediaWeb.LogController do
   use EvercamMediaWeb, :controller
+  use PhoenixSwagger
   import EvercamMedia.Validation.Log
   import Ecto.Query
   alias EvercamMediaWeb.ErrorView
@@ -7,6 +8,21 @@ defmodule EvercamMediaWeb.LogController do
   import String, only: [to_integer: 1]
 
   @default_limit 50
+
+  swagger_path :show do
+    get "/cameras/{id}/logs"
+    summary "Returns the logs."
+    parameters do
+      id :path, :string, "Unique identifier.", required: true
+      api_id :query, :string, "The Evercam API id for the requester.", required: true
+      api_key :query, :string, "The Evercam API key for the requester.", required: true
+    end
+    tag "Cameras"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+    response 403, "Forbidden camera access"
+    response 404, "Camera didn't found"
+  end
 
   def show(conn, %{"id" => exid} = params) do
     current_user = conn.assigns[:current_user]
