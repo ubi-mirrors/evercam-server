@@ -31,8 +31,8 @@ defmodule EvercamMediaWeb.CameraController do
     get "/cameras"
     summary "Returns all public and private cameras."
     parameters do
-      api_id :query, :string, "The Evercam API id for the requester.", required: true
-      api_key :query, :string, "The Evercam API key for the requester.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
     end
     tag "Cameras"
     response 200, "Success"
@@ -75,9 +75,9 @@ defmodule EvercamMediaWeb.CameraController do
     get "/cameras/{id}"
     summary "Returns the camera details."
     parameters do
-      id :path, :string, "Unique identifier", required: true
-      api_id :query, :string, "The Evercam API id for the requester.", required: true
-      api_key :query, :string, "The Evercam API key for the requester.", required: true
+      id :path, :string, "The ID of the camera being requested.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
     end
     tag "Cameras"
     response 200, "Success"

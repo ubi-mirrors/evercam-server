@@ -6,8 +6,8 @@ defmodule EvercamMediaWeb.SDKController do
     post "/sdk/nvr/reboot"
     summary "Reboot nvr."
     parameters do
-      api_id :query, :string, "", required: true
-      api_key :query, :string, "", required: true
+      api_id :query, :string, "The Evercam API id for the requester.", required: true
+      api_key :query, :string, "The Evercam API key for the requester", required: true
       ip :query, :string, "", required: true
       port :query, :string, "", required: true
       user :query, :string, "", required: true

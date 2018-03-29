@@ -13,9 +13,9 @@ defmodule EvercamMediaWeb.LogController do
     get "/cameras/{id}/logs"
     summary "Returns the logs."
     parameters do
-      id :path, :string, "Unique identifier.", required: true
-      api_id :query, :string, "The Evercam API id for the requester.", required: true
-      api_key :query, :string, "The Evercam API key for the requester.", required: true
+      id :path, :string, "The ID of the camera being requested.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
     end
     tag "Cameras"
     response 200, "Success"

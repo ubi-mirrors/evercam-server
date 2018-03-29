@@ -1,8 +1,23 @@
 defmodule EvercamMediaWeb.CameraShareController do
   use EvercamMediaWeb, :controller
+  use PhoenixSwagger
   alias EvercamMediaWeb.CameraShareView
   alias EvercamMedia.Intercom
   alias EvercamMedia.Zoho
+
+  swagger_path :show do
+    get "/cameras/{id}/shares"
+    summary "Returns the camera permitted users list."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Shares"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+    response 403, "Forbidden camera access"
+  end
 
   def show(conn, %{"id" => exid} = params) do
     current_user = conn.assigns[:current_user]
@@ -27,6 +42,23 @@ defmodule EvercamMediaWeb.CameraShareController do
         conn
         |> render(CameraShareView, "index.json", %{camera_shares: shares, camera: camera, user: current_user})
     end
+  end
+
+  swagger_path :create do
+    post "/cameras/{id}/shares"
+    summary "Provides the camera rights to user."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      email :query, :string, "Share with Evercam registered user", required: true
+      rights :query, :string, "", required: true, enum: ["snapshot","minimal+share","full"]
+      message :query, :string, ""
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Shares"
+    response 201, "Success"
+    response 401, "Invalid API keys or Unauthorized"
+    response 404, "Camera does not exist"
   end
 
   def create(conn, params) do
@@ -115,6 +147,23 @@ defmodule EvercamMediaWeb.CameraShareController do
     end
   end
 
+  swagger_path :update do
+    patch "/cameras/{id}/shares"
+    summary "Change the camera rights to user."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      email :query, :string, "Give shared user's email", required: true
+      rights :query, :string, "", required: true, enum: ["snapshot","minimal+share","full"]
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Shares"
+    response 200, "Success"
+    response 400, "Invalid rights specified in request"
+    response 401, "Invalid API keys or Unauthorized"
+    response 404, "Camera does not exist or Share not found"
+  end
+
   def update(conn, %{"id" => exid, "email" => email, "rights" => rights}) do
     caller = conn.assigns[:current_user]
     camera = Camera.get_full(exid)
@@ -141,6 +190,21 @@ defmodule EvercamMediaWeb.CameraShareController do
         render_error(conn, 400, Util.parse_changeset(share_changeset))
       end
     end
+  end
+
+  swagger_path :delete do
+    delete "/cameras/{id}/shares"
+    summary "Delete the camera access."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      email :query, :string, "Give shared user's email", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Shares"
+    response 200, "Success"
+    response 401, "Invalid API keys or Unauthorized"
+    response 404, "Camera does not exist or Share not found"
   end
 
   def delete(conn, %{"id" => exid, "email" => email}) do
