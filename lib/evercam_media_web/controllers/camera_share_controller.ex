@@ -2,6 +2,7 @@ defmodule EvercamMediaWeb.CameraShareController do
   use EvercamMediaWeb, :controller
   alias EvercamMediaWeb.CameraShareView
   alias EvercamMedia.Intercom
+  alias EvercamMedia.Zoho
 
   def show(conn, %{"id" => exid} = params) do
     current_user = conn.assigns[:current_user]
@@ -59,6 +60,7 @@ defmodule EvercamMediaWeb.CameraShareController do
                   Camera.invalidate_camera(camera)
                   CameraActivity.log_activity(caller, camera, "shared", %{with: sharee.email, ip: requester_ip}, next_datetime)
                 end)
+                add_contact_to_zoho(Application.get_env(:evercam_media, :run_spawn), camera, sharee, caller.username)
                 {[camera_share | shares], share_requests, changes, next_datetime}
               {:error, changeset} ->
                 {shares, share_requests, [attach_email_to_message(changeset, email) | changes], next_datetime}
@@ -84,6 +86,16 @@ defmodule EvercamMediaWeb.CameraShareController do
       |> render(CameraShareView, "all_shares.json", %{shares: total_shares, share_requests: share_requests, errors: errors})
     end
   end
+
+  defp add_contact_to_zoho(true, camera, user, user_id) when user_id in ["garda", "gardashared", "construction", "oldconstruction", "smartcities"] do
+    spawn fn ->
+      case Zoho.get_contact(user.email) do
+        {:ok, _} -> Logger.info "[add_contact_to_zoho] [#{user.email}] [Contact already exists]"
+        _ -> Zoho.insert_contact(user)
+      end
+    end
+  end
+  defp add_contact_to_zoho(_mode, _camera, _user, _user_id), do: :noop
 
   defp ensure_list(email) do
     case is_binary(email) do
