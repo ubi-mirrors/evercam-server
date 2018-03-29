@@ -16,9 +16,9 @@ defmodule EvercamMediaWeb.SnapshotController do
     get "/cameras/{id}/live/snapshot"
     summary "Returns the latest jpeg image from live camera."
     parameters do
-      id :path, :string, "Unique identifier.", required: true
-      api_id :query, :string, "The Evercam API id for the requester.", required: true
-      api_key :query, :string, "The Evercam API key for the requester.", required: true
+      id :path, :string, "The ID of the camera being requested.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
     end
     tag "Cameras"
     response 200, "Success"
@@ -81,9 +81,9 @@ defmodule EvercamMediaWeb.SnapshotController do
     get "/cameras/{id}/thumbnail"
     summary "Returns the latest thumbnail jpeg image."
     parameters do
-      id :path, :string, "Unique identifier.", required: true
-      api_id :query, :string, "The Evercam API id for the requester.", required: true
-      api_key :query, :string, "The Evercam API key for the requester.", required: true
+      id :path, :string, "The ID of the camera being requested.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
     end
     tag "Cameras"
     response 200, "Success"
@@ -111,8 +111,8 @@ defmodule EvercamMediaWeb.SnapshotController do
     summary "Returns the latest snapshot image in base64 format."
     parameters do
       id :path, :string, "Unique identifier for the camera.", required: true
-      api_id :query, :string, "The Evercam API id for the requester.", required: true
-      api_key :query, :string, "The Evercam API key for the requester.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
     end
     tag "Recordings"
     response 200, "Success"
@@ -140,8 +140,8 @@ defmodule EvercamMediaWeb.SnapshotController do
     summary "Returns the oldest snapshot image in base64 format."
     parameters do
       id :path, :string, "Unique identifier for the camera.", required: true
-      api_id :query, :string, "The Evercam API id for the requester.", required: true
-      api_key :query, :string, "The Evercam API key for the requester.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
     end
     tag "Recordings"
     response 200, "Success"
@@ -170,8 +170,8 @@ defmodule EvercamMediaWeb.SnapshotController do
     parameters do
       id :path, :string, "Unique identifier for the camera.", required: true
       timestamp :path, :string, "Unix timestamp", required: true
-      api_id :query, :string, "The Evercam API id for the requester.", required: true
-      api_key :query, :string, "The Evercam API key for the requester.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
     end
     tag "Recordings"
     response 200, "Success"
@@ -204,8 +204,8 @@ defmodule EvercamMediaWeb.SnapshotController do
       to :query, :string, "Unix timestamp", required: true
       limit :query, :integer, "", required: true, default: 3600
       page :query, :integer, "", required: true, default: 1
-      api_id :query, :string, "The Evercam API id for the requester.", required: true
-      api_key :query, :string, "The Evercam API key for the requester.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
     end
     tag "Recordings"
     response 200, "Success"
@@ -245,8 +245,8 @@ defmodule EvercamMediaWeb.SnapshotController do
             - Others = Archives",
             required: true,
             enum: ["Evercam Proxy", "Evercam Thumbnail", "Evercam Timelapse", "Evercam SnapMail", "Others"]
-      api_id :query, :string, "The Evercam API id for the requester.", required: true
-      api_key :query, :string, "The Evercam API key for the requester.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
       view :query, :boolean, "", required: true
     end
     tag "Recordings"
@@ -289,8 +289,8 @@ defmodule EvercamMediaWeb.SnapshotController do
       id :path, :string, "Unique identifier for the camera.", required: true
       year :path, :string, "Year, for example 2013", required: true
       month :path, :string, "Month, for example 12", required: true
-      api_id :query, :string, "The Evercam API id for the requester.", required: true
-      api_key :query, :string, "The Evercam API key for the requester.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
     end
     tag "Recordings"
     response 200, "Success"
@@ -401,8 +401,8 @@ defmodule EvercamMediaWeb.SnapshotController do
       year :path, :string, "Year, for example 2013", required: true
       month :path, :string, "Month, for example 12", required: true
       day :path, :string, "Day, for example 15", required: true
-      api_id :query, :string, "The Evercam API id for the requester.", required: true
-      api_key :query, :string, "The Evercam API key for the requester.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
     end
     tag "Recordings"
     response 200, "Success"
@@ -436,8 +436,8 @@ defmodule EvercamMediaWeb.SnapshotController do
       year :path, :string, "Year, for example 2013", required: true
       month :path, :string, "Month, for example 12", required: true
       day :path, :string, "Day, for example 16", required: true
-      api_id :query, :string, "The Evercam API id for the requester.", required: true
-      api_key :query, :string, "The Evercam API key for the requester.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
     end
     tag "Recordings"
     response 200, "Success"
@@ -473,8 +473,8 @@ defmodule EvercamMediaWeb.SnapshotController do
       month :path, :string, "Month, for example 12", required: true
       day :path, :string, "Day, for example 10", required: true
       hour :path, :string, "Hour, for example 13", required: true
-      api_id :query, :string, "The Evercam API id for the requester.", required: true
-      api_key :query, :string, "The Evercam API key for the requester.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
     end
     tag "Recordings"
     response 200, "Success"

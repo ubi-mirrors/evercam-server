@@ -1,5 +1,6 @@
 defmodule EvercamMediaWeb.ArchiveController do
   use EvercamMediaWeb, :controller
+  use PhoenixSwagger
   alias EvercamMediaWeb.ArchiveView
   alias EvercamMedia.Util
   alias EvercamMedia.Snapshot.Storage
@@ -8,6 +9,20 @@ defmodule EvercamMediaWeb.ArchiveController do
   require Logger
 
   @status %{pending: 0, processing: 1, completed: 2, failed: 3}
+
+  swagger_path :index do
+    get "/cameras/{id}/archives"
+    summary "Returns the archives list of given camera."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Archives"
+    response 200, "Success"
+    response 401, "Invalid API keys or Unauthorized"
+    response 403, "Camera does not exist"
+  end
 
   def index(conn, %{"id" => exid} = params) do
     current_user = conn.assigns[:current_user]
@@ -27,6 +42,21 @@ defmodule EvercamMediaWeb.ArchiveController do
 
       render(conn, ArchiveView, "index.json", %{archives: archives, compares: compare_archives})
     end
+  end
+
+  swagger_path :show do
+    get "/cameras/{id}/archives/{archive_id}"
+    summary "Returns the archives Details."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      archive_id :path, :string, "Unique identifier for archive.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Archives"
+    response 200, "Success"
+    response 401, "Invalid API keys or Unauthorized"
+    response 404, "Camera does not exist or Archive does not found"
   end
 
   def show(conn, %{"id" => exid, "archive_id" => archive_id} = params) do
@@ -64,6 +94,21 @@ defmodule EvercamMediaWeb.ArchiveController do
     end
   end
 
+  swagger_path :thumbnail do
+    get "/cameras/{id}/archives/{archive_id}/thumbnail"
+    summary "Returns the jpeg thumbnail of given archive."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      archive_id :path, :string, "Unique identifier for archive.", required: true
+      type :query, :string, "Media type of archive.", required: true, enum: ["clip", "compare", "others"]
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Archives"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+  end
+
   def thumbnail(conn, %{"id" => exid, "archive_id" => archive_id, "type" => media_type}) do
     data =
       case media_type do
@@ -74,6 +119,25 @@ defmodule EvercamMediaWeb.ArchiveController do
     conn
     |> put_resp_header("content-type", "image/jpeg")
     |> text(data)
+  end
+
+  swagger_path :create do
+    post "/cameras/{id}/archives"
+    summary "Create new archive."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      title :query, :string, "Name of the clip.", required: true
+      from_date :query, :string, "Unix timestamp", required: true
+      to_date :query, :string, "Unix timestamp", required: true
+      is_nvr_archive :query, :boolean, ""
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Archives"
+    response 200, "Success"
+    response 400, "Bad Request"
+    response 401, "Invalid API keys or Unauthorized"
+    response 404, "Camera does not exist"
   end
 
   def create(conn, %{"id" => exid} = params) do
@@ -87,6 +151,25 @@ defmodule EvercamMediaWeb.ArchiveController do
     end
   end
 
+  swagger_path :create do
+    post "/cameras/{id}/archives"
+    summary "Create new archive."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      title :query, :string, "", required: true
+      from_date :query, :string, "Unix timestamp", required: true
+      to_date :query, :string, "Unix timestamp", required: true
+      is_nvr_archive :query, :boolean, ""
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Archives"
+    response 200, "Success"
+    response 400, "Bad Request"
+    response 401, "Invalid API keys or Unauthorized"
+    response 404, "Camera does not exist"
+  end
+
   def update(conn, %{"id" => exid, "archive_id" => archive_id} = params) do
     current_user = conn.assigns[:current_user]
     camera = Camera.get_full(exid)
@@ -97,6 +180,18 @@ defmodule EvercamMediaWeb.ArchiveController do
     do
       update_clip(conn, camera, params, archive_id)
     end
+  end
+
+  swagger_path :pending_archives do
+    get "/cameras/archives/pending"
+    summary "Returns all pending archives."
+    parameters do
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Archives"
+    response 200, "Success"
+    response 401, "Invalid API keys or Unauthorized"
   end
 
   def pending_archives(conn, _) do
@@ -113,6 +208,21 @@ defmodule EvercamMediaWeb.ArchiveController do
     else
       render_error(conn, 401, "Unauthorized.")
     end
+  end
+
+  swagger_path :delete do
+    delete "/cameras/{id}/archives/{archive_id}"
+    summary "Delete the archives for given camera."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      archive_id :path, :string, "Unique identifier for archive.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Archives"
+    response 200, "Success"
+    response 401, "Invalid API keys or Unauthorized"
+    response 404, "Camera does not exist"
   end
 
   def delete(conn, %{"id" => exid, "archive_id" => archive_id}) do

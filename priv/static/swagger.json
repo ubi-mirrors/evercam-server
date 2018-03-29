@@ -77,14 +77,14 @@
             "required": true,
             "name": "api_id",
             "in": "query",
-            "description": ""
+            "description": "The Evercam API id for the requester."
           },
           {
             "type": "string",
             "required": true,
             "name": "api_key",
             "in": "query",
-            "description": ""
+            "description": "The Evercam API key for the requester"
           },
           {
             "type": "string",
@@ -145,24 +145,249 @@
             "required": true,
             "name": "id",
             "in": "path",
-            "description": "Unique identifier."
+            "description": "The ID of the camera being requested."
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_id",
             "in": "query",
             "description": "The Evercam API id for the requester."
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_key",
             "in": "query",
             "description": "The Evercam API key for the requester."
           }
         ],
         "operationId": "EvercamMediaWeb.SnapshotController.thumbnail",
+        "description": ""
+      }
+    },
+    "/cameras/{id}/shares": {
+      "post": {
+        "tags": [
+          "Shares"
+        ],
+        "summary": "Provides the camera rights to user.",
+        "responses": {
+          "404": {
+            "description": "Camera does not exist"
+          },
+          "401": {
+            "description": "Invalid API keys or Unauthorized"
+          },
+          "201": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for camera."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "email",
+            "in": "query",
+            "description": "Share with Evercam registered user"
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "rights",
+            "in": "query",
+            "enum": [
+              "snapshot",
+              "minimal+share",
+              "full"
+            ],
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "message",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.CameraShareController.create",
+        "description": ""
+      },
+      "patch": {
+        "tags": [
+          "Shares"
+        ],
+        "summary": "Change the camera rights to user.",
+        "responses": {
+          "404": {
+            "description": "Camera does not exist or Share not found"
+          },
+          "401": {
+            "description": "Invalid API keys or Unauthorized"
+          },
+          "400": {
+            "description": "Invalid rights specified in request"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for camera."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "email",
+            "in": "query",
+            "description": "Give shared user's email"
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "rights",
+            "in": "query",
+            "enum": [
+              "snapshot",
+              "minimal+share",
+              "full"
+            ],
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.CameraShareController.update",
+        "description": ""
+      },
+      "get": {
+        "tags": [
+          "Shares"
+        ],
+        "summary": "Returns the camera permitted users list.",
+        "responses": {
+          "403": {
+            "description": "Forbidden camera access"
+          },
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for camera."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.CameraShareController.show",
+        "description": ""
+      },
+      "delete": {
+        "tags": [
+          "Shares"
+        ],
+        "summary": "Delete the camera access.",
+        "responses": {
+          "404": {
+            "description": "Camera does not exist or Share not found"
+          },
+          "401": {
+            "description": "Invalid API keys or Unauthorized"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for camera."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "email",
+            "in": "query",
+            "description": "Give shared user's email"
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.CameraShareController.delete",
         "description": ""
       }
     },
@@ -221,14 +446,14 @@
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_id",
             "in": "query",
             "description": "The Evercam API id for the requester."
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_key",
             "in": "query",
             "description": "The Evercam API key for the requester."
@@ -289,14 +514,14 @@
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_id",
             "in": "query",
             "description": "The Evercam API id for the requester."
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_key",
             "in": "query",
             "description": "The Evercam API key for the requester."
@@ -354,14 +579,14 @@
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_id",
             "in": "query",
             "description": "The Evercam API id for the requester."
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_key",
             "in": "query",
             "description": "The Evercam API key for the requester."
@@ -405,14 +630,14 @@
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_id",
             "in": "query",
             "description": "The Evercam API id for the requester."
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_key",
             "in": "query",
             "description": "The Evercam API key for the requester."
@@ -473,14 +698,14 @@
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_id",
             "in": "query",
             "description": "The Evercam API id for the requester."
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_key",
             "in": "query",
             "description": "The Evercam API key for the requester."
@@ -527,14 +752,14 @@
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_id",
             "in": "query",
             "description": "The Evercam API id for the requester."
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_key",
             "in": "query",
             "description": "The Evercam API key for the requester."
@@ -574,14 +799,14 @@
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_id",
             "in": "query",
             "description": "The Evercam API id for the requester."
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_key",
             "in": "query",
             "description": "The Evercam API key for the requester."
@@ -651,14 +876,14 @@
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_id",
             "in": "query",
             "description": "The Evercam API id for the requester."
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_key",
             "in": "query",
             "description": "The Evercam API key for the requester."
@@ -694,18 +919,18 @@
             "required": true,
             "name": "id",
             "in": "path",
-            "description": "Unique identifier."
+            "description": "The ID of the camera being requested."
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_id",
             "in": "query",
             "description": "The Evercam API id for the requester."
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_key",
             "in": "query",
             "description": "The Evercam API key for the requester."
@@ -741,24 +966,301 @@
             "required": true,
             "name": "id",
             "in": "path",
-            "description": "Unique identifier."
+            "description": "The ID of the camera being requested."
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_id",
             "in": "query",
             "description": "The Evercam API id for the requester."
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_key",
             "in": "query",
             "description": "The Evercam API key for the requester."
           }
         ],
         "operationId": "EvercamMediaWeb.SnapshotController.live",
+        "description": ""
+      }
+    },
+    "/cameras/{id}/archives/{archive_id}/thumbnail": {
+      "get": {
+        "tags": [
+          "Archives"
+        ],
+        "summary": "Returns the jpeg thumbnail of given archive.",
+        "responses": {
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for camera."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "archive_id",
+            "in": "path",
+            "description": "Unique identifier for archive."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "type",
+            "in": "query",
+            "enum": [
+              "clip",
+              "compare",
+              "others"
+            ],
+            "description": "Media type of archive."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.ArchiveController.thumbnail",
+        "description": ""
+      }
+    },
+    "/cameras/{id}/archives/{archive_id}": {
+      "get": {
+        "tags": [
+          "Archives"
+        ],
+        "summary": "Returns the archives Details.",
+        "responses": {
+          "404": {
+            "description": "Camera does not exist or Archive does not found"
+          },
+          "401": {
+            "description": "Invalid API keys or Unauthorized"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for camera."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "archive_id",
+            "in": "path",
+            "description": "Unique identifier for archive."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.ArchiveController.show",
+        "description": ""
+      },
+      "delete": {
+        "tags": [
+          "Archives"
+        ],
+        "summary": "Delete the archives for given camera.",
+        "responses": {
+          "404": {
+            "description": "Camera does not exist"
+          },
+          "401": {
+            "description": "Invalid API keys or Unauthorized"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for camera."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "archive_id",
+            "in": "path",
+            "description": "Unique identifier for archive."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.ArchiveController.delete",
+        "description": ""
+      }
+    },
+    "/cameras/{id}/archives": {
+      "post": {
+        "tags": [
+          "Archives"
+        ],
+        "summary": "Create new archive.",
+        "responses": {
+          "404": {
+            "description": "Camera does not exist"
+          },
+          "401": {
+            "description": "Invalid API keys or Unauthorized"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for camera."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "title",
+            "in": "query",
+            "description": "Name of the clip."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "from_date",
+            "in": "query",
+            "description": "Unix timestamp"
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "to_date",
+            "in": "query",
+            "description": "Unix timestamp"
+          },
+          {
+            "type": "boolean",
+            "required": false,
+            "name": "is_nvr_archive",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.ArchiveController.create",
+        "description": ""
+      },
+      "get": {
+        "tags": [
+          "Archives"
+        ],
+        "summary": "Returns the archives list of given camera.",
+        "responses": {
+          "403": {
+            "description": "Camera does not exist"
+          },
+          "401": {
+            "description": "Invalid API keys or Unauthorized"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for camera."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.ArchiveController.index",
         "description": ""
       }
     },
@@ -785,24 +1287,58 @@
             "required": true,
             "name": "id",
             "in": "path",
-            "description": "Unique identifier"
+            "description": "The ID of the camera being requested."
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_id",
             "in": "query",
             "description": "The Evercam API id for the requester."
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_key",
             "in": "query",
             "description": "The Evercam API key for the requester."
           }
         ],
         "operationId": "EvercamMediaWeb.CameraController.show",
+        "description": ""
+      }
+    },
+    "/cameras/archives/pending": {
+      "get": {
+        "tags": [
+          "Archives"
+        ],
+        "summary": "Returns all pending archives.",
+        "responses": {
+          "401": {
+            "description": "Invalid API keys or Unauthorized"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.ArchiveController.pending_archives",
         "description": ""
       }
     },
@@ -823,14 +1359,14 @@
         "parameters": [
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_id",
             "in": "query",
             "description": "The Evercam API id for the requester."
           },
           {
             "type": "string",
-            "required": true,
+            "required": false,
             "name": "api_key",
             "in": "query",
             "description": "The Evercam API key for the requester."
