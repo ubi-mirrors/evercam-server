@@ -70,6 +70,7 @@ defmodule EvercamMediaWeb.CameraShareController do
          :ok <- caller_has_permission(conn, caller, camera)
     do
       requester_ip = user_request_ip(conn)
+      {:ok, zoho_camera} = Zoho.get_camera(camera.exid)
 
       fetch_shares =
         Enum.reduce(email_array, {[], [], [], Ecto.DateTime.utc}, fn email, {shares, share_requests, changes, datetime} = _acc ->
@@ -92,7 +93,7 @@ defmodule EvercamMediaWeb.CameraShareController do
                   Camera.invalidate_camera(camera)
                   CameraActivity.log_activity(caller, camera, "shared", %{with: sharee.email, ip: requester_ip}, next_datetime)
                 end)
-                add_contact_to_zoho(Application.get_env(:evercam_media, :run_spawn), camera, sharee, caller.username)
+                add_contact_to_zoho(Application.get_env(:evercam_media, :run_spawn), zoho_camera, sharee, caller.username)
                 {[camera_share | shares], share_requests, changes, next_datetime}
               {:error, changeset} ->
                 {shares, share_requests, [attach_email_to_message(changeset, email) | changes], next_datetime}
@@ -119,12 +120,16 @@ defmodule EvercamMediaWeb.CameraShareController do
     end
   end
 
-  defp add_contact_to_zoho(true, camera, user, user_id) when user_id in ["garda", "gardashared", "construction", "oldconstruction", "smartcities"] do
+  defp add_contact_to_zoho(true, zoho_camera, user, user_id) when user_id in ["garda", "gardashared", "construction", "oldconstruction", "smartcities"] do
     spawn fn ->
-      case Zoho.get_contact(user.email) do
-        {:ok, _} -> Logger.info "[add_contact_to_zoho] [#{user.email}] [Contact already exists]"
-        _ -> Zoho.insert_contact(user)
-      end
+      contact =
+        case Zoho.get_contact(user.email) do
+          {:ok, contact} -> contact
+          _ ->
+            {:ok, contact} = Zoho.insert_contact(user)
+            Map.put(contact, "Full_Name", User.get_fullname(user))
+        end
+      Zoho.associate_camera_contact(contact, zoho_camera)
     end
   end
   defp add_contact_to_zoho(_mode, _camera, _user, _user_id), do: :noop

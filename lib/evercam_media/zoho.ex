@@ -76,6 +76,33 @@ defmodule EvercamMedia.Zoho do
       }
 
     case HTTPoison.post(url, Poison.encode!(contact_xml), headers) do
+      {:ok, %HTTPoison.Response{body: body, status_code: 201}} ->
+        json_response = Poison.decode!(body)
+        contact = Map.get(json_response, "data") |> List.first
+        {:ok, contact["details"]}
+      error -> {:error, error}
+    end
+  end
+
+  def associate_camera_contact(contact, camera) do
+    url = "#{@zoho_url}Cameras_X_Contacts"
+    headers = ["Authorization": "#{@zoho_auth_token}", "Content-Type": "application/x-www-form-urlencoded"]
+
+    contact_xml =
+      %{ "data" => [%{
+          "Description" => "#{camera["Name"]} shared with #{contact["Full_Name"]}",
+          "Related_Camera_Sharees" => %{
+            "name": camera["Name"],
+            "id": camera["id"]
+          },
+          "Camera_Sharees" => %{
+            "name": contact["Full_Name"],
+            "id": contact["id"]
+          }
+        }]
+      }
+
+    case HTTPoison.post(url, Poison.encode!(contact_xml), headers) do
       {:ok, %HTTPoison.Response{body: body, status_code: 201}} -> {:ok, body}
       error -> {:error, error}
     end
