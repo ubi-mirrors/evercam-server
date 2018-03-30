@@ -70,7 +70,11 @@ defmodule EvercamMediaWeb.CameraShareController do
          :ok <- caller_has_permission(conn, caller, camera)
     do
       requester_ip = user_request_ip(conn)
-      {:ok, zoho_camera} = Zoho.get_camera(camera.exid)
+      zoho_camera =
+        case Zoho.get_camera(camera.exid) do
+          {:ok, zoho_camera} -> zoho_camera
+          _ -> %{}
+        end
 
       fetch_shares =
         Enum.reduce(email_array, {[], [], [], Ecto.DateTime.utc}, fn email, {shares, share_requests, changes, datetime} = _acc ->
