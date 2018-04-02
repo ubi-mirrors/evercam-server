@@ -20,41 +20,46 @@ defmodule EvercamMedia.SyncEvercamToZoho do
   def sync_camera_sharees(email_or_username) do
     user = User.by_username_or_email(email_or_username)
     cameras = Camera.for(user, false)
-    camera_ids = Enum.map(cameras, fn(camera) -> camera.id end)
 
-    CameraShare
-    |> where([cs], cs.user_id in ^camera_ids)
-    |> Repo.all
+    Enum.each(cameras, fn(camera) ->
+      zoho_camera =
+        case Zoho.get_camera(camera.exid) do
+          {:ok, zoho_camera} -> zoho_camera
+          _ -> %{}
+        end
 
-    # {users, emails} =
-    #   Camera
-    #   |> where([cam], cam.owner_id == ^user.id)
-    #   |> preload(:owner)
-    #   |> preload(:shares)
-    #   |> preload([shares: :user])
-    #   |> Repo.all
-    #   |> Enum.reduce({[], []}, fn(camera, {all_sharees, all_emails}) ->
-    #     {sharees, sharee_emails_list} =
-    #       camera.shares
-    #       |> Enum.reduce({[], all_emails}, fn(camera_share, {sharee_list, sharee_emails}) ->
-    #         # Logger.info "Start Contact sync: [#{camera_share.user.email}]"
-    #         case Enum.member?(sharee_emails, camera_share.user.email) do
-    #           true ->
-    #             Logger.info "Duplicate Email: #{camera_share.user.email}"
-    #             {sharee_list, sharee_emails}
-    #           false ->
-    #             {[camera_share.user | sharee_list], [camera_share.user.email | sharee_emails]}
-    #         end
-    #         # case Zoho.get_contact(camera_share.user.email) do
-    #         #   {:ok, _} -> sharee_list
-    #         #   _ -> [camera_share.user | sharee_list]
-    #         # end
-    #       end)
-    #     {[sharees | all_sharees], [sharee_emails_list | all_emails]}
-    #   end)
-    # IO.inspect Enum.coun(users)
-    # Enum.each(users, fn(user) ->
-    #   Logger.debug user.email
-    # end)
+      camera_shares =
+        CameraShare
+        |> where(user_id: ^camera.id)
+        |> preload(:user)
+        |> Repo.all
+
+      request_param = create_request_params(camera_shares, zoho_camera, [])
+      IO.inspect request_param
+    end)
   end
+
+  defp create_request_params([camera_share | rest], zoho_camera, request_param) do
+    zoho_contact =
+      case Zoho.get_contact(camera_share.user.email) do
+        {:ok, zoho_contact} -> zoho_contact
+        _ -> %{}
+      end
+
+    json_object =
+      %{
+        "Description" => "#{zoho_camera["Name"]} shared with #{zoho_contact["Full_Name"]}",
+        "Related_Camera_Sharees" => %{
+          "name": zoho_camera["Name"],
+          "id": zoho_camera["id"]
+        },
+        "Camera_Sharees" => %{
+          "name": zoho_contact["Full_Name"],
+          "id": zoho_contact["id"]
+        }
+      }
+
+    create_request_params(rest, zoho_camera, List.insert_at(request_param, -1, json_object))
+  end
+  defp create_request_params([], _zoho_camera, request_param), do: request_param
 end
