@@ -35,7 +35,10 @@ defmodule EvercamMedia.SyncEvercamToZoho do
         |> Repo.all
 
       request_param = create_request_params(camera_shares, zoho_camera, [])
-      Zoho.associate_multiple_contact(request_param)
+      case request_param do
+        [] -> Logger.info "No pending share for camera #{camera.exid}"
+        request -> Zoho.associate_multiple_contact(request)
+      end
     end)
   end
 
@@ -55,7 +58,10 @@ defmodule EvercamMedia.SyncEvercamToZoho do
       |> Repo.all
 
     request_param = create_request_params(camera_shares, zoho_camera, [])
-    Zoho.associate_multiple_contact(request_param)
+    case request_param do
+      [] -> Logger.info "No pending share"
+      request -> Zoho.associate_multiple_contact(request)
+    end
   end
 
   defp create_request_params([camera_share | rest], zoho_camera, request_param) do
