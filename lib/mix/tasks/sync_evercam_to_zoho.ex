@@ -25,41 +25,58 @@ defmodule EvercamMedia.SyncEvercamToZoho do
       zoho_camera =
         case Zoho.get_camera(camera.exid) do
           {:ok, zoho_camera} -> zoho_camera
-          _ -> %{}
+          _ -> nil
         end
 
       camera_shares =
         CameraShare
-        |> where(user_id: ^camera.id)
+        |> where(camera_id: ^camera.id)
         |> preload(:user)
         |> Repo.all
 
       request_param = create_request_params(camera_shares, zoho_camera, [])
-      IO.inspect request_param
+      Zoho.associate_multiple_contact(request_param)
     end)
   end
 
   defp create_request_params([camera_share | rest], zoho_camera, request_param) do
+    Logger.info "Associate camera (#{zoho_camera["Evercam_ID"]}) with contact (#{camera_share.user.email})."
     zoho_contact =
       case Zoho.get_contact(camera_share.user.email) do
         {:ok, zoho_contact} -> zoho_contact
-        _ -> %{}
+        _ ->
+          case Zoho.insert_contact(camera_share.user) do
+            {:ok, contact} -> Map.put(contact, "Full_Name", User.get_fullname(camera_share.user))
+            _ -> nil
+          end
       end
 
-    json_object =
-      %{
-        "Description" => "#{zoho_camera["Name"]} shared with #{zoho_contact["Full_Name"]}",
-        "Related_Camera_Sharees" => %{
-          "name": zoho_camera["Name"],
-          "id": zoho_camera["id"]
-        },
-        "Camera_Sharees" => %{
-          "name": zoho_contact["Full_Name"],
-          "id": zoho_contact["id"]
-        }
-      }
-
-    create_request_params(rest, zoho_camera, List.insert_at(request_param, -1, json_object))
+    case request(zoho_contact, zoho_camera) do
+      nil -> create_request_params(rest, zoho_camera, request_param)
+      json_object -> create_request_params(rest, zoho_camera, List.insert_at(request_param, -1, json_object))
+    end
   end
   defp create_request_params([], _zoho_camera, request_param), do: request_param
+
+  defp request(nil, nil), do: nil
+  defp request(nil, _zoho_camera), do: nil
+  defp request(_zoho_contact, nil), do: nil
+  defp request(zoho_contact, zoho_camera) do
+    case Zoho.get_share(zoho_camera["Evercam_ID"], zoho_contact["Full_Name"]) do
+      {:ok, _share} -> nil
+      _ ->
+        %{
+          "Share_ID" => Zoho.create_share_id(zoho_camera["Evercam_ID"], zoho_contact["Full_Name"]),
+          "Description" => "#{zoho_camera["Name"]} shared with #{zoho_contact["Full_Name"]}",
+          "Related_Camera_Sharees" => %{
+            "name": zoho_camera["Name"],
+            "id": zoho_camera["id"]
+          },
+          "Camera_Sharees" => %{
+            "name": zoho_contact["Full_Name"],
+            "id": zoho_contact["id"]
+          }
+        }
+    end
+  end
 end

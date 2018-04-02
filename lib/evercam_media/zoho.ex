@@ -84,12 +84,38 @@ defmodule EvercamMedia.Zoho do
     end
   end
 
+  def get_share(camera_exid, contact_fulname) do
+    url = "#{@zoho_url}Cameras_X_Contacts/search?criteria=(Share_ID:equals:#{create_share_id(camera_exid, contact_fulname)})"
+    headers = ["Authorization": "#{@zoho_auth_token}"]
+
+    case HTTPoison.get(url, headers) do
+      {:ok, %HTTPoison.Response{body: body, status_code: 200}} ->
+        json_response = Poison.decode!(body)
+        share = Map.get(json_response, "data") |> List.first
+        {:ok, share}
+      {:ok, %HTTPoison.Response{status_code: 204}} -> {:nodata, "Share does't exits."}
+      _ -> {:error}
+    end
+  end
+
+  def delete_share(share_id) do
+    url = "#{@zoho_url}Cameras_X_Contacts?ids=#{share_id}"
+    headers = ["Authorization": "#{@zoho_auth_token}"]
+
+    case HTTPoison.delete(url, headers) do
+      {:ok, %HTTPoison.Response{status_code: 200}} -> {:ok, "Share deleted successfully."}
+      {:ok, %HTTPoison.Response{status_code: 204}} -> {:nodata, "Share does't exits."}
+      error -> {:error}
+    end
+  end
+
   def associate_camera_contact(contact, camera) do
     url = "#{@zoho_url}Cameras_X_Contacts"
     headers = ["Authorization": "#{@zoho_auth_token}", "Content-Type": "application/x-www-form-urlencoded"]
 
     contact_xml =
       %{ "data" => [%{
+          "Share_ID" => create_share_id(camera["Evercam_ID"], contact["Full_Name"]),
           "Description" => "#{camera["Name"]} shared with #{contact["Full_Name"]}",
           "Related_Camera_Sharees" => %{
             "name": camera["Name"],
@@ -102,6 +128,17 @@ defmodule EvercamMedia.Zoho do
         }]
       }
 
+    case HTTPoison.post(url, Poison.encode!(contact_xml), headers) do
+      {:ok, %HTTPoison.Response{body: body, status_code: 201}} -> {:ok, body}
+      error -> {:error, error}
+    end
+  end
+
+  def associate_multiple_contact(request_params) do
+    url = "#{@zoho_url}Cameras_X_Contacts"
+    headers = ["Authorization": "#{@zoho_auth_token}", "Content-Type": "application/x-www-form-urlencoded"]
+
+    contact_xml = %{ "data" => request_params }
     case HTTPoison.post(url, Poison.encode!(contact_xml), headers) do
       {:ok, %HTTPoison.Response{body: body, status_code: 201}} -> {:ok, body}
       error -> {:error, error}
@@ -127,4 +164,9 @@ defmodule EvercamMedia.Zoho do
     create_camera_request(rest, List.insert_at(camera_json, -1, camera_obj))
   end
   def create_camera_request([], camera_json), do: camera_json
+
+  def create_share_id(camera_exid, username) do
+    clean_name = username |> EvercamMedia.Util.slugify |> String.replace(" ", "") |> String.replace("-", "") |> String.downcase
+    "#{camera_exid}-#{clean_name}"
+  end
 end
