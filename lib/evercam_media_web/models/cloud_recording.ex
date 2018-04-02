@@ -51,7 +51,7 @@ defmodule CloudRecording do
 
   def initial_sleep(cloud_recording) do
     if cloud_recording == nil || cloud_recording.frequency == 1 || cloud_recording.status == "off" do
-      :crypto.rand_uniform(1, 60) * 1000
+      :rand.uniform(60) * 1000
     else
       1000
     end

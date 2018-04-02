@@ -53,7 +53,7 @@ defmodule TimelapseRecording do
 
   def initial_sleep(timelapse_recording) do
     if timelapse_recording == nil || timelapse_recording.frequency == 1 || timelapse_recording.status == "off" do
-      :crypto.rand_uniform(1, 60) * 1000
+      :rand.uniform(60) * 1000
     else
       1000
     end

@@ -22,6 +22,7 @@ defmodule EvercamMedia.Types.JSON.Extension do
 
   @behaviour Postgrex.Extension
 
+  def init(_), do: :ok
   def init(_parameters, opts),
     do: Keyword.fetch!(opts, :library)
 
@@ -31,11 +32,13 @@ defmodule EvercamMedia.Types.JSON.Extension do
   def format(_library),
     do: :binary
 
+  def encode(_), do: :ok
   def encode(%TypeInfo{type: "json"}, map, _state, library),
     do: library.encode!(map)
   def encode(%TypeInfo{type: "jsonb"}, map, _state, library),
     do: <<1, library.encode!(map)::binary>>
 
+  def decode(_), do: :ok
   def decode(%TypeInfo{type: "json"}, json, _state, library),
     do: library.decode!(json)
   def decode(%TypeInfo{type: "jsonb"}, <<1, json::binary>>, _state, library),
