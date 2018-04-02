@@ -229,10 +229,21 @@ defmodule EvercamMediaWeb.CameraShareController do
       CameraShare.delete_share(sharee, camera)
       Camera.invalidate_user(sharee)
       Camera.invalidate_camera(camera)
+      delete_share_to_zoho(Application.get_env(:evercam_media, :run_spawn), exid, User.get_fullname(sharee), caller.username)
       CameraActivity.log_activity(caller, camera, "stopped sharing", %{with: sharee.email, ip: user_request_ip(conn)})
       json(conn, %{})
     end
   end
+
+  defp delete_share_to_zoho(true, camera_exid, user_fullname, user_id) when user_id in ["garda", "gardashared", "construction", "oldconstruction", "smartcities"] do
+    spawn fn ->
+      case Zoho.get_share(camera_exid, user_fullname) do
+        {:ok, share} -> Zoho.delete_share(share["id"])
+        _ -> :noop
+      end
+    end
+  end
+  defp delete_share_to_zoho(_mode, _camera_exid, _user_fullname, _user_id), do: :noop
 
   def shared_users(conn, params) do
     caller = conn.assigns[:current_user]

@@ -57,7 +57,7 @@ defmodule EvercamMedia.Zoho do
         json_response = Poison.decode!(body)
         contact = Map.get(json_response, "data") |> List.first
         {:ok, contact}
-      {:ok, %HTTPoison.Response{status_code: 204}} -> {:nodata, "Camera does't exits."}
+      {:ok, %HTTPoison.Response{status_code: 204}} -> {:nodata, "Contact does't exits."}
       _ -> {:error}
     end
   end
@@ -69,6 +69,7 @@ defmodule EvercamMedia.Zoho do
     contact_xml =
       %{"data" =>
         [%{
+          "Account_Name" => "No Account",
           "First_Name" => "#{user.firstname}",
           "Last_Name" => "#{user.lastname}",
           "Email" => "#{user.email}"
@@ -105,7 +106,7 @@ defmodule EvercamMedia.Zoho do
     case HTTPoison.delete(url, headers) do
       {:ok, %HTTPoison.Response{status_code: 200}} -> {:ok, "Share deleted successfully."}
       {:ok, %HTTPoison.Response{status_code: 204}} -> {:nodata, "Share does't exits."}
-      error -> {:error}
+      _ -> {:error}
     end
   end
 
