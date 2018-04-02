@@ -39,8 +39,26 @@ defmodule EvercamMedia.SyncEvercamToZoho do
     end)
   end
 
+  def sync_single_camera_sharees(camera_exid) do
+    camera = Camera.get_full(camera_exid)
+
+    zoho_camera =
+      case Zoho.get_camera(camera.exid) do
+        {:ok, zoho_camera} -> zoho_camera
+        _ -> nil
+      end
+
+    camera_shares =
+      CameraShare
+      |> where(camera_id: ^camera.id)
+      |> preload(:user)
+      |> Repo.all
+
+    request_param = create_request_params(camera_shares, zoho_camera, [])
+    Zoho.associate_multiple_contact(request_param)
+  end
+
   defp create_request_params([camera_share | rest], zoho_camera, request_param) do
-    Logger.info "Associate camera (#{zoho_camera["Evercam_ID"]}) with contact (#{camera_share.user.email})."
     zoho_contact =
       case Zoho.get_contact(camera_share.user.email) do
         {:ok, zoho_contact} -> zoho_contact
@@ -50,6 +68,7 @@ defmodule EvercamMedia.SyncEvercamToZoho do
             _ -> nil
           end
       end
+    Logger.info "Associate camera (#{zoho_camera["Evercam_ID"]}) with contact (#{zoho_contact["Full_Name"]})."
 
     case request(zoho_contact, zoho_camera) do
       nil -> create_request_params(rest, zoho_camera, request_param)
