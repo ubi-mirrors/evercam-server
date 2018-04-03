@@ -4,8 +4,8 @@ defmodule Compare do
   import Ecto.Query
   alias EvercamMedia.Repo
 
-  @required_fields ~w(camera_id name before_date after_date embed_code status requested_by)
-  @optional_fields ~w(exid create_animation)
+  @required_fields ~w(camera_id name before_date after_date embed_code status requested_by exid)
+  @optional_fields ~w(create_animation)
 
   # @status %{processing: 0, completed: 1, failed: 2}
 
@@ -57,29 +57,6 @@ defmodule Compare do
     Compare
     |> where(camera_id: ^id)
     |> Repo.delete_all
-  end
-
-  defp validate_exid(changeset) do
-    case get_field(changeset, :exid) do
-      nil -> auto_generate_camera_id(changeset)
-      _exid -> changeset |> update_change(:exid, &String.downcase/1)
-    end
-  end
-
-  defp auto_generate_camera_id(changeset) do
-    case get_field(changeset, :name) do
-      nil ->
-        changeset
-      name ->
-        compare_exid =
-          name
-          |> EvercamMedia.Util.slugify
-          |> String.replace(" ", "")
-          |> String.replace("-", "")
-          |> String.downcase
-          |> String.slice(0..4)
-        put_change(changeset, :exid, "#{compare_exid}-#{Enum.take_random(?a..?z, 5)}")
-    end
   end
 
   def required_fields do
