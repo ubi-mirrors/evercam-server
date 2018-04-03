@@ -39,6 +39,14 @@ defmodule Compare do
     |> Repo.one
   end
 
+  def by_status(status) do
+    Compare
+    |> where(status: ^status)
+    |> preload(:camera)
+    |> preload(:user)
+    |> Repo.all
+  end
+
   def delete_by_exid(exid) do
     Compare
     |> where(exid: ^exid)
