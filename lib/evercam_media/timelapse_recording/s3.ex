@@ -11,6 +11,15 @@ defmodule EvercamMedia.TimelapseRecording.S3 do
     |> ExAws.request!
   end
 
+  def save_compare(camera_exid, compare_exid, timestamp, image, _notes, state, opts \\ []) do
+    Logger.debug "[#{camera_exid}] [snapshot_upload] [#{timestamp}]"
+    directory_path = construct_compare_bucket_path(camera_exid, compare_exid)
+    file_path = construct_compare_file_name(timestamp, state)
+    opts = Enum.concat(opts, [content_type: "image/jpeg"])
+    "#{directory_path}#{file_path}"
+    |> do_save(image, opts)
+  end
+
   def save(camera_exid, timestamp, image, _notes, opts \\ []) do
     Logger.debug "[#{camera_exid}] [snapshot_upload] [#{timestamp}]"
     directory_path = construct_bucket_path(camera_exid, timestamp)
@@ -100,7 +109,7 @@ defmodule EvercamMedia.TimelapseRecording.S3 do
   end
 
   def load_compare_thumbnail(camera_exid, compare_id) do
-    get_url = "#{camera_exid}/compares/thumb-#{compare_id}.jpg"
+    get_url = "#{camera_exid}/compares/#{compare_id}/thumb-#{compare_id}.jpg"
     case ExAws.S3.get_object("evercam-camera-assets", get_url) |> ExAws.request do
       {:ok, response} -> response.body
       {:error, _} -> EvercamMedia.Util.default_thumbnail
@@ -123,5 +132,15 @@ defmodule EvercamMedia.TimelapseRecording.S3 do
     timestamp
     |> Calendar.DateTime.Parse.unix!
     |> Calendar.Strftime.strftime!("%H_%M_%S.jpg")
+  end
+
+  def construct_compare_bucket_path(camera_exid, compare_exid) do
+    "#{camera_exid}/compares/#{compare_exid}/"
+  end
+
+  def construct_compare_file_name(timestamp, state) do
+    timestamp
+    |> Calendar.DateTime.Parse.unix!
+    |> Calendar.Strftime.strftime!("#{state}-%Y-%m-%d-%H_%M_%S.jpg")
   end
 end

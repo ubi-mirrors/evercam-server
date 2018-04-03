@@ -46,7 +46,8 @@ defmodule EvercamMediaWeb.CompareController do
         name: params["name"],
         before_date: convert_to_datetime(params["before"]),
         after_date: convert_to_datetime(params["after"]),
-        embed_code: params["embed"]
+        embed_code: params["embed"],
+        exid: params["exid"]
       }
       |> add_parameter("field", :create_animation, params["create_animation"])
       changeset = Compare.changeset(%Compare{}, compare_params)
@@ -85,15 +86,15 @@ defmodule EvercamMediaWeb.CompareController do
   defp get_content_type("mp4"), do: "video/mp4"
 
   defp start_export(true, camera_exid, compare_exid, params) do
-    spawn fn -> do_export_image(camera_exid, String.to_integer(params["before"]), params["before_image"]) end
-    spawn fn -> do_export_image(camera_exid, String.to_integer(params["after"]), params["after_image"]) end
+    spawn fn -> do_export_image(camera_exid, compare_exid, String.to_integer(params["before"]), params["before_image"], "start") end
+    spawn fn -> do_export_image(camera_exid, compare_exid, String.to_integer(params["after"]), params["after_image"], "end") end
     spawn fn -> create_animated(params["create_animation"], camera_exid, compare_exid, params["before_image"], params["after_image"]) end
   end
   defp start_export(_is_run, _camera_exid, _compare_exid, _params), do: :nothing
 
-  defp do_export_image(camera_exid, timestamp, image_base64) do
+  defp do_export_image(camera_exid, compare_exid, timestamp, image_base64, state) do
     decoded_image = decode_image(image_base64)
-    S3.save(camera_exid, timestamp, decoded_image, "compare", [acl: :public_read])
+    S3.save_compare(camera_exid, compare_exid, timestamp, decoded_image, "compare", state, [acl: :public_read])
   end
 
   defp create_animated(animation, camera_exid, compare_id, before_image, after_image) when animation in [true, "true"] do
@@ -117,10 +118,10 @@ defmodule EvercamMediaWeb.CompareController do
         "" ->
           gif_content = File.read!(animated_file)
           mp4_content = File.read!("#{root}#{compare_id}.mp4")
-          upload_path = "#{camera_exid}/compares/#{compare_id}"
-          S3.do_save("#{upload_path}.gif", gif_content, [content_type: "image/gif", acl: :public_read])
-          S3.do_save("#{upload_path}.mp4", mp4_content, [acl: :public_read])
-          S3.do_save("#{camera_exid}/compares/thumb-#{compare_id}.jpg", File.read!("#{root}thumb-#{compare_id}.jpg"), [content_type: "image/jpg", acl: :public_read])
+          upload_path = "#{camera_exid}/compares/#{compare_id}/"
+          S3.do_save("#{upload_path}#{compare_id}.gif", gif_content, [content_type: "image/gif", acl: :public_read])
+          S3.do_save("#{upload_path}#{compare_id}.mp4", mp4_content, [acl: :public_read])
+          S3.do_save("#{camera_exid}/compares/#{compare_id}/thumb-#{compare_id}.jpg", File.read!("#{root}thumb-#{compare_id}.jpg"), [content_type: "image/jpg", acl: :public_read])
           update_compare(compare_id, 1)
         _ -> update_compare(compare_id, 2)
       end
@@ -141,9 +142,9 @@ defmodule EvercamMediaWeb.CompareController do
     spawn(fn ->
       before_date = Util.ecto_datetime_to_unix(compare.before_date)
       after_date = Util.ecto_datetime_to_unix(compare.after_date)
-      animation_path = "#{camera_exid}/compares/#{compare.exid}"
-      before_image = "#{S3.construct_bucket_path(camera_exid, before_date)}#{S3.construct_file_name(before_date)}"
-      after_image = "#{S3.construct_bucket_path(camera_exid, after_date)}#{S3.construct_file_name(after_date)}"
+      animation_path = "#{camera_exid}/compares/#{compare.exid}/#{compare.exid}"
+      before_image = "#{S3.construct_compare_bucket_path(camera_exid, compare.exid)}#{S3.construct_compare_file_name(before_date, "start")}"
+      after_image = "#{S3.construct_compare_bucket_path(camera_exid, compare.exid)}#{S3.construct_compare_file_name(after_date, "end")}"
       files = ["#{after_image}", "#{before_image}", "#{animation_path}.gif", "#{animation_path}.mp4"]
       S3.delete_object(files)
     end)
@@ -201,7 +202,7 @@ defmodule EvercamMediaWeb.CompareController do
 
   defp load_animation(conn, camera_exid, compare_id, format) do
     {content_type, content} =
-      case S3.do_load("#{camera_exid}/compares/#{compare_id}.#{format}") do
+      case S3.do_load("#{camera_exid}/compares/#{compare_id}/#{compare_id}.#{format}") do
         {:ok, response} ->
           {get_content_type(format), response}
         {:error, _, _} ->

@@ -90,6 +90,5 @@ defmodule Compare do
     model
     |> cast(params, @required_fields ++ @optional_fields)
     |> validate_required(required_fields())
-    |> validate_exid
   end
 end

@@ -144,6 +144,7 @@ defmodule EvercamMedia.CompareControllerTest do
       before_image: "data:image/jpeg;base64,jkhdsifuhsduhfdsf",
       after_image: "data:image/jpeg;base64,jkhdsifuhsduhfdsf",
       embed: "<div></div>",
+      exid: "testing-compare",
       requested_by: context[:user].id
     }
     response =
