@@ -68,11 +68,12 @@ defmodule EvercamMedia.SyncEvercamToZoho do
     zoho_contact =
       case Zoho.get_contact(camera_share.user.email) do
         {:ok, zoho_contact} -> zoho_contact
-        _ ->
+        {:nodata, message} ->
           case Zoho.insert_contact(camera_share.user) do
             {:ok, contact} -> Map.put(contact, "Full_Name", User.get_fullname(camera_share.user))
             _ -> nil
           end
+        {:error} -> nil
       end
     Logger.info "Associate camera (#{zoho_camera["Evercam_ID"]}) with contact (#{zoho_contact["Full_Name"]})."
 

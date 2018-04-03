@@ -129,11 +129,15 @@ defmodule EvercamMediaWeb.CameraShareController do
       contact =
         case Zoho.get_contact(user.email) do
           {:ok, contact} -> contact
-          _ ->
+          {:nodata, message} ->
             {:ok, contact} = Zoho.insert_contact(user)
             Map.put(contact, "Full_Name", User.get_fullname(user))
+          {:error} -> nil
         end
-      Zoho.associate_camera_contact(contact, zoho_camera)
+      case contact do
+        zoho_contact -> Zoho.associate_camera_contact(zoho_contact, zoho_camera)
+        nil -> :noop
+      end
     end
   end
   defp add_contact_to_zoho(_mode, _camera, _user, _user_id), do: :noop
