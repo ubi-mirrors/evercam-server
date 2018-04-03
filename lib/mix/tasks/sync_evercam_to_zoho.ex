@@ -34,6 +34,7 @@ defmodule EvercamMedia.SyncEvercamToZoho do
         |> preload(:user)
         |> Repo.all
 
+      Logger.info "Start camera (#{camera.exid}) association."
       request_param = create_request_params(camera_shares, zoho_camera, [])
       case request_param do
         [] -> Logger.info "No pending share for camera #{camera.exid}"
