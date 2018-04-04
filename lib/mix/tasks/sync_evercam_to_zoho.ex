@@ -58,6 +58,19 @@ defmodule EvercamMedia.SyncEvercamToZoho do
       |> preload(:user)
       |> Repo.all
 
+    case Enum.count(camera_shares) do
+      count when count > 49 ->
+        camera_shares
+        |> Enum.chunk_every(40)
+        |> Enum.each(fn(camera_share_chunk) ->
+          do_associate(camera_share_chunk, zoho_camera)
+        end)
+      _ -> do_associate(camera_shares, zoho_camera)
+    end
+
+  end
+
+  def do_associate(camera_shares, zoho_camera) do
     request_param = create_request_params(camera_shares, zoho_camera, [])
     case request_param do
       [] -> Logger.info "No pending share"
@@ -69,7 +82,7 @@ defmodule EvercamMedia.SyncEvercamToZoho do
     zoho_contact =
       case Zoho.get_contact(camera_share.user.email) do
         {:ok, zoho_contact} -> zoho_contact
-        {:nodata, message} ->
+        {:nodata, _message} ->
           case Zoho.insert_contact(camera_share.user) do
             {:ok, contact} -> Map.put(contact, "Full_Name", User.get_fullname(camera_share.user))
             _ -> nil
