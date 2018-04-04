@@ -102,6 +102,7 @@ defmodule VendorModel do
     |> List.last
     |> String.split("/")
     |> List.first
+    |> String.to_integer
   end
   def get_channel(_camera, channel), do: channel
 

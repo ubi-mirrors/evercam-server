@@ -310,7 +310,7 @@ defmodule EvercamMedia.HikvisionNVR do
   end
 
   def parse_chl_id(channel) do
-    String.to_integer(channel) - 1
+    channel - 1
     |> Integer.floor_div(100)
   end
 
