@@ -63,6 +63,7 @@ defmodule EvercamMedia.SyncEvercamToZoho do
         camera_shares
         |> Enum.chunk_every(40)
         |> Enum.each(fn(camera_share_chunk) ->
+          :timer.sleep(60000)
           do_associate(camera_share_chunk, zoho_camera)
         end)
       _ -> do_associate(camera_shares, zoho_camera)
