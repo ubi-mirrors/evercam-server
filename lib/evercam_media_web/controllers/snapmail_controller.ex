@@ -1,7 +1,20 @@
 defmodule EvercamMediaWeb.SnapmailController do
   use EvercamMediaWeb, :controller
+  use PhoenixSwagger
   alias EvercamMediaWeb.SnapmailView
   alias EvercamMedia.Snapmail.SnapmailerSupervisor
+
+  swagger_path :all do
+    get "/snapmails"
+    summary "Returns all snapmails."
+    parameters do
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Snapmails"
+    response 200, "Success"
+    response 401, "Invalid API keys or Unauthorized"
+  end
 
   def all(conn, params) do
     current_user = conn.assigns[:current_user]
@@ -26,6 +39,20 @@ defmodule EvercamMediaWeb.SnapmailController do
     end
   end
 
+  swagger_path :show do
+    get "/snapmails/{id}"
+    summary "Returns the requested snapmail details."
+    parameters do
+      id :path, :string, "The ID of the snapmail being requested."
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Snapmails"
+    response 200, "Success"
+    response 401, "Invalid API keys or Unauthorized"
+    response 404, "Snapmail not found"
+  end
+
   def show(conn, %{"id" => exid}) do
     current_user = conn.assigns[:current_user]
 
@@ -38,6 +65,25 @@ defmodule EvercamMediaWeb.SnapmailController do
         render_error(conn, 401, "Unauthorized.")
       end
     end
+  end
+
+  swagger_path :create do
+    post "/snapmails"
+    summary "Create new snapmail."
+    parameters do
+      camera_exids :query, :string, "Multiple IDs of camera in following format (abc,xyz).", required: true
+      notify_days :query, :array, "", items: [type: "string", enum: ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]], required: true
+      notify_time :query, :string, "Notification time, for example 14:23", required: true
+      recipients :query, :string, "Multiple emails in following format (test@example.com,info@example.com).", required: true
+      subject :query, :string, "", required: true
+      timezone :query, :string, "For example Europe/Dublin", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Snapmails"
+    response 201, "Success"
+    response 401, "Invalid API keys or Unauthorized"
+    response 404, "Not Found"
   end
 
   def create(conn, params) do
@@ -67,6 +113,26 @@ defmodule EvercamMediaWeb.SnapmailController do
     end
   end
 
+  swagger_path :update do
+    patch "/snapmails/{id}"
+    summary "Update the existing snapmail."
+    parameters do
+      id :path, :string, "The ID of the snapmail being requested.", required: true
+      camera_exids :query, :string, "Multiple IDs of camera in following format (abc,xyz)."
+      notify_days :query, :array, "", items: [type: "string", enum: ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]]
+      notify_time :query, :string, "Notification, for example 14:23"
+      recipients :query, :string, "Multiple emails in following format (test@example.com,info@example.com)."
+      subject :query, :string, ""
+      timezone :query, :string, "For example Europe/Dublin"
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Snapmails"
+    response 200, "Success"
+    response 401, "Invalid API keys or Unauthorized"
+    response 404, "Snapmail not found"
+  end
+
   def update(conn, %{"id" => snapmail_exid} = params) do
     current_user = conn.assigns[:current_user]
 
@@ -94,6 +160,19 @@ defmodule EvercamMediaWeb.SnapmailController do
     end
   end
 
+  swagger_path :unsubscribe do
+    patch "/snapmails/{id}/unsubscribe/{email}"
+    summary "Unsubscribe the snapmail of given email."
+    parameters do
+      id :path, :string, "The ID of the snapmail being requested."
+      email :path, :string, "Give subscribed email."
+    end
+    tag "Snapmails"
+    response 200, "Success"
+    response 401, "Invalid API keys or Unauthorized"
+    response 404, "Snapmail not found"
+  end
+
   def unsubscribe(conn, %{"id" => snapmail_exid, "email" => email}) do
     with {:ok, snapmail} <- snapmail_exist(conn, snapmail_exid)
     do
@@ -107,6 +186,20 @@ defmodule EvercamMediaWeb.SnapmailController do
           render_error(conn, 400, Util.parse_changeset(changeset))
       end
     end
+  end
+
+  swagger_path :delete do
+    delete "/snapmails/{id}"
+    summary "Delete the snapmail"
+    parameters do
+      id :path, :string, "The ID of the snapmail being requested."
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Snapmails"
+    response 200, "Success"
+    response 401, "Invalid API keys or Unauthorized"
+    response 404, "Snapmail not found"
   end
 
   def delete(conn, %{"id" => snapmail_exid}) do

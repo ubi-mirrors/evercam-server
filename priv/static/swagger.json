@@ -529,6 +529,188 @@
         "description": ""
       }
     },
+    "/snapmails/{id}": {
+      "patch": {
+        "tags": [
+          "Snapmails"
+        ],
+        "summary": "Update the existing snapmail.",
+        "responses": {
+          "404": {
+            "description": "Snapmail not found"
+          },
+          "401": {
+            "description": "Invalid API keys or Unauthorized"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the snapmail being requested."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "camera_exids",
+            "in": "query",
+            "description": "Multiple IDs of camera in following format (abc,xyz)."
+          },
+          {
+            "type": "array",
+            "required": false,
+            "name": "notify_days",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday"
+              ]
+            },
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "notify_time",
+            "in": "query",
+            "description": "Notification, for example 14:23"
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "recipients",
+            "in": "query",
+            "description": "Multiple emails in following format (test@example.com,info@example.com)."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "subject",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "timezone",
+            "in": "query",
+            "description": "For example Europe/Dublin"
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.SnapmailController.update",
+        "description": ""
+      },
+      "get": {
+        "tags": [
+          "Snapmails"
+        ],
+        "summary": "Returns the requested snapmail details.",
+        "responses": {
+          "404": {
+            "description": "Snapmail not found"
+          },
+          "401": {
+            "description": "Invalid API keys or Unauthorized"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the snapmail being requested."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.SnapmailController.show",
+        "description": ""
+      },
+      "delete": {
+        "tags": [
+          "Snapmails"
+        ],
+        "summary": "Delete the snapmail",
+        "responses": {
+          "404": {
+            "description": "Snapmail not found"
+          },
+          "401": {
+            "description": "Invalid API keys or Unauthorized"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the snapmail being requested."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.SnapmailController.delete",
+        "description": ""
+      }
+    },
     "/vendors": {
       "get": {
         "tags": [
@@ -2547,6 +2729,43 @@
         "description": ""
       }
     },
+    "/snapmails/{id}/unsubscribe/{email}": {
+      "patch": {
+        "tags": [
+          "Snapmails"
+        ],
+        "summary": "Unsubscribe the snapmail of given email.",
+        "responses": {
+          "404": {
+            "description": "Snapmail not found"
+          },
+          "401": {
+            "description": "Invalid API keys or Unauthorized"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the snapmail being requested."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "email",
+            "in": "path",
+            "description": "Give subscribed email."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.SnapmailController.unsubscribe",
+        "description": ""
+      }
+    },
     "/cameras/{id}/nvr/stream/info": {
       "get": {
         "tags": [
@@ -2588,6 +2807,129 @@
           }
         ],
         "operationId": "EvercamMediaWeb.NVRController.get_info",
+        "description": ""
+      }
+    },
+    "/snapmails": {
+      "post": {
+        "tags": [
+          "Snapmails"
+        ],
+        "summary": "Create new snapmail.",
+        "responses": {
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Invalid API keys or Unauthorized"
+          },
+          "201": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "camera_exids",
+            "in": "query",
+            "description": "Multiple IDs of camera in following format (abc,xyz)."
+          },
+          {
+            "type": "array",
+            "required": true,
+            "name": "notify_days",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday"
+              ]
+            },
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "notify_time",
+            "in": "query",
+            "description": "Notification time, for example 14:23"
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "recipients",
+            "in": "query",
+            "description": "Multiple emails in following format (test@example.com,info@example.com)."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "subject",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "timezone",
+            "in": "query",
+            "description": "For example Europe/Dublin"
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.SnapmailController.create",
+        "description": ""
+      },
+      "get": {
+        "tags": [
+          "Snapmails"
+        ],
+        "summary": "Returns all snapmails.",
+        "responses": {
+          "401": {
+            "description": "Invalid API keys or Unauthorized"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.SnapmailController.all",
         "description": ""
       }
     },
