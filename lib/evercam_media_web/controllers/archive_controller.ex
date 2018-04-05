@@ -10,6 +10,31 @@ defmodule EvercamMediaWeb.ArchiveController do
 
   @status %{pending: 0, processing: 1, completed: 2, failed: 3}
 
+  def swagger_definitions do
+    %{
+      Archive: swagger_schema do
+        title "Archive"
+        description ""
+        properties do
+          id :integer, ""
+          camera_id :integer, ""
+          exid :string, "", format: "text"
+          title :string, "", format: "text"
+          from_date :string, "", format: "timestamp"
+          to_date :string, "", format: "timestamp"
+          status :integer, ""
+          requested_by :integer, ""
+          embed_time :boolean, ""
+          public :boolean, ""
+          frames :integer, ""
+          url :string, "", format: "character(255)"
+          file_name :string, "", format: "character(255)"
+          created_at :string, "", format: "timestamp"
+        end
+      end
+    }
+  end
+
   swagger_path :index do
     get "/cameras/{id}/archives"
     summary "Returns the archives list of given camera."
@@ -160,6 +185,25 @@ defmodule EvercamMediaWeb.ArchiveController do
       from_date :query, :string, "Unix timestamp", required: true
       to_date :query, :string, "Unix timestamp", required: true
       is_nvr_archive :query, :boolean, ""
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Archives"
+    response 200, "Success"
+    response 400, "Bad Request"
+    response 401, "Invalid API keys or Unauthorized"
+    response 404, "Camera does not exist"
+  end
+
+  swagger_path :update do
+    patch "/cameras/{id}/archives/{archive_id}"
+    summary "Updates full or partial data for an existing archive."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      archive_id :path, :string, "Unique identifier for archive.", required: true
+      title :query, :string, ""
+      status :query, :string, "",enum: ["pending","processing","completed","failed"]
+      public :query, :boolean, ""
       api_id :query, :string, "The Evercam API id for the requester."
       api_key :query, :string, "The Evercam API key for the requester."
     end

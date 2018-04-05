@@ -5,6 +5,25 @@ defmodule EvercamMediaWeb.CameraShareController do
   alias EvercamMedia.Intercom
   alias EvercamMedia.Zoho
 
+  def swagger_definitions do
+    %{
+      Share: swagger_schema do
+        title "Share"
+        description ""
+        properties do
+          id :integer, ""
+          camera_id :integer, ""
+          user_id :integer, ""
+          sharer_id :integer, ""
+          kind :string, "", format: "character(50)"
+          message :string, "", format: "text"
+          created_at :string, "", format: "timestamp"
+          updated_at :string, "", format: "timestamp"
+        end
+      end
+    }
+  end
+
   swagger_path :show do
     get "/cameras/{id}/shares"
     summary "Returns the camera permitted users list."
@@ -249,6 +268,18 @@ defmodule EvercamMediaWeb.CameraShareController do
   end
   defp delete_share_to_zoho(_mode, _camera_exid, _user_fullname, _user_id), do: :noop
 
+  swagger_path :shared_users do
+    get "/shares/users"
+    summary "Returns the shared users."
+    parameters do
+      camera_id :query, :string, "Unique identifier for camera.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Shares"
+    response 200, "Success"
+    response 401, "Invalid API keys or Unauthorized"
+  end
   def shared_users(conn, params) do
     caller = conn.assigns[:current_user]
 

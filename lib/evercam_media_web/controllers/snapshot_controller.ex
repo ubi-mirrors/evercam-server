@@ -40,6 +40,22 @@ defmodule EvercamMediaWeb.SnapshotController do
     end
   end
 
+  swagger_path :create do
+    post "/cameras/{id}/recordings/snapshots"
+    summary "Fetches a snapshot from the camera and stores it using the current timestamp."
+    parameters do
+      id :path, :string, "The ID of the camera being requested.", required: true
+      notes :query, :string, ""
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Recordings"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+    response 403, "Forbidden camera access"
+    response 504, "Camera does not respond with a jpeg"
+  end
+
   def create(conn, %{"id" => camera_exid} = params) do
     params = Map.merge(@optional_params, params)
     user = conn.assigns[:current_user]
@@ -59,6 +75,23 @@ defmodule EvercamMediaWeb.SnapshotController do
     else
       false -> render_error(conn, 403, "Forbidden.")
     end
+  end
+
+  swagger_path :test do
+    post "/cameras/test"
+    summary "Test the given camera."
+    parameters do
+      camera_exid :query, :string, "The ID of the camera being tested.", required: true
+      cam_username :query, :string, "Username of the camera", required: true
+      cam_password :query, :string, "Password of the camera", required: true
+      vendor_id :query, :string, "Vendor id of the camera", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Cameras"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+    response 504, "Camera does not respond with a jpeg"
   end
 
   def test(conn, params) do
@@ -282,9 +315,8 @@ defmodule EvercamMediaWeb.SnapshotController do
   end
 
   swagger_path :days do
-    get "/cameras/{id}/recordings/snapshots/{year}/{month}/{day}/hours"
-    description "Returns all recorded days."
-    summary "Find the recorded days in a month"
+    get "/cameras/{id}/recordings/snapshots/{year}/{month}/{day}/days"
+    summary "Returns all recorded days in a month."
     parameters do
       id :path, :string, "Unique identifier for the camera.", required: true
       year :path, :string, "Year, for example 2013", required: true

@@ -1,5 +1,6 @@
 defmodule EvercamMediaWeb.PublicController do
   use EvercamMediaWeb, :controller
+  use PhoenixSwagger
   alias EvercamMediaWeb.PublicView
 
   @default_distance 1000
@@ -18,6 +19,13 @@ defmodule EvercamMediaWeb.PublicController do
 
     conn
     |> render(PublicView, "geojson.json", %{cameras: cameras})
+  end
+
+  swagger_path :index do
+    get "/public/cameras"
+    summary "Returns all pbulic cameras list."
+    tag "Cameras"
+    response 200, "Success"
   end
 
   def index(conn, params) do

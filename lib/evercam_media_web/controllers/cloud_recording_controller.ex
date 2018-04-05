@@ -1,8 +1,23 @@
 defmodule EvercamMediaWeb.CloudRecordingController do
   use EvercamMediaWeb, :controller
+  use PhoenixSwagger
   alias EvercamMediaWeb.ErrorView
   alias EvercamMedia.Snapshot.WorkerSupervisor
   import EvercamMedia.Validation.CloudRecording
+
+  swagger_path :show do
+    get "/cameras/{id}/apps/cloud-recording"
+    summary "Returns the cloud recording of given camera."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Recordings"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+    response 403, "Unauthorized"
+  end
 
   def show(conn, %{"id" => exid}) do
     current_user = conn.assigns[:current_user]
@@ -11,6 +26,24 @@ defmodule EvercamMediaWeb.CloudRecordingController do
     with :ok <- ensure_camera_exists(camera, exid, conn),
          :ok <- ensure_can_edit(current_user, camera, conn),
          do: camera.cloud_recordings |> render_cloud_recording(conn)
+  end
+
+  swagger_path :create do
+    post "/cameras/{id}/apps/cloud-recording"
+    summary "Create new cloud recording of given camera."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      frequency :query, :integer, "Frequency, For example 60", required: true
+      storage_duration :query, :integer, "Duration, For example 90", required: true
+      status :query, :string, "", enum: ["on-scheduled","off","on","paused"], required: true
+      schedule :query, :string, "For example in json format {\"Wednesday\":[\"8:0-18:0\"],\"Tuesday\":[\"8:0-18:0\"]}", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Recordings"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+    response 403, "Unauthorized"
   end
 
   def create(conn, %{"id" => exid} = params) do
@@ -58,6 +91,21 @@ defmodule EvercamMediaWeb.CloudRecordingController do
     end
   end
 
+   swagger_path :nvr_days do
+    get "/cameras/{id}/nvr/recordings/{year}/{month}/days"
+    summary "Returns recorded days on nvr in a given month."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      year :path, :string, "Year, for example 2013", required: true
+      month :path, :string, "Month, for example 10", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Nvr"
+    response 200, "Success"
+    response 404, "No recordings found or Camera does not found"
+  end
+
   def nvr_days(conn, %{"id" => exid, "year" => year, "month" => month}) do
     camera = Camera.by_exid_with_associations(exid)
 
@@ -88,6 +136,22 @@ defmodule EvercamMediaWeb.CloudRecordingController do
         {:error} -> render_error(conn, 404, "No recordings found")
       end
     end
+  end
+
+  swagger_path :nvr_hours do
+    get "/cameras/{id}/nvr/recordings/{year}/{month}/{day}/hours"
+    summary "Returns recorded hours on nvr in a given day."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      year :path, :string, "Year, for example 2013", required: true
+      month :path, :string, "Month, for example 10", required: true
+      day :path, :string, "Day, for example 24", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Nvr"
+    response 200, "Success"
+    response 404, "No recordings found or Camera does not found"
   end
 
   def nvr_hours(conn, %{"id" => exid, "year" => year, "month" => month, "day" => day}) do
@@ -135,6 +199,19 @@ defmodule EvercamMediaWeb.CloudRecordingController do
         {:error} -> render_error(conn, 404, "No recordings found")
       end
     end
+  end
+
+  swagger_path :stop do
+    get "/cameras/{id}/nvr/recordings/stop"
+    summary "Turns off the streaming of the given camera."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Nvr"
+    response 200, "Success"
+    response 404, "No stream running or Camera does not found"
   end
 
   def stop(conn, %{"id" => exid}) do

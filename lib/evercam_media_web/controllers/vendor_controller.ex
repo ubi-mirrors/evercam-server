@@ -1,7 +1,19 @@
 defmodule EvercamMediaWeb.VendorController do
   use EvercamMediaWeb, :controller
+  use PhoenixSwagger
   alias EvercamMediaWeb.VendorView
   alias EvercamMediaWeb.ErrorView
+
+  swagger_path :show do
+    get "/vendors/{id}"
+    summary "Returns available information for the specified vendor."
+    parameters do
+      id :path, :string, "The ID of the vendor being requested."
+    end
+    tag "Vendors"
+    response 200, "Success"
+    response 404, "Not found"
+  end
 
   def show(conn, %{"id" => exid}) do
     case Vendor.by_exid(exid) do
@@ -13,6 +25,13 @@ defmodule EvercamMediaWeb.VendorController do
         conn
         |> render(VendorView, "show.json", %{vendor: vendor})
     end
+  end
+
+  swagger_path :index do
+    get "/vendors"
+    summary "Returns all vendors."
+    tag "Vendors"
+    response 200, "Success"
   end
 
   def index(conn, params) do

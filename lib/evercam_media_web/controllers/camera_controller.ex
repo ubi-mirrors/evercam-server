@@ -13,6 +13,31 @@ defmodule EvercamMediaWeb.CameraController do
   require Logger
   import String, only: [to_integer: 1]
 
+  def swagger_definitions do
+    %{
+      Camera: swagger_schema do
+        title "Camera"
+        description ""
+        properties do
+          id :integer, ""
+          exid :string, "", format: "text"
+          owner_id :integer, ""
+          is_public :boolean, ""
+          config :string, "", format: "json"
+          is_online :boolean, ""
+          timezone :string, "", format: "text", example: "Europe/Dublin"
+          location :string, "", format: "geography(Point,4326)"
+          mac_address :string, "", format: "macaddr"
+          model_id :integer, ""
+          discoverable :boolean, "", default: false
+          thumbnail_url :string, "", format: "text"
+          is_online_email_owner_notification :boolean, ""
+          alert_emails :string, "", format: "text"
+        end
+      end
+    }
+  end
+
   def port_check(conn, params) do
     case check_params(params) do
       {:invalid, message} ->
@@ -102,6 +127,21 @@ defmodule EvercamMediaWeb.CameraController do
     end
   end
 
+  swagger_path :transfer do
+    put "/cameras/{id}"
+    summary "Change the ownership of the camera."
+    parameters do
+      id :path, :string, "The ID of the camera being requested.", required: true
+      user_id :query, :string, "The username of the new owner", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Cameras"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+    response 404, "Camera does not exist or Unauthorized"
+  end
+
   def transfer(conn, %{"id" => exid, "user_id" => user_id}) do
     current_user = conn.assigns[:current_user]
     camera = Camera.get_full(exid)
@@ -183,6 +223,20 @@ defmodule EvercamMediaWeb.CameraController do
     }
   end
 
+  swagger_path :delete do
+    delete "/cameras/{id}"
+    summary "Deletes a camera from Evercam along with any stored media."
+    parameters do
+      id :path, :string, "The ID of the camera being requested.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Cameras"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+    response 404, "Camera does not exist or Unauthorized"
+  end
+
   def delete(conn, %{"id" => exid}) do
     caller = conn.assigns[:current_user]
     camera = Camera.get_full(exid)
@@ -208,9 +262,41 @@ defmodule EvercamMediaWeb.CameraController do
     end
   end
 
+  swagger_path :create do
+    post "/cameras"
+    summary "Creates a new camera owned by the authenticating user."
+    parameters do
+      name :query, :string, "Name of the camera.", required: true
+      external_host :query, :string, "External IP or URL", required: true
+      external_http_port :query, :integer, "External HTTP Port, for example 8080", required: true
+      external_rtsp_port :query, :string, "Internal RTSP Port, for example 880."
+      vendor :query, :string, "Vendor name, for example hikvision"
+      model :query, :string, "Model name of the camera being requested"
+      timezone :query, :string, "Timezone, for example \"Europe/Dublin\""
+      mac_address :query, :string, "Mac address of the camera being requested"
+      is_online :query, :boolean, ""
+      discoverable :query, :boolean, ""
+      location_lng :query, :string, "Longitude, for example 31.422117"
+      location_lat :query, :string, "Latitude, for example 73.090051"
+      is_public :query, :boolean, ""
+      secondary_port :query, :string, "Secondary port of the camera being requested"
+      nvr_http_port :query, :string, "HTTP port of NVR."
+      nvr_rtsp_port :query, :string, "RTSP port of NVR."
+      internal_host :query, :string, "Internal IP or URL."
+      internal_http_port :query, :string, "Internal HTTP Port, for example 80."
+      internal_rtsp_port :query, :string, "Internal RTSP Port, for example 980."
+      cam_username :query, :string, "Username of the camera being requested."
+      cam_password :query, :string, "Password of the camera being requested."
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Cameras"
+    response 200, "Success"
+    response 401, "Invalid API keys or Unauthorized"
+  end
+
   def create(conn, params) do
     caller = conn.assigns[:current_user]
-
     with :ok <- is_authorized(conn, caller)
     do
       params

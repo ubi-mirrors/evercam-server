@@ -10,6 +10,50 @@ defmodule EvercamMediaWeb.UserController do
   import EvercamMedia.Validation.Log
   require Logger
 
+  def swagger_definitions do
+    %{
+      User: swagger_schema do
+        title "User"
+        description ""
+        properties do
+          id :integer, ""
+          firstname :string, "", format: "text"
+          lastname :string, "", format: "text"
+          username :string, "", format: "text"
+          password :string, "", format: "text"
+          country_id :integer, ""
+          email :string, "", format: "text"
+          reset_token :string, "", format: "text"
+          token_expires_at :string, "", format: "timestamp"
+          api_id :string, "", format: "text"
+          api_key :string, "", format: "text"
+          is_admin :boolean, "", default: false
+          stripe_customer_id :string, "", format: "text"
+          billing_id :string, "", format: "text"
+          vat_number :string, "", format: "text"
+          payment_method :integer, ""
+          insight_id :string, "", format: "text"
+          created_at :string, "", format: "timestamp"
+          updated_at :string, "", format: "timestamp"
+        end
+      end
+    }
+  end
+
+  swagger_path :get do
+    get "/users/{id}"
+    summary "Returns the single user's profile details."
+    parameters do
+      id :path, :string, "Username/email of the existing user.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Users"
+    response 200, "Success"
+    response 401, "Invalid API keys or Unauthorized"
+    response 404, "User does not exist"
+  end
+
   def get(conn, params) do
     caller = conn.assigns[:current_user]
     user =
@@ -30,6 +74,19 @@ defmodule EvercamMediaWeb.UserController do
         conn
         |> render(UserView, "show.json", %{user: user})
     end
+  end
+
+  swagger_path :credentials do
+    get "/users/{id}/credentials"
+    summary "Returns API credentials of given user."
+    parameters do
+      id :path, :string, "Username/email of the user being requested.", required: true
+      password :query, :string, "", required: true
+    end
+    tag "Users"
+    response 200, "Success"
+    response 400, "Invalid password"
+    response 404, "User does not exit"
   end
 
   def credentials(conn, %{"id" => username} = params) do
@@ -59,6 +116,7 @@ defmodule EvercamMediaWeb.UserController do
     end
     tag "Users"
     response 201, "Success"
+    response 400, "Invalid token | email or password has already been taken"
   end
 
   def create(conn, params) do
@@ -130,6 +188,17 @@ defmodule EvercamMediaWeb.UserController do
     end
   end
 
+  swagger_path :user_exist do
+    post "/users/exist/{input}"
+    summary "Check the existence of the user."
+    parameters do
+      input :path, :string, "Username/email of the user being requested.", required: true
+    end
+    tag "Users"
+    response 201, "Success"
+    response 404, "User does not exit"
+  end
+
   def user_exist(conn, %{"input" => input} = _params) do
     with %User{} <- User.by_username_or_email(input) do
       conn
@@ -151,6 +220,22 @@ defmodule EvercamMediaWeb.UserController do
        System.get_env["ANDROID_APP"] == token -> :ok
        true -> render_error(conn, 400, "Invalid token.")
     end
+  end
+
+  swagger_path :update do
+    patch "/users/{id}"
+    summary "Updates full or partial data on your existing user account."
+    parameters do
+      id :path, :string, "Username/email of the existing user.", required: true
+      firstname :query, :string, ""
+      lastname :query, :string, ""
+      username :query, :string, ""
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Users"
+    response 201, "Success"
+    response 400, "Invalid token | email or password has already been taken"
   end
 
   def update(conn, %{"id" => username} = params) do
@@ -184,6 +269,20 @@ defmodule EvercamMediaWeb.UserController do
     end
   end
 
+  swagger_path :delete do
+    delete "/users/{id}"
+    summary "Delete your account, any cameras you own and all stored media."
+    parameters do
+      id :path, :string, "Username/email of the existing user.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Users"
+    response 200, "Success"
+    response 401, "Invalid API keys or Unauthorized"
+    response 404, "User does not exist"
+  end
+
   def delete(conn, %{"id" => username}) do
     current_user = conn.assigns[:current_user]
     user =
@@ -197,6 +296,20 @@ defmodule EvercamMediaWeb.UserController do
       spawn(fn -> delete_user(user) end)
       json(conn, %{})
     end
+  end
+
+  swagger_path :user_activities do
+    get "/users/{id}/activities"
+    summary "Returns the logs of given user."
+    parameters do
+      id :path, :string, "Username/email of the user.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Users"
+    response 200, "Success"
+    response 401, "Invalid API keys or Unauthorized"
+    response 404, "User does not exist"
   end
 
   def user_activities(conn, %{"id" => username} = params) do

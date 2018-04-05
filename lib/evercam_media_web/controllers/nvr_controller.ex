@@ -1,11 +1,26 @@
 defmodule EvercamMediaWeb.NVRController do
   use EvercamMediaWeb, :controller
+  use PhoenixSwagger
   alias EvercamMediaWeb.SnapshotExtractorView
   alias EvercamMediaWeb.ErrorView
   alias EvercamMedia.HikvisionNVR
   alias EvercamMedia.Repo
 
   @root_dir Application.get_env(:evercam_media, :storage_dir)
+
+  swagger_path :get_info do
+    get "/cameras/{id}/nvr/stream/info"
+    summary "Returns all information about NVR."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Nvr"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+    response 403, "Unauthorized"
+  end
 
   def get_info(conn, %{"id" => exid}) do
     current_user = conn.assigns[:current_user]
@@ -25,6 +40,20 @@ defmodule EvercamMediaWeb.NVRController do
       hdd_info = HikvisionNVR.get_hdd_info(ip, port, cam_username, cam_password)
       json(conn, %{stream_info: stream_info, device_info: device_info, hdd_info: hdd_info})
     end
+  end
+
+  swagger_path :get_vh_info do
+    get "/cameras/{id}/nvr/stream/vhinfo"
+    summary "Returns all VH information of NVR."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Nvr"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+    response 403, "Unauthorized"
   end
 
   def get_vh_info(conn, %{"id" => exid}) do

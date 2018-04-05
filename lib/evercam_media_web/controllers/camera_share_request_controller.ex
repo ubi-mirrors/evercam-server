@@ -1,7 +1,23 @@
 defmodule EvercamMediaWeb.CameraShareRequestController do
   use EvercamMediaWeb, :controller
+  use PhoenixSwagger
   alias EvercamMediaWeb.CameraShareRequestView
   alias EvercamMedia.Intercom
+
+  swagger_path :show do
+    get "/cameras/{id}/shares/requests"
+    summary "Returns share requests of given camera."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      status :query, :string, "", required: true, enum: ["pending","cancelled","used"]
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Shares"
+    response 200, "Success"
+    response 401, "Invalid API keys or Unauthorized"
+    response 404, "Camera does not found"
+  end
 
   def show(conn, %{"id" => exid} = params) do
     caller = conn.assigns[:current_user]
@@ -16,6 +32,22 @@ defmodule EvercamMediaWeb.CameraShareRequestController do
       conn
       |> render(CameraShareRequestView, "index.json", %{camera_share_requests: share_requests})
     end
+  end
+
+  swagger_path :update do
+    patch "/cameras/{id}/shares/requests"
+    summary "Update the pending share request of given email."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      email :query, :string, ""
+      rights :query, :string, ""
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Shares"
+    response 200, "Success"
+    response 401, "Invalid API keys or Unauthorized"
+    response 404, "Camera does not found or Share request not found"
   end
 
   def update(conn, %{"id" => exid, "email" => email, "rights" => rights}) do
@@ -38,6 +70,22 @@ defmodule EvercamMediaWeb.CameraShareRequestController do
           |> render_error(400, Util.parse_changeset(changeset))
       end
     end
+  end
+
+  swagger_path :cancel do
+    delete "/cameras/{id}/shares/requests"
+    summary "Cancel the pending share request of given email."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      email :query, :string, ""
+      key :query, :string, ""
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Shares"
+    response 200, "Success"
+    response 401, "Invalid API keys or Unauthorized"
+    response 404, "Camera does not found or Share request not found"
   end
 
   def cancel(conn, %{"id" => exid, "email" => email} = params) do

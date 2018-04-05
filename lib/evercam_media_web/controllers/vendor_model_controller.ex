@@ -1,9 +1,17 @@
 defmodule EvercamMediaWeb.VendorModelController do
   use EvercamMediaWeb, :controller
+  use PhoenixSwagger
   alias EvercamMediaWeb.VendorModelView
   import String, only: [to_integer: 1]
 
   @default_limit 25
+
+  swagger_path :index do
+    get "/models"
+    summary "Returns all models."
+    tag "Models"
+    response 200, "Success"
+  end
 
   def index(conn, params) do
     with {:ok, vendor} <- vendor_exists(conn, params["vendor_id"])
@@ -24,6 +32,17 @@ defmodule EvercamMediaWeb.VendorModelController do
       conn
       |> render(VendorModelView, "index.json", %{vendor_models: returned_models, pages: total_pages, records: total_models})
     end
+  end
+
+  swagger_path :show do
+    get "/models/{id}"
+    summary "Returns available information for the specified model."
+    parameters do
+      id :path, :string, "The ID of the model being requested."
+    end
+    tag "Models"
+    response 200, "Success"
+    response 404, "Not found"
   end
 
   def show(conn, %{"id" => exid}) do

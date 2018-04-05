@@ -1,8 +1,45 @@
 defmodule EvercamMediaWeb.CompareController do
   use EvercamMediaWeb, :controller
+  use PhoenixSwagger
   alias EvercamMediaWeb.CompareView
   alias EvercamMedia.Util
   alias EvercamMedia.TimelapseRecording.S3
+
+  def swagger_definitions do
+    %{
+      Compare: swagger_schema do
+        title "Compare"
+        description ""
+        properties do
+          id :integer, ""
+          exid :string, "", format: "character(255)"
+          name :string, "", format: "character(255)"
+          before_date :string, "", format: "timestamp"
+          after_date :string, "", format: "timestamp"
+          embed_code :string, "", format: "character(255)"
+          camera_id :integer, ""
+          create_animation :boolean, "", default: false
+          status :integer, ""
+          requested_by :integer, ""
+          inserted_at :string, "", format: "timestamp"
+          updated_at :string, "", format: "timestamp"
+        end
+      end
+    }
+  end
+
+  swagger_path :index do
+    get "/cameras/{id}/compares"
+    summary "Returns all compares of the requested camera."
+    parameters do
+      id :path, :string, "Unique identifier for the camera.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Compares"
+    response 200, "Success"
+    response 401, "Invalid API keys or Unauthorized"
+  end
 
   def index(conn, %{"id" => camera_exid}) do
     current_user = conn.assigns[:current_user]
@@ -14,6 +51,21 @@ defmodule EvercamMediaWeb.CompareController do
       compare_archives = Compare.get_by_camera(camera.id)
       render(conn, CompareView, "index.json", %{compares: compare_archives})
     end
+  end
+
+  swagger_path :show do
+    get "/cameras/{id}/compares/{compare_id}"
+    summary "Returns the single compare."
+    parameters do
+      compare_id :path, :string, "The ID of the compare being requested.", required: true
+      id :path, :string, "Unique identifier for the camera.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Compares"
+    response 200, "Success"
+    response 401, "Invalid API keys or Unauthorized"
+    response 404, "Camera does not exist or Compare archive not found."
   end
 
   def show(conn, %{"id" => camera_exid, "compare_id" => compare_id}) do
@@ -65,6 +117,21 @@ defmodule EvercamMediaWeb.CompareController do
           render_error(conn, 400, Util.parse_changeset(changeset))
       end
     end
+  end
+
+  swagger_path :delete do
+    delete "/cameras/{id}/compares/{compare_id}"
+    summary "Delete the compare."
+    parameters do
+      compare_id :path, :string, "The ID of the compare being requested.", required: true
+      id :path, :string, "Unique identifier for the camera.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Compares"
+    response 200, "Success"
+    response 401, "Invalid API keys or Unauthorized"
+    response 404, "Camera does not exist or Compare archive not found."
   end
 
   def delete(conn, %{"id" => camera_exid, "compare_id" => compare_id}) do
