@@ -23,7 +23,13 @@ defmodule EvercamMediaWeb.PublicController do
 
   swagger_path :index do
     get "/public/cameras"
-    summary "Returns all pbulic cameras list."
+    summary "Returns all public cameras list."
+    parameters do
+      is_near_to :query, :string, "Longitude,Latitude for example 31.4208475,73.0895894"
+      within_distance :query, :string, "Within distance, for example 9.5"
+      limit :query, :string, "Limit of records, for example 10"
+      offset :query, :string, "Offset, for example 15"
+    end
     tag "Cameras"
     response 200, "Success"
   end

@@ -6,9 +6,54 @@ defmodule EvercamMediaWeb.VendorModelController do
 
   @default_limit 25
 
+  def swagger_definitions do
+    %{
+      Model: swagger_schema do
+        title "Model"
+        description ""
+        properties do
+          id :integer, ""
+          vendor_id :integer, "", format: "text"
+          name :string, "", format: "text"
+          config :string, "", format: "json"
+          exid :string, "", format: "text"
+          jpg_url :string, "", format: "text"
+          h264_url :string, "", format: "text"
+          mjpg_url :string, "", format: "text"
+          shape :string, "", format: "text"
+          resolution :string, "", format: "text"
+          official_url :string, "", format: "text"
+          more_info :string, "", format: "text"
+          poe :boolean, "", default: false
+          wifi :boolean, "", default: false
+          onvif :boolean, "", default: false
+          psia :boolean, "", default: false
+          ptz :boolean, "", default: false
+          infrared :boolean, "", default: false
+          varifocal :boolean, "", default: false
+          sd_card :boolean, "", default: false
+          upnp :boolean, "", default: false
+          audio_io :boolean, "", default: false
+          discontinued :boolean, "", default: false
+          username :string, "", format: "text"
+          password :string, "", format: "text"
+          channel :integer, ""
+          created_at :string, "", format: "timestamp"
+          updated_at :string, "", format: "timestamp"
+        end
+      end
+    }
+  end
+
   swagger_path :index do
     get "/models"
-    summary "Returns all models."
+    summary "Returns set of known models for a supported camera vendor."
+    parameters do
+      vendor_id :query, :string, "Unique identifier for the vendor."
+      name :query, :string, "The name of the model."
+      limit :query, :string, ""
+      page :query, :string, ""
+    end
     tag "Models"
     response 200, "Success"
   end

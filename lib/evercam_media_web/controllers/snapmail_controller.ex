@@ -4,6 +4,30 @@ defmodule EvercamMediaWeb.SnapmailController do
   alias EvercamMediaWeb.SnapmailView
   alias EvercamMedia.Snapmail.SnapmailerSupervisor
 
+  def swagger_definitions do
+    %{
+      Snapmail: swagger_schema do
+        title "Snapmail"
+        description ""
+        properties do
+          id :integer, ""
+          exid :string, "", format: "character(255)"
+          subject :string, "", format: "text"
+          recipients :string, "", format: "text"
+          message :string, "", format: "text"
+          notify_days :string, "", format: "character(255)"
+          notify_time :string, "", format: "character(255)"
+          is_public :boolean, "", default: false
+          user_id :integer, ""
+          timezone :string, "",format: "text"
+          is_paused :boolean, "", default: false
+          inserted_at :string, "", format: "timestamp"
+          updated_at :string, "", format: "timestamp"
+        end
+      end
+    }
+  end
+
   swagger_path :all do
     get "/snapmails"
     summary "Returns all snapmails."

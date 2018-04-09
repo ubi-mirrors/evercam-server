@@ -38,6 +38,17 @@ defmodule EvercamMediaWeb.CameraController do
     }
   end
 
+  swagger_path :port_check do
+    get "/cameras/port-check"
+    summary "Returns status of the port."
+    parameters do
+      address :query, :string, "External IP or URL, for example 192.168.1.46"
+      port :query, :integer, "HTTP port, for example 8086"
+    end
+    tag "Cameras"
+    response 200, "Success"
+  end
+
   def port_check(conn, params) do
     case check_params(params) do
       {:invalid, message} ->
@@ -162,6 +173,39 @@ defmodule EvercamMediaWeb.CameraController do
       conn
       |> render("show.json", %{camera: camera, user: current_user})
     end
+  end
+
+  swagger_path :update do
+    patch "/cameras/{id}"
+    summary "Update the camera owned by the authenticating user."
+    parameters do
+      id :path, :string, "The ID of the camera being requested.", required: true
+      name :query, :string, "Name of the camera."
+      external_http_port :query, :integer, "External HTTP Port, for example 8080"
+      external_rtsp_port :query, :string, "Internal RTSP Port, for example 880."
+      vendor :query, :string, "Vendor name, for example hikvision"
+      model :query, :string, "Model name of the camera being requested"
+      timezone :query, :string, "Timezone, for example \"Europe/Dublin\""
+      mac_address :query, :string, "Mac address of the camera being requested"
+      is_online :query, :boolean, ""
+      discoverable :query, :boolean, ""
+      location_lng :query, :string, "Longitude, for example 31.422117"
+      location_lat :query, :string, "Latitude, for example 73.090051"
+      is_public :query, :boolean, ""
+      secondary_port :query, :string, "Secondary port of the camera being requested"
+      nvr_http_port :query, :string, "HTTP port of NVR."
+      nvr_rtsp_port :query, :string, "RTSP port of NVR."
+      internal_host :query, :string, "Internal IP or URL."
+      internal_http_port :query, :string, "Internal HTTP Port, for example 80."
+      internal_rtsp_port :query, :string, "Internal RTSP Port, for example 980."
+      cam_username :query, :string, "Username of the camera being requested."
+      cam_password :query, :string, "Password of the camera being requested."
+      api_id :query, :string, "The Evercam API id for the requester.", required: true
+      api_key :query, :string, "The Evercam API key for the requester.", required: true
+    end
+    tag "Cameras"
+    response 200, "Success"
+    response 401, "Invalid API keys or Unauthorized"
   end
 
   def update(conn, %{"id" => exid} = params) do
