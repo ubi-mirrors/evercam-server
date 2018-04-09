@@ -80,6 +80,14 @@ defmodule Archive do
     Repo.update(archive_changeset)
   end
 
+  def by_status(status) do
+    Archive
+    |> where(status: ^status)
+    |> preload(:camera)
+    |> preload(:user)
+    |> Repo.all
+  end
+
   def required_fields do
     @required_fields |> Enum.map(fn(field) -> String.to_atom(field) end)
   end
