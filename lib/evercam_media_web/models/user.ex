@@ -6,8 +6,8 @@ defmodule User do
   @email_regex ~r/^\S+@\S+$/
   @name_regex ~r/^[\p{Xwd}\s,.']+$/
 
-  @required_fields ~w(username password firstname lastname email)
-  @optional_fields ~w(api_id api_key country_id confirmed_at updated_at created_at)
+  @required_fields ~w(password firstname lastname email)
+  @optional_fields ~w(username api_id api_key country_id confirmed_at updated_at created_at)
 
   schema "users" do
     belongs_to :country, Country, foreign_key: :country_id
@@ -126,6 +126,16 @@ defmodule User do
     Comeonin.Bcrypt.hashpass(password, Comeonin.Bcrypt.gen_salt(12, true))
   end
 
+  def has_username(changeset) do
+    case get_field(changeset, :username) do
+      username when username in [nil, ""] -> put_change(changeset, :username, get_field(changeset, :email))
+      _ ->
+        changeset
+        |> put_change(:username, get_field(changeset, :email))
+        |> update_change(:username, &String.downcase/1)
+    end
+  end
+
   def required_fields do
     @required_fields |> Enum.map(fn(field) -> String.to_atom(field) end)
   end
@@ -134,13 +144,12 @@ defmodule User do
     model
     |> cast(params, @required_fields ++ @optional_fields)
     |> validate_required(required_fields())
-    |> unique_constraint(:username, [name: :user_username_unique_index, message: "Username has already been taken."])
+    |> has_username
     |> unique_constraint(:email, [name: :user_email_unique_index, message: "Email has already been taken."])
+    |> unique_constraint(:username, [name: :user_username_unique_index, message: "Username has already been taken."])
     |> validate_format(:firstname, @name_regex)
     |> validate_format(:lastname, @name_regex)
-    |> update_change(:username, &String.downcase/1)
     |> update_change(:email, &String.downcase/1)
-    |> validate_format(:username, ~r/^[a-z]+[\w-]+$/, [message: "Username format isn't valid!"])
     |> validate_format(:email, @email_regex, [message: "Email format isn't valid!"])
     |> validate_length(:password, [min: 6, message: "Password should be at least 6 character(s)."])
     |> encrypt_password

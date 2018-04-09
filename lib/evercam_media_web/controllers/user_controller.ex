@@ -243,7 +243,7 @@ defmodule EvercamMediaWeb.UserController do
     user =
       params["id"]
       |> String.replace_trailing(".json", "")
-      |> User.by_username
+      |> User.by_username_or_email
 
     with :ok <- ensure_user_exists(user, username, conn),
          :ok <- ensure_can_view(current_user, user, conn),
@@ -288,7 +288,7 @@ defmodule EvercamMediaWeb.UserController do
     user =
       username
       |> String.replace_trailing(".json", "")
-      |> User.by_username
+      |> User.by_username_or_email
 
     with :ok <- ensure_user_exists(user, username, conn),
          :ok <- ensure_can_view(current_user, user, conn)
