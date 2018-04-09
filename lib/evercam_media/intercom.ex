@@ -3,13 +3,11 @@ defmodule EvercamMedia.Intercom do
   require Logger
 
   @intercom_url System.get_env["INTERCOM_URL"]
-  @intercom_auth {System.get_env["INTERCOM_ID"], System.get_env["INTERCOM_KEY"]}
-  @hackney [basic_auth: @intercom_auth]
 
   def get_user(user_id) do
     url = "#{@intercom_url}?user_id=#{user_id}"
-    headers = ["Accept": "Accept:application/json"]
-    response = HTTPoison.get(url, headers, hackney: @hackney) |> elem(1)
+    headers = ["Authorization": "Bearer #{System.get_env["INTERCOM_ACCESS_TOKEN"]}", "Accept": "Accept:application/json"]
+    response = HTTPoison.get(url, headers) |> elem(1)
     case response.status_code do
       200 -> {:ok, response}
       _ -> {:error, response}
@@ -19,8 +17,8 @@ defmodule EvercamMedia.Intercom do
   def get_company(company_id) do
     intercom_url = @intercom_url |> String.replace("users", "companies")
     url = "#{intercom_url}?company_id=#{company_id}"
-    headers = ["Accept": "Accept:application/json"]
-    response = HTTPoison.get(url, headers, hackney: @hackney) |> elem(1)
+    headers = ["Authorization": "Bearer #{System.get_env["INTERCOM_ACCESS_TOKEN"]}", "Accept": "Accept:application/json"]
+    response = HTTPoison.get(url, headers) |> elem(1)
     case response.status_code do
       200 -> {:ok, response.body |> Poison.decode!}
       _ -> {:error, response}
@@ -33,7 +31,7 @@ defmodule EvercamMedia.Intercom do
         {:ok, company} -> company["company_id"]
         _ -> ""
       end
-    headers = ["Accept": "Accept:application/json", "Content-Type": "application/json"]
+    headers = ["Authorization": "Bearer #{System.get_env["INTERCOM_ACCESS_TOKEN"]}",  "Accept": "Accept:application/json", "Content-Type": "application/json"]
     intercom_new_user = %{
       "email": user.email,
       "name": user.firstname <> " " <> user.lastname,
@@ -58,14 +56,14 @@ defmodule EvercamMedia.Intercom do
         {:ok, json} -> json
         _ -> nil
       end
-    HTTPoison.post(@intercom_url, json, headers, hackney: @hackney)
+    HTTPoison.post(@intercom_url, json, headers)
     tag_user(user.email, get_tag_name(company_id))
   end
 
   def tag_user(_email, ""), do: :noop
   def tag_user(email, tag) do
     intercom_url = @intercom_url |> String.replace("users", "tags")
-    headers = ["Accept": "Accept:application/json", "Content-Type": "application/json"]
+    headers = ["Authorization": "Bearer #{System.get_env["INTERCOM_ACCESS_TOKEN"]}", "Accept": "Accept:application/json", "Content-Type": "application/json"]
     tag_params = %{
       "name": tag,
       "users": [%{"email": email}]
@@ -76,7 +74,7 @@ defmodule EvercamMedia.Intercom do
         {:ok, json} -> json
         _ -> nil
       end
-    HTTPoison.post(intercom_url, json, headers, hackney: @hackney)
+    HTTPoison.post(intercom_url, json, headers)
   end
 
   defp add_userid(params, ""), do: params
@@ -103,9 +101,9 @@ defmodule EvercamMedia.Intercom do
   def delete_user(_user, _by_val, 3), do: :noop
   def delete_user(user, by_val, tries) do
     url = "#{@intercom_url}?#{by_val}=#{user}"
-    headers = ["Accept": "Accept:application/json"]
+    headers = ["Authorization": "Bearer #{System.get_env["INTERCOM_ACCESS_TOKEN"]}",  "Accept": "Accept:application/json"]
 
-    case HTTPoison.delete(url, headers, hackney: @hackney) do
+    case HTTPoison.delete(url, headers) do
       {:ok, _response} -> :noop
       {:error, _reason} -> delete_user(user, by_val, tries + 1)
     end
