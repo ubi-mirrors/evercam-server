@@ -38,7 +38,7 @@ defmodule EvercamMedia.MoveClipsToS3 do
         end)
       else
         :not_ok ->
-          Logger.info "Ignoring Archive: Type URL. #{archive.exid}"
+          Logger.info "Ignoring Archive: Type URL."
       end
     end)
   end
