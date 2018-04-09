@@ -30,15 +30,15 @@ defmodule EvercamMedia.MoveClipsToS3 do
 
         Enum.each(0..2, fn(x) ->
           with {:ok, data} <- exist_on_seaweed?(Enum.at(src_object, x), Enum.at(ext_object, x)) do
+            Logger.info "Getting Data from #{archive.camera.exid} : file type #{put_type(Enum.at(ext_object, x))}"
             save_archive_to_s3(data, Enum.at(dest_object, x), Enum.at(ext_object, x))
+            Logger.info "Data Uploaded to S3 for #{archive.camera.exid} : file type #{put_type(Enum.at(ext_object, x))}"
           else
-            :not_found ->
-              Logger.info "No files on weed: #{archive.exid}"
+            :not_found -> :noop
           end
         end)
       else
-        :not_ok ->
-          Logger.info "Ignoring Archive: Type URL."
+        :not_ok -> :noop
       end
     end)
   end
