@@ -4,6 +4,23 @@ defmodule EvercamMediaWeb.VendorController do
   alias EvercamMediaWeb.VendorView
   alias EvercamMediaWeb.ErrorView
 
+  def swagger_definitions do
+    %{
+      Vendor: swagger_schema do
+        title "Vendor"
+        description ""
+        properties do
+          id :integer, ""
+          exid :string, "", format: "text"
+          name :string, "", format: "text"
+          known_macs :string, "", format: "text"
+          created_at :string, "", format: "timestamp"
+          updated_at :string, "", format: "timestamp"
+        end
+      end
+    }
+  end
+
   swagger_path :show do
     get "/vendors/{id}"
     summary "Returns available information for the specified vendor."
@@ -29,7 +46,12 @@ defmodule EvercamMediaWeb.VendorController do
 
   swagger_path :index do
     get "/vendors"
-    summary "Returns all vendors."
+    summary "Returns all known IP hardware vendors."
+    parameters do
+      id :query, :string, "The ID of the vendor being requested."
+      name :query, :string, "The name of the vendor."
+      mac :query, :string, "The mac address of the vendor."
+    end
     tag "Vendors"
     response 200, "Success"
   end

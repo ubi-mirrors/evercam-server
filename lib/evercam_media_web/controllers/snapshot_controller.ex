@@ -84,6 +84,8 @@ defmodule EvercamMediaWeb.SnapshotController do
       camera_exid :query, :string, "The ID of the camera being tested.", required: true
       cam_username :query, :string, "Username of the camera", required: true
       cam_password :query, :string, "Password of the camera", required: true
+      external_url :query, :string, "External URL, for example http://110.39.130.42:8040 ", required: true
+      jpg_url :query, :string, "JPG URL, for example ISAPI/Streaming/channels/101/picture?videoResolutionWidth=1920&videoResolutionHeight=1080", required: true
       vendor_id :query, :string, "Vendor id of the camera", required: true
       api_id :query, :string, "The Evercam API id for the requester."
       api_key :query, :string, "The Evercam API key for the requester."
@@ -315,7 +317,7 @@ defmodule EvercamMediaWeb.SnapshotController do
   end
 
   swagger_path :days do
-    get "/cameras/{id}/recordings/snapshots/{year}/{month}/{day}/days"
+    get "/cameras/{id}/recordings/snapshots/{year}/{month}/days"
     summary "Returns all recorded days in a month."
     parameters do
       id :path, :string, "Unique identifier for the camera.", required: true

@@ -315,6 +315,185 @@
         "operationId": "EvercamMediaWeb.CameraController.transfer",
         "description": ""
       },
+      "patch": {
+        "tags": [
+          "Cameras"
+        ],
+        "summary": "Update the camera owned by the authenticating user.",
+        "responses": {
+          "401": {
+            "description": "Invalid API keys or Unauthorized"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the camera being requested."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "name",
+            "in": "query",
+            "description": "Name of the camera."
+          },
+          {
+            "type": "integer",
+            "required": false,
+            "name": "external_http_port",
+            "in": "query",
+            "description": "External HTTP Port, for example 8080"
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "external_rtsp_port",
+            "in": "query",
+            "description": "Internal RTSP Port, for example 880."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "vendor",
+            "in": "query",
+            "description": "Vendor name, for example hikvision"
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "model",
+            "in": "query",
+            "description": "Model name of the camera being requested"
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "timezone",
+            "in": "query",
+            "description": "Timezone, for example \"Europe/Dublin\""
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "mac_address",
+            "in": "query",
+            "description": "Mac address of the camera being requested"
+          },
+          {
+            "type": "boolean",
+            "required": false,
+            "name": "is_online",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "boolean",
+            "required": false,
+            "name": "discoverable",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "location_lng",
+            "in": "query",
+            "description": "Longitude, for example 31.422117"
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "location_lat",
+            "in": "query",
+            "description": "Latitude, for example 73.090051"
+          },
+          {
+            "type": "boolean",
+            "required": false,
+            "name": "is_public",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "secondary_port",
+            "in": "query",
+            "description": "Secondary port of the camera being requested"
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "nvr_http_port",
+            "in": "query",
+            "description": "HTTP port of NVR."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "nvr_rtsp_port",
+            "in": "query",
+            "description": "RTSP port of NVR."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "internal_host",
+            "in": "query",
+            "description": "Internal IP or URL."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "internal_http_port",
+            "in": "query",
+            "description": "Internal HTTP Port, for example 80."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "internal_rtsp_port",
+            "in": "query",
+            "description": "Internal RTSP Port, for example 980."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "cam_username",
+            "in": "query",
+            "description": "Username of the camera being requested."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "cam_password",
+            "in": "query",
+            "description": "Password of the camera being requested."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.CameraController.update",
+        "description": ""
+      },
       "get": {
         "tags": [
           "Cameras"
@@ -479,6 +658,20 @@
           {
             "type": "string",
             "required": true,
+            "name": "external_url",
+            "in": "query",
+            "description": "External URL, for example http://110.39.130.42:8040 "
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "jpg_url",
+            "in": "query",
+            "description": "JPG URL, for example ISAPI/Streaming/channels/101/picture?videoResolutionWidth=1920&videoResolutionHeight=1080"
+          },
+          {
+            "type": "string",
+            "required": true,
             "name": "vendor_id",
             "in": "query",
             "description": "Vendor id of the camera"
@@ -499,6 +692,37 @@
           }
         ],
         "operationId": "EvercamMediaWeb.SnapshotController.test",
+        "description": ""
+      }
+    },
+    "/cameras/port-check": {
+      "get": {
+        "tags": [
+          "Cameras"
+        ],
+        "summary": "Returns status of the port.",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": false,
+            "name": "address",
+            "in": "query",
+            "description": "External IP or URL, for example 192.168.1.46"
+          },
+          {
+            "type": "integer",
+            "required": false,
+            "name": "port",
+            "in": "query",
+            "description": "HTTP port, for example 8086"
+          }
+        ],
+        "operationId": "EvercamMediaWeb.CameraController.port_check",
         "description": ""
       }
     },
@@ -716,13 +940,35 @@
         "tags": [
           "Vendors"
         ],
-        "summary": "Returns all vendors.",
+        "summary": "Returns all known IP hardware vendors.",
         "responses": {
           "200": {
             "description": "Success"
           }
         },
-        "parameters": [],
+        "parameters": [
+          {
+            "type": "string",
+            "required": false,
+            "name": "id",
+            "in": "query",
+            "description": "The ID of the vendor being requested."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "name",
+            "in": "query",
+            "description": "The name of the vendor."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "mac",
+            "in": "query",
+            "description": "The mac address of the vendor."
+          }
+        ],
         "operationId": "EvercamMediaWeb.VendorController.index",
         "description": ""
       }
@@ -2063,13 +2309,42 @@
         "tags": [
           "Models"
         ],
-        "summary": "Returns all models.",
+        "summary": "Returns set of known models for a supported camera vendor.",
         "responses": {
           "200": {
             "description": "Success"
           }
         },
-        "parameters": [],
+        "parameters": [
+          {
+            "type": "string",
+            "required": false,
+            "name": "vendor_id",
+            "in": "query",
+            "description": "Unique identifier for the vendor."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "name",
+            "in": "query",
+            "description": "The name of the model."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "limit",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "page",
+            "in": "query",
+            "description": ""
+          }
+        ],
         "operationId": "EvercamMediaWeb.VendorModelController.index",
         "description": ""
       }
@@ -2271,67 +2546,6 @@
         "description": ""
       }
     },
-    "/cameras/{id}/recordings/snapshots/{year}/{month}/{day}/days": {
-      "get": {
-        "tags": [
-          "Recordings"
-        ],
-        "summary": "Returns all recorded days in a month.",
-        "responses": {
-          "404": {
-            "description": "Camera does not exist"
-          },
-          "403": {
-            "description": "Forbidden camera access"
-          },
-          "401": {
-            "description": "Invalid API keys"
-          },
-          "200": {
-            "description": "Success"
-          }
-        },
-        "parameters": [
-          {
-            "type": "string",
-            "required": true,
-            "name": "id",
-            "in": "path",
-            "description": "Unique identifier for the camera."
-          },
-          {
-            "type": "string",
-            "required": true,
-            "name": "year",
-            "in": "path",
-            "description": "Year, for example 2013"
-          },
-          {
-            "type": "string",
-            "required": true,
-            "name": "month",
-            "in": "path",
-            "description": "Month, for example 12"
-          },
-          {
-            "type": "string",
-            "required": false,
-            "name": "api_id",
-            "in": "query",
-            "description": "The Evercam API id for the requester."
-          },
-          {
-            "type": "string",
-            "required": false,
-            "name": "api_key",
-            "in": "query",
-            "description": "The Evercam API key for the requester."
-          }
-        ],
-        "operationId": "EvercamMediaWeb.SnapshotController.days",
-        "description": ""
-      }
-    },
     "/cameras/{id}/recordings/snapshots/{timestamp}": {
       "get": {
         "tags": [
@@ -2412,13 +2626,42 @@
         "tags": [
           "Cameras"
         ],
-        "summary": "Returns all pbulic cameras list.",
+        "summary": "Returns all public cameras list.",
         "responses": {
           "200": {
             "description": "Success"
           }
         },
-        "parameters": [],
+        "parameters": [
+          {
+            "type": "string",
+            "required": false,
+            "name": "is_near_to",
+            "in": "query",
+            "description": "Longitude,Latitude for example 31.4208475,73.0895894"
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "within_distance",
+            "in": "query",
+            "description": "Within distance, for example 9.5"
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "limit",
+            "in": "query",
+            "description": "Limit of records, for example 10"
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "offset",
+            "in": "query",
+            "description": "Offset, for example 15"
+          }
+        ],
         "operationId": "EvercamMediaWeb.PublicController.index",
         "description": ""
       }
@@ -2558,6 +2801,67 @@
           }
         ],
         "operationId": "EvercamMediaWeb.LogController.show",
+        "description": ""
+      }
+    },
+    "/cameras/{id}/recordings/snapshots/{year}/{month}/days": {
+      "get": {
+        "tags": [
+          "Recordings"
+        ],
+        "summary": "Returns all recorded days in a month.",
+        "responses": {
+          "404": {
+            "description": "Camera does not exist"
+          },
+          "403": {
+            "description": "Forbidden camera access"
+          },
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for the camera."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "year",
+            "in": "path",
+            "description": "Year, for example 2013"
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "month",
+            "in": "path",
+            "description": "Month, for example 12"
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.SnapshotController.days",
         "description": ""
       }
     },
@@ -3327,6 +3631,42 @@
   },
   "host": "media.evercam.io/v1",
   "definitions": {
+    "Vendor": {
+      "type": "object",
+      "title": "Vendor",
+      "properties": {
+        "updated_at": {
+          "type": "string",
+          "format": "timestamp",
+          "description": ""
+        },
+        "name": {
+          "type": "string",
+          "format": "text",
+          "description": ""
+        },
+        "known_macs": {
+          "type": "string",
+          "format": "text",
+          "description": ""
+        },
+        "id": {
+          "type": "integer",
+          "description": ""
+        },
+        "exid": {
+          "type": "string",
+          "format": "text",
+          "description": ""
+        },
+        "created_at": {
+          "type": "string",
+          "format": "timestamp",
+          "description": ""
+        }
+      },
+      "description": ""
+    },
     "User": {
       "type": "object",
       "title": "User",
@@ -3426,6 +3766,76 @@
       },
       "description": ""
     },
+    "Snapmail": {
+      "type": "object",
+      "title": "Snapmail",
+      "properties": {
+        "user_id": {
+          "type": "integer",
+          "description": ""
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "timestamp",
+          "description": ""
+        },
+        "timezone": {
+          "type": "string",
+          "format": "text",
+          "description": ""
+        },
+        "subject": {
+          "type": "string",
+          "format": "text",
+          "description": ""
+        },
+        "recipients": {
+          "type": "string",
+          "format": "text",
+          "description": ""
+        },
+        "notify_time": {
+          "type": "string",
+          "format": "character(255)",
+          "description": ""
+        },
+        "notify_days": {
+          "type": "string",
+          "format": "character(255)",
+          "description": ""
+        },
+        "message": {
+          "type": "string",
+          "format": "text",
+          "description": ""
+        },
+        "is_public": {
+          "type": "boolean",
+          "description": "",
+          "default": false
+        },
+        "is_paused": {
+          "type": "boolean",
+          "description": "",
+          "default": false
+        },
+        "inserted_at": {
+          "type": "string",
+          "format": "timestamp",
+          "description": ""
+        },
+        "id": {
+          "type": "integer",
+          "description": ""
+        },
+        "exid": {
+          "type": "string",
+          "format": "character(255)",
+          "description": ""
+        }
+      },
+      "description": ""
+    },
     "Share": {
       "type": "object",
       "title": "Share",
@@ -3465,6 +3875,151 @@
         "camera_id": {
           "type": "integer",
           "description": ""
+        }
+      },
+      "description": ""
+    },
+    "Model": {
+      "type": "object",
+      "title": "Model",
+      "properties": {
+        "wifi": {
+          "type": "boolean",
+          "description": "",
+          "default": false
+        },
+        "vendor_id": {
+          "type": "integer",
+          "format": "text",
+          "description": ""
+        },
+        "varifocal": {
+          "type": "boolean",
+          "description": "",
+          "default": false
+        },
+        "username": {
+          "type": "string",
+          "format": "text",
+          "description": ""
+        },
+        "upnp": {
+          "type": "boolean",
+          "description": "",
+          "default": false
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "timestamp",
+          "description": ""
+        },
+        "shape": {
+          "type": "string",
+          "format": "text",
+          "description": ""
+        },
+        "sd_card": {
+          "type": "boolean",
+          "description": "",
+          "default": false
+        },
+        "resolution": {
+          "type": "string",
+          "format": "text",
+          "description": ""
+        },
+        "ptz": {
+          "type": "boolean",
+          "description": "",
+          "default": false
+        },
+        "psia": {
+          "type": "boolean",
+          "description": "",
+          "default": false
+        },
+        "poe": {
+          "type": "boolean",
+          "description": "",
+          "default": false
+        },
+        "password": {
+          "type": "string",
+          "format": "text",
+          "description": ""
+        },
+        "onvif": {
+          "type": "boolean",
+          "description": "",
+          "default": false
+        },
+        "official_url": {
+          "type": "string",
+          "format": "text",
+          "description": ""
+        },
+        "name": {
+          "type": "string",
+          "format": "text",
+          "description": ""
+        },
+        "more_info": {
+          "type": "string",
+          "format": "text",
+          "description": ""
+        },
+        "mjpg_url": {
+          "type": "string",
+          "format": "text",
+          "description": ""
+        },
+        "jpg_url": {
+          "type": "string",
+          "format": "text",
+          "description": ""
+        },
+        "infrared": {
+          "type": "boolean",
+          "description": "",
+          "default": false
+        },
+        "id": {
+          "type": "integer",
+          "description": ""
+        },
+        "h264_url": {
+          "type": "string",
+          "format": "text",
+          "description": ""
+        },
+        "exid": {
+          "type": "string",
+          "format": "text",
+          "description": ""
+        },
+        "discontinued": {
+          "type": "boolean",
+          "description": "",
+          "default": false
+        },
+        "created_at": {
+          "type": "string",
+          "format": "timestamp",
+          "description": ""
+        },
+        "config": {
+          "type": "string",
+          "format": "json",
+          "description": ""
+        },
+        "channel": {
+          "type": "integer",
+          "description": ""
+        },
+        "audio_io": {
+          "type": "boolean",
+          "description": "",
+          "default": false
         }
       },
       "description": ""
