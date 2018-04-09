@@ -1,6 +1,7 @@
 defmodule EvercamMedia.Snapshot.Storage do
   require Logger
   alias EvercamMedia.Util
+  import EvercamMedia.TimelapseRecording.S3, only: [do_save: 3, do_load: 1]
 
   @root_dir Application.get_env(:evercam_media, :storage_dir)
   @seaweedfs Application.get_env(:evercam_media, :seaweedfs_url)
@@ -511,6 +512,10 @@ defmodule EvercamMedia.Snapshot.Storage do
   end
 
   def save(camera_exid, timestamp, image, "Evercam Thumbnail"), do: update_cache_and_save_thumbnail(camera_exid, timestamp, image)
+  def save(camera_exid, timestamp, image, "Evercam SnapMail") do
+    save_snapmail_to_s3(camera_exid, timestamp, image)
+    update_cache_and_save_thumbnail(camera_exid, timestamp, image)
+  end
   def save(camera_exid, timestamp, image, notes) do
     try do
       seaweedfs_save(camera_exid, timestamp, image, notes)
@@ -518,6 +523,17 @@ defmodule EvercamMedia.Snapshot.Storage do
     catch _type, _error ->
       :noop
     end
+  end
+
+  defp save_snapmail_to_s3(camera_exid, timestamp, image) do
+    path =
+      timestamp
+      |> Calendar.DateTime.Parse.unix!
+      |> Calendar.Strftime.strftime!("#{camera_exid}/snapmails/%Y/%m/%d/%H/")
+
+    filename = construct_file_name(timestamp)
+    do_save("#{path}#{filename}", image, [content_type: "image/jpeg"])
+    Logger.info "SnapMail saved to S3 for #{camera_exid}."
   end
 
   defp oldest_directory_name(cloud_recording, directory, url, type \\ "Directories", attribute \\ "Name")
@@ -682,6 +698,18 @@ defmodule EvercamMedia.Snapshot.Storage do
       {:error, error}
     else
       {:ok, image, notes} -> {:ok, image, notes}
+    end
+  end
+  def load(camera_exid, timestamp, "Evercam SnapMail" = notes) do
+    file_name = construct_file_name(timestamp)
+    path =
+      timestamp
+      |> Calendar.DateTime.Parse.unix!
+      |> Calendar.Strftime.strftime!("#{camera_exid}/snapmails/%Y/%m/%d/%H/")
+
+    case do_load("#{path}#{file_name}") do
+      {:ok, snapshot} -> {:ok, snapshot, notes}
+      {:error, _code, _message} -> {:error, :not_found}
     end
   end
   def load(camera_exid, timestamp, notes) do
