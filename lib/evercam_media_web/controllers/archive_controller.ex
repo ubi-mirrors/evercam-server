@@ -5,7 +5,7 @@ defmodule EvercamMediaWeb.ArchiveController do
   alias EvercamMedia.Util
   alias EvercamMedia.Snapshot.Storage
   import Ecto.Changeset
-  import EvercamMedia.TimelapseRecording.S3, only: [load_compare_thumbnail: 2]
+  import EvercamMedia.TimelapseRecording.S3, only: [load_compare_thumbnail: 2, do_load: 1]
   require Logger
 
   @status %{pending: 0, processing: 1, completed: 2, failed: 3}
@@ -90,6 +90,7 @@ defmodule EvercamMediaWeb.ArchiveController do
 
     with :ok <- valid_params(conn, params),
          :ok <- ensure_camera_exists(camera, exid, conn),
+         :ok <- deliver_content(conn, exid, archive_id),
          :ok <- ensure_can_list(current_user, camera, conn)
     do
       archive = Archive.by_exid(archive_id)
@@ -106,16 +107,12 @@ defmodule EvercamMediaWeb.ArchiveController do
   def play(conn, %{"id" => exid, "archive_id" => archive_id}) do
     current_user = conn.assigns[:current_user]
     camera = Camera.get_full(exid)
-    archive = Archive.by_exid(archive_id)
 
     with :ok <- ensure_can_list(current_user, camera, conn) do
-      archive_date =
-        archive.created_at
-        |> Ecto.DateTime.to_erl
-        |> Calendar.DateTime.from_erl!("UTC")
-      seaweed_url = EvercamMedia.Snapshot.Storage.point_to_seaweed(archive_date)
+      {:ok, content} = do_load("#{exid}/clips/#{archive_id}/#{archive_id}.mp4")
       conn
-      |> redirect(external: "#{seaweed_url}/#{exid}/clips/#{archive_id}.mp4")
+      |> put_resp_header("content-type", "video/mp4")
+      |> text(content)
     end
   end
 
@@ -545,4 +542,21 @@ defmodule EvercamMediaWeb.ArchiveController do
   defp send_archive_email(2, archive), do: EvercamMedia.UserMailer.archive_completed(archive, archive.user.email)
   defp send_archive_email(3, archive), do: EvercamMedia.UserMailer.archive_failed(archive, archive.user.email)
   defp send_archive_email(_, _), do: Logger.info "Archive updated!"
+
+  defp deliver_content(conn, exid, archive_id) do
+    archive_with_extension = String.split(archive_id, ".")
+    case length(archive_with_extension) do
+      2 ->
+        [file_name, extension] = archive_with_extension
+        load_file(conn, exid, file_name, extension)
+      _ -> :ok
+    end
+  end
+
+  defp load_file(conn, camera_exid, file_name, extension) do
+    {:ok, response} = do_load("#{camera_exid}/clips/#{file_name}/#{file_name}.#{extension}")
+    conn
+    |> put_resp_header("content-type", "application/octet-stream")
+    |> text(response)
+  end
 end

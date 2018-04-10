@@ -595,27 +595,22 @@ defmodule EvercamMedia.Snapshot.Storage do
   end
 
   def load_archive_thumbnail(camera_exid, archive_id) do
-    file_path = "/#{camera_exid}/clips/thumb-#{archive_id}.jpg"
-    get_url = "#{@seaweedfs}#{file_path}"
-    case HTTPoison.get("#{get_url}", [], hackney: [pool: :seaweedfs_download_pool]) do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} -> body
-      {:ok, %HTTPoison.Response{status_code: 404}} -> Util.default_thumbnail
-      {:error, %HTTPoison.Error{reason: _reason}} -> Util.default_thumbnail
+    file_path = "#{camera_exid}/clips/#{archive_id}/thumb-#{archive_id}.jpg"
+
+    case do_load(file_path) do
+      {:ok, body} -> body
+      {:error, _code, _error} -> Util.default_thumbnail
     end
   end
 
   def save_archive_thumbnail(camera_exid, archive_id, path) do
-    file_path = "/#{camera_exid}/clips/thumb-#{archive_id}.jpg"
-    post_url = "#{@seaweedfs}#{file_path}"
+    file_path = "#{camera_exid}/clips/#{archive_id}/thumb-#{archive_id}.jpg"
 
     "#{path}thumb-#{archive_id}.jpg"
     |> File.open([:read, :binary, :raw], fn(file) -> IO.binread(file, :all) end)
     |> case do
       {:ok, content} ->
-        case HTTPoison.post(post_url, {:multipart, [{file_path, content, []}]}, [], hackney: [pool: :seaweedfs_upload_pool]) do
-          {:ok, _response} -> :noop
-          {:error, error} -> Logger.info "[save_archive_thumbnail] [#{camera_exid}] [#{archive_id}] [#{inspect error}]"
-        end
+        do_save(file_path, content, [content_type: "image/jpeg"])
       {:error, _error} -> {:error, "Failed to read video file."}
     end
   end
@@ -623,14 +618,10 @@ defmodule EvercamMedia.Snapshot.Storage do
   def save_archive_file(camera_exid, archive_id, url, extension) do
     case HTTPoison.get("#{url}", [], hackney: [pool: :seaweedfs_download_pool]) do
       {:ok, %HTTPoison.Response{status_code: 200, body: content}} ->
-        file_path = "/#{camera_exid}/clips/#{archive_id}.#{extension}"
+        file_path = "#{camera_exid}/clips/#{archive_id}/#{archive_id}.#{extension}"
         File.mkdir_p("#{@root_dir}/#{archive_id}/")
         File.write("#{@root_dir}/#{archive_id}/#{archive_id}.#{extension}", content)
-        post_url = "#{@seaweedfs}#{file_path}"
-        case HTTPoison.post(post_url, {:multipart, [{file_path, content, []}]}, [], hackney: [pool: :seaweedfs_upload_pool]) do
-          {:ok, _response} -> :noop
-          {:error, error} -> Logger.info "[save_archive_file] [#{camera_exid}] [#{archive_id}] [#{inspect error}]"
-        end
+        do_save(file_path, content, [content_type: "application/octet-stream"])
       {:error, _} -> :noop
     end
   end
@@ -645,23 +636,16 @@ defmodule EvercamMedia.Snapshot.Storage do
   end
 
   def seaweedfs_save_video_file(camera_exid, archive_id, content) do
-    hackney = [pool: :seaweedfs_upload_pool]
-    file_path = "/#{camera_exid}/clips/#{archive_id}.mp4"
-    post_url = "#{@seaweedfs}#{file_path}"
-    case HTTPoison.post(post_url, {:multipart, [{file_path, content, []}]}, [], hackney: hackney) do
-      {:ok, _response} -> :noop
-      {:error, error} -> Logger.info "[save_video] [#{camera_exid}] [#{archive_id}] [#{inspect error}]"
-    end
+    file_path = "#{camera_exid}/clips/#{archive_id}/#{archive_id}.mp4"
+    do_save(file_path, content, [content_type: "video/mp4"])
   end
 
   def delete_archive(camera_exid, archive_id) do
-    hackney = [pool: :seaweedfs_download_pool]
-    archive_url = "#{@seaweedfs}/#{camera_exid}/clips/#{archive_id}.mp4"
+    archive_path = "#{camera_exid}/clips/#{archive_id}/#{archive_id}.mp4"
+    archive_thumbail_path = "#{camera_exid}/clips/#{archive_id}/thumb-#{archive_id}.jpg"
     Logger.info "[#{camera_exid}] [archive_delete] [#{archive_id}]"
-    case HTTPoison.delete("#{archive_url}", [], hackney: hackney) do
-      {:ok, _response} -> :noop
-      {:error, error} -> Logger.info "[archive_delete] [#{camera_exid}] [#{archive_id}] [#{inspect error}]"
-    end
+    EvercamMedia.TimelapseRecording.S3.delete_object(["#{archive_path}", "#{archive_thumbail_path}"])
+    Logger.info "[archive_delete] [#{camera_exid}] [#{archive_id}]"
   end
 
   def import_archive_to_seaweed(max_id) do
