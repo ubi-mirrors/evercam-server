@@ -229,6 +229,22 @@ defmodule EvercamMediaWeb.CloudRecordingController do
     end
   end
 
+  swagger_path :get_recording_times do
+    get "/cameras/{id}/nvr/videos"
+    summary "Returns the recording time chunks in an hour."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      starttime :query, :string, "Unix timestamp"
+      endtime :query, :string, "Unix timestamp"
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Nvr"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+    response 404, "Camera does not exist"
+  end
+
   def get_recording_times(conn, %{"id" => exid, "starttime" => starttime, "endtime" => endtime}) do
     camera = Camera.by_exid_with_associations(exid)
 

@@ -1,17 +1,70 @@
 defmodule EvercamMediaWeb.ONVIFPTZController do
   use EvercamMediaWeb, :controller
+  use PhoenixSwagger
   alias EvercamMedia.ONVIFPTZ
+
+  swagger_path :status do
+    get "/cameras/{id}/ptz/status"
+    summary "Returns ptz status of the given camera."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Onvif"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+  end
 
   def status(conn, _params) do
     conn.assigns.onvif_access_info |> ONVIFPTZ.get_status("Profile_1") |> respond_default(conn)
+  end
+
+  swagger_path :nodes do
+    get "/cameras/{id}/ptz/nodes"
+    summary "Returns ptz nodes of the given camera."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Onvif"
+    response 200, "Success"
+    response 401, "Invalid API keys"
   end
 
   def nodes(conn, _params) do
     conn.assigns.onvif_access_info |> ONVIFPTZ.get_nodes |> respond_default(conn)
   end
 
+  swagger_path :configurations do
+    get "/cameras/{id}/ptz/configurations"
+    summary "Returns ptz configurations of the given camera."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Onvif"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+  end
+
   def configurations(conn, _params) do
     conn.assigns.onvif_access_info |> ONVIFPTZ.get_configurations |> respond_default(conn)
+  end
+
+  swagger_path :presets do
+    get "/cameras/{id}/ptz/presets"
+    summary "Returns all ptz presets of the given camera."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Onvif"
+    response 200, "Success"
+    response 401, "Invalid API keys"
   end
 
   def presets(conn, _params) do
@@ -23,28 +76,123 @@ defmodule EvercamMediaWeb.ONVIFPTZController do
     end
   end
 
+  swagger_path :stop do
+    get "/cameras/{id}/ptz/continuous/stop"
+    summary "Stop the ptz of the given camera."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Onvif"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+  end
+
   def stop(conn, _params) do
     conn.assigns.onvif_access_info |> ONVIFPTZ.stop("Profile_1") |> respond(conn)
+  end
+
+  swagger_path :home do
+    post "/cameras/{id}/ptz/home"
+    summary "Returns PTZ home of the given camera."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Onvif"
+    response 201, "Success"
+    response 401, "Invalid API keys"
   end
 
   def home(conn, _params) do
     conn.assigns.onvif_access_info |> ONVIFPTZ.goto_home_position("Profile_1") |> respond(conn)
   end
 
+  swagger_path :sethome do
+    post "/cameras/{id}/ptz/home/set"
+    summary "Set ptz home of the given camera."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Onvif"
+    response 201, "Success"
+    response 401, "Invalid API keys"
+  end
+
   def sethome(conn, _params) do
     conn.assigns.onvif_access_info |> ONVIFPTZ.set_home_position("Profile_1") |> respond(conn)
+  end
+
+  swagger_path :gotopreset do
+    post "/cameras/{id}/ptz/presets/go/{preset_token}"
+    summary "Go to specific preset of given camera."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      preset_token :path, :integer, "Unique token number of the preset.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Onvif"
+    response 201, "Success"
+    response 401, "Invalid API keys"
   end
 
   def gotopreset(conn, %{"preset_token" => token}) do
     conn.assigns.onvif_access_info |> ONVIFPTZ.goto_preset("Profile_1", token) |> respond(conn)
   end
 
+  swagger_path :setpreset do
+    post "/cameras/{id}/ptz/presets/{preset_token}/set"
+    summary "Set the view of the camera to given preset."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      preset_token :path, :integer, "Unique token number of the preset.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Onvif"
+    response 201, "Success"
+    response 401, "Invalid API keys"
+  end
+
   def setpreset(conn, %{"preset_token" => token}) do
     conn.assigns.onvif_access_info |> ONVIFPTZ.set_preset("Profile_1", "", token) |> respond(conn)
   end
 
+  swagger_path :createpreset do
+    post "/cameras/{id}/ptz/presets/create"
+    summary "Create new ptz preset of given camera."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      preset_name :query, :string, ""
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Onvif"
+    response 201, "Success"
+    response 401, "Invalid API keys"
+  end
+
   def createpreset(conn, %{"preset_name" => name}) do
     conn.assigns.onvif_access_info |> ONVIFPTZ.set_preset("Profile_1", name) |> respond(conn)
+  end
+
+  swagger_path :continuousmove do
+    post "/cameras/{id}/ptz/continuous/start/{direction}"
+    summary "Move the camera to given direction."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      direction :query, :string, "", enum: ["left", "right", "up", "down"], required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Onvif"
+    response 201, "Success"
+    response 401, "Invalid API keys"
   end
 
   def continuousmove(conn, %{"direction" => direction}) do
@@ -59,6 +207,20 @@ defmodule EvercamMediaWeb.ONVIFPTZController do
     conn.assigns.onvif_access_info |> ONVIFPTZ.continuous_move("Profile_1", velocity) |> respond(conn)
   end
 
+  swagger_path :continuouszoom do
+    post "/cameras/{id}/ptz/continuous/zoom/{mode}"
+    summary "Zoom in/out of the camera."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      mode :query, :string, "", enum: ["in", "out"], required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Onvif"
+    response 201, "Success"
+    response 401, "Invalid API keys"
+  end
+
   def continuouszoom(conn, %{"mode" => mode}) do
     velocity =
       case mode do
@@ -67,6 +229,24 @@ defmodule EvercamMediaWeb.ONVIFPTZController do
         _ -> [zoom: 0.0]
       end
     conn.assigns.onvif_access_info |> ONVIFPTZ.continuous_move("Profile_1", velocity) |> respond(conn)
+  end
+
+  swagger_path :relativemove do
+    post "/cameras/{id}/ptz/relative"
+    summary "Relative move of the camera."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      left :query, :integer, "Left move, for example 4"
+      right :query, :integer, "Right move, for example 4"
+      up :query, :integer, "Up move, for example 4"
+      down :query, :integer, "Down move, for example 4"
+      zoom :query, :integer, "Zoom, for example 1"
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Onvif"
+    response 201, "Success"
+    response 401, "Invalid API keys"
   end
 
   def relativemove(conn, params) do

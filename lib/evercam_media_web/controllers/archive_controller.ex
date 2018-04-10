@@ -104,6 +104,21 @@ defmodule EvercamMediaWeb.ArchiveController do
     end
   end
 
+  swagger_path :play do
+    get "/cameras/{id}/archives/{archive_id}/play"
+    summary "Play the requested archive of the given camera."
+    parameters do
+      id :path, :string, "Unique identifier for camera.", required: true
+      archive_id :path, :string, "Unique identifier for archive.", required: true
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Archives"
+    response 200, "Success"
+    response 401, "Invalid API keys or Unauthorized"
+    response 404, "Camera does not exist or Archive does not found"
+  end
+
   def play(conn, %{"id" => exid, "archive_id" => archive_id}) do
     current_user = conn.assigns[:current_user]
     camera = Camera.get_full(exid)

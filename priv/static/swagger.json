@@ -1,6 +1,123 @@
 {
   "swagger": "2.0",
   "paths": {
+    "/cameras/{id}/ptz/home": {
+      "post": {
+        "tags": [
+          "Onvif"
+        ],
+        "summary": "Returns PTZ home of the given camera.",
+        "responses": {
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "201": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for camera."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.ONVIFPTZController.home",
+        "description": ""
+      }
+    },
+    "/cameras/{id}/ptz/relative": {
+      "post": {
+        "tags": [
+          "Onvif"
+        ],
+        "summary": "Relative move of the camera.",
+        "responses": {
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "201": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for camera."
+          },
+          {
+            "type": "integer",
+            "required": false,
+            "name": "left",
+            "in": "query",
+            "description": "Left move, for example 4"
+          },
+          {
+            "type": "integer",
+            "required": false,
+            "name": "right",
+            "in": "query",
+            "description": "Right move, for example 4"
+          },
+          {
+            "type": "integer",
+            "required": false,
+            "name": "up",
+            "in": "query",
+            "description": "Up move, for example 4"
+          },
+          {
+            "type": "integer",
+            "required": false,
+            "name": "down",
+            "in": "query",
+            "description": "Down move, for example 4"
+          },
+          {
+            "type": "integer",
+            "required": false,
+            "name": "zoom",
+            "in": "query",
+            "description": "Zoom, for example 1"
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.ONVIFPTZController.relativemove",
+        "description": ""
+      }
+    },
     "/cameras/{id}/recordings/snapshots/oldest": {
       "get": {
         "tags": [
@@ -116,6 +233,54 @@
         "description": ""
       }
     },
+    "/cameras/{id}/ptz/presets/create": {
+      "post": {
+        "tags": [
+          "Onvif"
+        ],
+        "summary": "Create new ptz presets of given camera.",
+        "responses": {
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "201": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for camera."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "preset_name",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.ONVIFPTZController.createpreset",
+        "description": ""
+      }
+    },
     "/users": {
       "post": {
         "tags": [
@@ -175,6 +340,54 @@
           }
         ],
         "operationId": "EvercamMediaWeb.UserController.create",
+        "description": ""
+      }
+    },
+    "/cameras/{id}/ptz/presets/{preset_token}/set": {
+      "post": {
+        "tags": [
+          "Onvif"
+        ],
+        "summary": "Set the view of the camera to given preset.",
+        "responses": {
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "201": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for camera."
+          },
+          {
+            "type": "integer",
+            "required": true,
+            "name": "preset_token",
+            "in": "path",
+            "description": "Unique token number of the preset."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.ONVIFPTZController.setpreset",
         "description": ""
       }
     },
@@ -262,6 +475,47 @@
           }
         ],
         "operationId": "EvercamMediaWeb.ArchiveController.thumbnail",
+        "description": ""
+      }
+    },
+    "/cameras/{id}/ptz/status": {
+      "get": {
+        "tags": [
+          "Onvif"
+        ],
+        "summary": "Returns ptz status of the given camera.",
+        "responses": {
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for camera."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.ONVIFPTZController.status",
         "description": ""
       }
     },
@@ -1038,6 +1292,47 @@
         "description": ""
       }
     },
+    "/cameras/{id}/ptz/nodes": {
+      "get": {
+        "tags": [
+          "Onvif"
+        ],
+        "summary": "Returns ptz nodes of the given camera.",
+        "responses": {
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for camera."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.ONVIFPTZController.nodes",
+        "description": ""
+      }
+    },
     "/cameras": {
       "post": {
         "tags": [
@@ -1461,6 +1756,105 @@
           }
         ],
         "operationId": "EvercamMediaWeb.SDKController.nvr_reboot",
+        "description": ""
+      }
+    },
+    "/cameras/{id}/nvr/videos": {
+      "get": {
+        "tags": [
+          "Nvr"
+        ],
+        "summary": "Returns the recording time chunks in an hour.",
+        "responses": {
+          "404": {
+            "description": "Camera does not exist"
+          },
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for camera."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "starttime",
+            "in": "query",
+            "description": "Unix timestamp"
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "endtime",
+            "in": "query",
+            "description": "Unix timestamp"
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.CloudRecordingController.get_recording_times",
+        "description": ""
+      }
+    },
+    "/cameras/{id}/ptz/presets": {
+      "get": {
+        "tags": [
+          "Onvif"
+        ],
+        "summary": "Returns all ptz presets of the given camera.",
+        "responses": {
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for camera."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.ONVIFPTZController.presets",
         "description": ""
       }
     },
@@ -1988,6 +2382,57 @@
         "description": ""
       }
     },
+    "/cameras/{id}/archives/{archive_id}/play": {
+      "get": {
+        "tags": [
+          "Archives"
+        ],
+        "summary": "Play the requested archive of the given camera.",
+        "responses": {
+          "404": {
+            "description": "Camera does not exist or Archive does not found"
+          },
+          "401": {
+            "description": "Invalid API keys or Unauthorized"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for camera."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "archive_id",
+            "in": "path",
+            "description": "Unique identifier for archive."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.ArchiveController.play",
+        "description": ""
+      }
+    },
     "/vendors/{id}": {
       "get": {
         "tags": [
@@ -2201,6 +2646,47 @@
           }
         ],
         "operationId": "EvercamMediaWeb.CloudRecordingController.nvr_hours",
+        "description": ""
+      }
+    },
+    "/cameras/{id}/ptz/configurations": {
+      "get": {
+        "tags": [
+          "Onvif"
+        ],
+        "summary": "Returns ptz configurations of the given camera.",
+        "responses": {
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for camera."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.ONVIFPTZController.configurations",
         "description": ""
       }
     },
@@ -2757,6 +3243,47 @@
         "description": ""
       }
     },
+    "/cameras/{id}/ptz/home/set": {
+      "post": {
+        "tags": [
+          "Onvif"
+        ],
+        "summary": "Set ptz home of the given camera.",
+        "responses": {
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "201": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for camera."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.ONVIFPTZController.sethome",
+        "description": ""
+      }
+    },
     "/cameras/{id}/logs": {
       "get": {
         "tags": [
@@ -3114,6 +3641,54 @@
         "description": ""
       }
     },
+    "/onvif/v20/{service}/{operation}": {
+      "get": {
+        "tags": [
+          "Onvif"
+        ],
+        "summary": "Execute the operation of given service.",
+        "responses": {
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "service",
+            "in": "path",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "operation",
+            "in": "path",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.ONVIFController.invoke",
+        "description": ""
+      }
+    },
     "/snapmails": {
       "post": {
         "tags": [
@@ -3416,6 +3991,58 @@
         "description": ""
       }
     },
+    "/cameras/{id}/ptz/continuous/zoom/{mode}": {
+      "post": {
+        "tags": [
+          "Onvif"
+        ],
+        "summary": "Zoom in/out of the camera.",
+        "responses": {
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "201": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for camera."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "mode",
+            "in": "query",
+            "enum": [
+              "in",
+              "out"
+            ],
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.ONVIFPTZController.continuouszoom",
+        "description": ""
+      }
+    },
     "/cameras/{id}/archives": {
       "post": {
         "tags": [
@@ -3574,6 +4201,149 @@
           }
         ],
         "operationId": "EvercamMediaWeb.UserController.user_activities",
+        "description": ""
+      }
+    },
+    "/cameras/{id}/ptz/continuous/stop": {
+      "get": {
+        "tags": [
+          "Onvif"
+        ],
+        "summary": "Stop the ptz of the given camera.",
+        "responses": {
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for camera."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.ONVIFPTZController.stop",
+        "description": ""
+      }
+    },
+    "/cameras/{id}/ptz/presets/go/{preset_token}": {
+      "post": {
+        "tags": [
+          "Onvif"
+        ],
+        "summary": "Go to specific preset of given camera.",
+        "responses": {
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "201": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for camera."
+          },
+          {
+            "type": "integer",
+            "required": true,
+            "name": "preset_token",
+            "in": "path",
+            "description": "Unique token number of the preset."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.ONVIFPTZController.gotopreset",
+        "description": ""
+      }
+    },
+    "/cameras/{id}/ptz/continuous/start/{direction}": {
+      "post": {
+        "tags": [
+          "Onvif"
+        ],
+        "summary": "Move the camera to given direction.",
+        "responses": {
+          "401": {
+            "description": "Invalid API keys"
+          },
+          "201": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for camera."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "direction",
+            "in": "query",
+            "enum": [
+              "left",
+              "right",
+              "up",
+              "down"
+            ],
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.ONVIFPTZController.continuousmove",
         "description": ""
       }
     },
