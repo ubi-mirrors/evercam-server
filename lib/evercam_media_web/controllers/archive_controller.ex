@@ -5,7 +5,7 @@ defmodule EvercamMediaWeb.ArchiveController do
   alias EvercamMedia.Util
   alias EvercamMedia.Snapshot.Storage
   import Ecto.Changeset
-  import EvercamMedia.TimelapseRecording.S3, only: [load_compare_thumbnail: 2, do_load: 1]
+  import EvercamMedia.TimelapseRecording.S3, only: [load_compare_thumbnail: 2, do_load: 1, get_presigned_url_to_object: 1]
   require Logger
 
   @status %{pending: 0, processing: 1, completed: 2, failed: 3}
@@ -124,10 +124,9 @@ defmodule EvercamMediaWeb.ArchiveController do
     camera = Camera.get_full(exid)
 
     with :ok <- ensure_can_list(current_user, camera, conn) do
-      {:ok, content} = do_load("#{exid}/clips/#{archive_id}/#{archive_id}.mp4")
+      {:ok, url} = get_presigned_url_to_object("#{exid}/clips/#{archive_id}/#{archive_id}.mp4")
       conn
-      |> put_resp_header("content-type", "video/mp4")
-      |> text(content)
+      |> redirect(external: url)
     end
   end
 

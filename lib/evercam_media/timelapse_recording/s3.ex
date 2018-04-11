@@ -116,6 +116,11 @@ defmodule EvercamMedia.TimelapseRecording.S3 do
     end
   end
 
+  def get_presigned_url_to_object(path) do
+    ExAws.Config.new(:s3)
+    |> ExAws.S3.presigned_url(:get, "evercam-camera-assets", path)
+  end
+
   defp convert_timestamp_to_path(timestamp) do
     timestamp
     |> Calendar.DateTime.Parse.unix!
