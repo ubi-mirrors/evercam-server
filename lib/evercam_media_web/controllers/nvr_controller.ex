@@ -112,7 +112,10 @@ defmodule EvercamMediaWeb.NVRController do
           end_date: convert_timestamp(end_date),
           interval: String.to_integer(interval),
           schedule: get_schedule(params["schedule"]),
-          requester: params["requester"]
+          requester: params["requester"],
+          create_mp4: params["create_mp4"],
+          jpegs_to_dropbox: params["jpegs_to_dropbox"],
+          inject_to_cr: params["inject_to_cr"]
         }
 
       config
@@ -143,6 +146,9 @@ defmodule EvercamMediaWeb.NVRController do
         interval: config.interval,
         schedule: config.schedule,
         status: 11,
+        create_mp4: config.create_mp4,
+        jpegs_to_dropbox: config.jpegs_to_dropbox,
+        inject_to_cr: config.inject_to_cr,
         requestor: get_requester(requester, user)
       }
     SnapshotExtractor.changeset(%SnapshotExtractor{}, params)

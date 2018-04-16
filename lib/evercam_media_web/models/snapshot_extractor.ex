@@ -5,7 +5,7 @@ defmodule SnapshotExtractor do
   alias EvercamMedia.Repo
 
   @required_fields ~w(camera_id to_date from_date status interval schedule)
-  @optional_fields ~w(notes requestor updated_at created_at)
+  @optional_fields ~w(notes requestor updated_at created_at create_mp4 jpegs_to_dropbox inject_to_cr)
 
   schema "snapshot_extractors" do
     belongs_to :camera, Camera, foreign_key: :camera_id
@@ -17,6 +17,9 @@ defmodule SnapshotExtractor do
     field :status, :integer
     field :notes, :string
     field :requestor, :string
+    field :create_mp4, :boolean
+    field :jpegs_to_dropbox, :boolean
+    field :inject_to_cr, :boolean
     timestamps(inserted_at: :created_at, type: Ecto.DateTime, default: Ecto.DateTime.utc)
   end
 
