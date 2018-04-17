@@ -96,8 +96,8 @@ defmodule EvercamMediaWeb.CompareController do
         requested_by: current_user.id,
         camera_id: camera.id,
         name: params["name"],
-        before_date: convert_to_datetime(params["before"]),
-        after_date: convert_to_datetime(params["after"]),
+        before_date: convert_to_datetime(params["before_date"]),
+        after_date: convert_to_datetime(params["after_date"]),
         embed_code: params["embed"],
         exid: params["exid"]
       }
