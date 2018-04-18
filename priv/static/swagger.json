@@ -238,7 +238,7 @@
         "tags": [
           "Onvif"
         ],
-        "summary": "Create new ptz presets of given camera.",
+        "summary": "Create new ptz preset of given camera.",
         "responses": {
           "401": {
             "description": "Invalid API keys"
@@ -2342,6 +2342,104 @@
       }
     },
     "/cameras/{id}/compares": {
+      "post": {
+        "tags": [
+          "Compares"
+        ],
+        "summary": "Create new compare.",
+        "responses": {
+          "404": {
+            "description": "Camera does not exist"
+          },
+          "401": {
+            "description": "Invalid API keys or Unauthorized"
+          },
+          "201": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for the camera."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "exid",
+            "in": "query",
+            "description": "Unique identifier for the compare."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "name",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "before_date",
+            "in": "query",
+            "description": "Unix timestamp"
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "before_image",
+            "in": "query",
+            "description": "Before image in base64 format."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "after_date",
+            "in": "query",
+            "description": "Unix timestamp"
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "after_image",
+            "in": "query",
+            "description": "After image in base64 format."
+          },
+          {
+            "type": "string",
+            "required": true,
+            "name": "embed",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "boolean",
+            "required": true,
+            "name": "create_animation",
+            "in": "query",
+            "description": ""
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_id",
+            "in": "query",
+            "description": "The Evercam API id for the requester."
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "api_key",
+            "in": "query",
+            "description": "The Evercam API key for the requester."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.CompareController.create",
+        "description": ""
+      },
       "get": {
         "tags": [
           "Compares"
