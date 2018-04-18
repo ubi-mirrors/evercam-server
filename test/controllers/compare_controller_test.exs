@@ -94,8 +94,8 @@ defmodule EvercamMedia.CompareControllerTest do
     timestamp = Calendar.DateTime.now!("UTC") |> Calendar.DateTime.Format.unix
     params = %{
       name: "New Compare",
-      before: "#{timestamp}",
-      after: "#{timestamp}",
+      before_date: "#{timestamp}",
+      after_date: "#{timestamp}",
       embed: "<div></div>"
     }
     response =
@@ -110,8 +110,8 @@ defmodule EvercamMedia.CompareControllerTest do
     timestamp = Calendar.DateTime.now!("UTC") |> Calendar.DateTime.Format.unix
     params = %{
       name: "New Compare",
-      before: "#{timestamp}",
-      after: "#{timestamp}",
+      before_date: "#{timestamp}",
+      after_date: "#{timestamp}",
       embed: "<div></div>"
     }
     response =
@@ -126,7 +126,7 @@ defmodule EvercamMedia.CompareControllerTest do
     timestamp = Calendar.DateTime.now!("UTC") |> Calendar.DateTime.Format.unix
     params = %{
       name: "New Compare",
-      before: "#{timestamp}"
+      before_date: "#{timestamp}"
     }
     response =
       build_conn()
@@ -139,8 +139,8 @@ defmodule EvercamMedia.CompareControllerTest do
     timestamp = Calendar.DateTime.now!("UTC") |> Calendar.DateTime.Format.unix
     params = %{
       name: "New Compare",
-      before: "#{timestamp}",
-      after: "#{timestamp}",
+      before_date: "#{timestamp}",
+      after_date: "#{timestamp}",
       before_image: "data:image/jpeg;base64,jkhdsifuhsduhfdsf",
       after_image: "data:image/jpeg;base64,jkhdsifuhsduhfdsf",
       embed: "<div></div>",
