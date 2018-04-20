@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.6.6
+-- Dumped from database version 9.6.8
 -- Dumped by pg_dump version 10.0
 
 SET statement_timeout = 0;
@@ -120,6 +120,7 @@ CREATE TABLE access_tokens (
     id integer DEFAULT nextval('sq_access_tokens'::regclass) NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    expires_at timestamp with time zone,
     is_revoked boolean NOT NULL,
     user_id integer,
     client_id integer,
@@ -192,6 +193,18 @@ CREATE SEQUENCE apps_id_seq
 --
 
 ALTER SEQUENCE apps_id_seq OWNED BY apps.id;
+
+
+--
+-- Name: ar_internal_metadata; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE ar_internal_metadata (
+    key character varying NOT NULL,
+    value character varying,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
 
 
 --
@@ -509,31 +522,11 @@ ALTER SEQUENCE cloud_recordings_id_seq OWNED BY cloud_recordings.id;
 
 
 --
--- Name: compares; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE compares (
-    id integer NOT NULL,
-    exid character varying(255) NOT NULL,
-    name character varying(255) NOT NULL,
-    before_date timestamp without time zone NOT NULL,
-    after_date timestamp without time zone NOT NULL,
-    embed_code character varying(255) NOT NULL,
-    create_animation boolean DEFAULT false,
-    camera_id integer NOT NULL,
-    inserted_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL,
-    status integer DEFAULT 0 NOT NULL,
-    requested_by integer NOT NULL
-);
-
-
---
 -- Name: compares_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE compares_id_seq
-    START WITH 1
+    START WITH 35
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
@@ -541,10 +534,23 @@ CREATE SEQUENCE compares_id_seq
 
 
 --
--- Name: compares_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: compares; Type: TABLE; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE compares_id_seq OWNED BY compares.id;
+CREATE TABLE compares (
+    id integer DEFAULT nextval('compares_id_seq'::regclass) NOT NULL,
+    exid character varying(255) NOT NULL,
+    name character varying(255) NOT NULL,
+    before_date timestamp without time zone NOT NULL,
+    after_date timestamp without time zone NOT NULL,
+    embed_code character varying(255) NOT NULL,
+    camera_id integer NOT NULL,
+    inserted_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL,
+    create_animation boolean DEFAULT false,
+    status integer DEFAULT 0 NOT NULL,
+    requested_by integer NOT NULL
+);
 
 
 --
@@ -825,7 +831,10 @@ CREATE TABLE snapshot_extractors (
     notes text,
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone,
-    requestor text
+    requestor text,
+    mp4 boolean DEFAULT false,
+    jpegs boolean DEFAULT false,
+    inject_to_cr boolean DEFAULT false
 );
 
 
@@ -1011,7 +1020,48 @@ CREATE TABLE users (
     token_expires_at timestamp without time zone,
     api_id text,
     api_key text,
+    is_admin boolean DEFAULT false NOT NULL,
     stripe_customer_id text,
+    billing_id text,
+    last_login_at timestamp with time zone,
+    vat_number text,
+    payment_method integer DEFAULT 0,
+    insight_id text,
+    encrypted_password character varying DEFAULT ''::character varying,
+    reset_password_token character varying,
+    reset_password_sent_at timestamp without time zone,
+    remember_created_at timestamp without time zone,
+    sign_in_count integer DEFAULT 0 NOT NULL,
+    current_sign_in_at timestamp without time zone,
+    last_sign_in_at timestamp without time zone,
+    current_sign_in_ip inet,
+    last_sign_in_ip inet,
+    telegram_username character varying(255)
+);
+
+
+--
+-- Name: users_old; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE users_old (
+    id integer NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    firstname text NOT NULL,
+    lastname text NOT NULL,
+    username text NOT NULL,
+    password text NOT NULL,
+    country_id integer,
+    confirmed_at timestamp with time zone,
+    email text NOT NULL,
+    reset_token text,
+    token_expires_at timestamp without time zone,
+    api_id text,
+    api_key text,
+    is_admin boolean DEFAULT false NOT NULL,
+    stripe_customer_id text,
+    billing_id text,
     last_login_at timestamp with time zone,
     vat_number text,
     payment_method integer DEFAULT 0,
@@ -1168,13 +1218,6 @@ ALTER TABLE ONLY cloud_recordings ALTER COLUMN id SET DEFAULT nextval('cloud_rec
 
 
 --
--- Name: compares id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY compares ALTER COLUMN id SET DEFAULT nextval('compares_id_seq'::regclass);
-
-
---
 -- Name: licences id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1266,6 +1309,14 @@ ALTER TABLE ONLY add_ons
 
 ALTER TABLE ONLY apps
     ADD CONSTRAINT apps_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: ar_internal_metadata ar_internal_metadata_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY ar_internal_metadata
+    ADD CONSTRAINT ar_internal_metadata_pkey PRIMARY KEY (key);
 
 
 --
@@ -1397,6 +1448,14 @@ ALTER TABLE ONLY users
 
 
 --
+-- Name: users_old pk_users_old; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY users_old
+    ADD CONSTRAINT pk_users_old PRIMARY KEY (id);
+
+
+--
 -- Name: vendors pk_vendors; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1472,182 +1531,189 @@ ALTER TABLE ONLY webhooks
 -- Name: access_rights_camera_id_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX access_rights_camera_id_index ON access_rights USING btree (camera_id);
+CREATE INDEX access_rights_camera_id_index ON public.access_rights USING btree (camera_id);
 
 
 --
 -- Name: access_rights_token_id_camera_id_right_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX access_rights_token_id_camera_id_right_index ON access_rights USING btree (token_id, camera_id, "right");
+CREATE INDEX access_rights_token_id_camera_id_right_index ON public.access_rights USING btree (token_id, camera_id, "right");
 
 
 --
 -- Name: access_rights_token_id_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX access_rights_token_id_index ON access_rights USING btree (token_id);
+CREATE INDEX access_rights_token_id_index ON public.access_rights USING btree (token_id);
 
 
 --
 -- Name: camera_activities_camera_id_done_at_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX camera_activities_camera_id_done_at_index ON camera_activities USING btree (camera_id, done_at);
+CREATE UNIQUE INDEX camera_activities_camera_id_done_at_index ON public.camera_activities USING btree (camera_id, done_at);
 
 
 --
 -- Name: camera_endpoints_camera_id_scheme_host_port_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX camera_endpoints_camera_id_scheme_host_port_index ON camera_endpoints USING btree (camera_id, scheme, host, port);
+CREATE UNIQUE INDEX camera_endpoints_camera_id_scheme_host_port_index ON public.camera_endpoints USING btree (camera_id, scheme, host, port);
 
 
 --
 -- Name: camera_share_requests_camera_id_email_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX camera_share_requests_camera_id_email_index ON camera_share_requests USING btree (camera_id, email);
+CREATE INDEX camera_share_requests_camera_id_email_index ON public.camera_share_requests USING btree (camera_id, email);
 
 
 --
 -- Name: camera_share_requests_camera_id_email_status_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX camera_share_requests_camera_id_email_status_index ON camera_share_requests USING btree (camera_id, email, status) WHERE (status = '-1'::integer);
+CREATE UNIQUE INDEX camera_share_requests_camera_id_email_status_index ON public.camera_share_requests USING btree (camera_id, email, status) WHERE (status = '-1'::integer);
 
 
 --
 -- Name: camera_share_requests_key_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX camera_share_requests_key_index ON camera_share_requests USING btree (key);
+CREATE UNIQUE INDEX camera_share_requests_key_index ON public.camera_share_requests USING btree (key);
 
 
 --
 -- Name: camera_shares_camera_id_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX camera_shares_camera_id_index ON camera_shares USING btree (camera_id);
+CREATE INDEX camera_shares_camera_id_index ON public.camera_shares USING btree (camera_id);
 
 
 --
 -- Name: camera_shares_camera_id_user_id_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX camera_shares_camera_id_user_id_index ON camera_shares USING btree (camera_id, user_id);
+CREATE UNIQUE INDEX camera_shares_camera_id_user_id_index ON public.camera_shares USING btree (camera_id, user_id);
 
 
 --
 -- Name: camera_shares_user_id_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX camera_shares_user_id_index ON camera_shares USING btree (user_id);
+CREATE INDEX camera_shares_user_id_index ON public.camera_shares USING btree (user_id);
 
 
 --
 -- Name: cameras_exid_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX cameras_exid_index ON cameras USING btree (exid);
+CREATE UNIQUE INDEX cameras_exid_index ON public.cameras USING btree (exid);
 
 
 --
 -- Name: cameras_mac_address_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX cameras_mac_address_index ON cameras USING btree (mac_address);
+CREATE INDEX cameras_mac_address_index ON public.cameras USING btree (mac_address);
 
 
 --
 -- Name: cloud_recordings_camera_id_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX cloud_recordings_camera_id_index ON cloud_recordings USING btree (camera_id);
+CREATE UNIQUE INDEX cloud_recordings_camera_id_index ON public.cloud_recordings USING btree (camera_id);
 
 
 --
 -- Name: compare_exid_unique_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX compare_exid_unique_index ON compares USING btree (exid);
+CREATE UNIQUE INDEX compare_exid_unique_index ON public.compares USING btree (exid);
 
 
 --
 -- Name: country_code_unique_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX country_code_unique_index ON countries USING btree (iso3166_a2);
+CREATE UNIQUE INDEX country_code_unique_index ON public.countries USING btree (iso3166_a2);
 
 
 --
 -- Name: exid_unique_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX exid_unique_index ON snapmails USING btree (exid);
+CREATE UNIQUE INDEX exid_unique_index ON public.snapmails USING btree (exid);
+
+
+--
+-- Name: index_users_on_reset_password_token; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_users_on_reset_password_token ON public.users USING btree (reset_password_token);
 
 
 --
 -- Name: ix_access_tokens_grantee_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_access_tokens_grantee_id ON access_tokens USING btree (client_id);
+CREATE INDEX ix_access_tokens_grantee_id ON public.access_tokens USING btree (client_id);
 
 
 --
 -- Name: ix_access_tokens_grantor_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_access_tokens_grantor_id ON access_tokens USING btree (user_id);
+CREATE INDEX ix_access_tokens_grantor_id ON public.access_tokens USING btree (user_id);
 
 
 --
 -- Name: ix_firmwares_vendor_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_firmwares_vendor_id ON vendor_models USING btree (vendor_id);
+CREATE INDEX ix_firmwares_vendor_id ON public.vendor_models USING btree (vendor_id);
 
 
 --
 -- Name: ix_streams_owner_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_streams_owner_id ON cameras USING btree (owner_id);
+CREATE INDEX ix_streams_owner_id ON public.cameras USING btree (owner_id);
 
 
 --
 -- Name: ix_users_country_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_users_country_id ON users USING btree (country_id);
+CREATE INDEX ix_users_country_id ON public.users USING btree (country_id);
 
 
 --
 -- Name: snapemail_camera_id_unique_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX snapemail_camera_id_unique_index ON snapmail_cameras USING btree (snapmail_id, camera_id);
+CREATE UNIQUE INDEX snapemail_camera_id_unique_index ON public.snapmail_cameras USING btree (snapmail_id, camera_id);
 
 
 --
 -- Name: timelapse_exid_unique_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX timelapse_exid_unique_index ON timelapses USING btree (exid);
+CREATE UNIQUE INDEX timelapse_exid_unique_index ON public.timelapses USING btree (exid);
 
 
 --
 -- Name: user_email_unique_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX user_email_unique_index ON users USING btree (email);
+CREATE UNIQUE INDEX user_email_unique_index ON public.users USING btree (email);
 
 
 --
 -- Name: user_username_unique_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX user_username_unique_index ON users USING btree (username);
+CREATE UNIQUE INDEX user_username_unique_index ON public.users USING btree (username);
 
 
 --
@@ -1750,5 +1816,5 @@ ALTER TABLE ONLY timelapses
 -- PostgreSQL database dump complete
 --
 
-INSERT INTO "schema_migrations" (version) VALUES (20160616160229), (20160712101523), (20160720125939), (20160727112052), (20160830055709), (20161202114834), (20161202115000), (20161213162000), (20161219130300), (20161221070146), (20161221070226), (20170103162400), (20170112110000), (20170213140200), (20170222114100), (20170414141100), (20170419105000), (20171009070501), (20171213120725), (20171220062816), (20171222101825), (20180102124912), (20180122051210), (20180130103936);
+INSERT INTO "schema_migrations" (version) VALUES (20150622102645), (20150629144629), (20150629183319), (20160616160229), (20160712101523), (20160720125939), (20160727112052), (20160830055709), (20161202114834), (20161202115000), (20161213162000), (20161219130300), (20161221070146), (20161221070226), (20170103162400), (20170112110000), (20170213140200), (20170222114100), (20170414141100), (20170419105000), (20171009070501), (20171213120725), (20171220062816), (20171222101825), (20180102124912), (20180122051210), (20180130103936), (20180411104000), (20180416121600), (20180420054301);
 

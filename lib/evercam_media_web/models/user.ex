@@ -7,7 +7,7 @@ defmodule User do
   @name_regex ~r/^[\p{Xwd}\s,.']+$/
 
   @required_fields ~w(password firstname lastname email)
-  @optional_fields ~w(username api_id api_key country_id confirmed_at updated_at created_at)
+  @optional_fields ~w(username telegram_username api_id api_key country_id confirmed_at updated_at created_at)
 
   schema "users" do
     belongs_to :country, Country, foreign_key: :country_id
@@ -16,6 +16,7 @@ defmodule User do
     has_many :access_tokens, AccessToken
 
     field :username, :string
+    field :telegram_username, :string
     field :password, :string
     field :firstname, :string
     field :lastname, :string

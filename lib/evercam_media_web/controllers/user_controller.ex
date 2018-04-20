@@ -146,6 +146,8 @@ defmodule EvercamMediaWeb.UserController do
             Map.delete(params, "share_request_key")
         end
 
+      params = add_parameter(params, :telegram_username, params["telegram_username"])
+
       changeset = User.changeset(%User{}, params)
       case Repo.insert(changeset) do
         {:ok, user} ->
@@ -254,6 +256,8 @@ defmodule EvercamMediaWeb.UserController do
         lastname: lastname(params["lastname"], user),
         email: email(params["email"], user)
       }
+
+      user_params = add_parameter(user_params, :telegram_username, params["telegram_username"])
       user_params = case country(params["country"], user) do
         nil -> Map.delete(user_params, "country")
         country_id -> Map.merge(user_params, %{country_id: country_id}) |> Map.delete("country")
@@ -345,6 +349,11 @@ defmodule EvercamMediaWeb.UserController do
     Camera.invalidate_user(user)
     User.invalidate_share_users(user)
     Intercom.delete_user(user.username)
+  end
+
+  defp add_parameter(params, _key, nil), do: params
+  defp add_parameter(params, key, value) do
+    Map.put(params, key, value)
   end
 
   defp firstname(firstname, user) when firstname in [nil, ""], do: user.firstname
