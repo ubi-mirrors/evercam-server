@@ -533,7 +533,6 @@ defmodule EvercamMedia.Snapshot.Storage do
 
     filename = construct_file_name(timestamp)
     do_save("#{path}#{filename}", image, [content_type: "image/jpeg"])
-    Logger.info "SnapMail saved to S3 for #{camera_exid}."
   end
 
   defp oldest_directory_name(cloud_recording, directory, url, type \\ "Directories", attribute \\ "Name")

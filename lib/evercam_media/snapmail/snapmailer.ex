@@ -188,6 +188,6 @@ defmodule EvercamMedia.Snapmail.Snapmailer do
     end
   end
 
-  defp is_younger?(seconds) when seconds <= 300, do: true
-  defp is_younger?(seconds) when seconds > 300, do: false
+  defp is_younger?(seconds) when seconds <= 600, do: true
+  defp is_younger?(seconds) when seconds > 600, do: false
 end
