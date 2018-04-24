@@ -41,6 +41,14 @@ defmodule SnapshotExtractor do
     end
   end
 
+  def by_status(status) do
+    SnapshotExtractor
+    |> where(status: ^status)
+    |> order_by([c], desc: c.created_at)
+    |> preload(:camera)
+    |> Repo.all
+  end
+
   def delete_by_camera_id(camera_id) do
     SnapshotExtractor
     |> where(camera_id: ^camera_id)
