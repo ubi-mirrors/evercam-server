@@ -368,7 +368,7 @@ defmodule EvercamMediaWeb.CameraShareController do
 
   defp get_user_model(email) do
     %User{
-      username: "",
+      username: email,
       firstname: "",
       lastname: "",
       email: email,
