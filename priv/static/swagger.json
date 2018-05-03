@@ -870,6 +870,36 @@
         "description": ""
       }
     },
+    "/users/telegram/{id}/credentials": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Returns API credentials of given user.",
+        "responses": {
+          "404": {
+            "description": "User does not exit"
+          },
+          "400": {
+            "description": "Invalid password"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Telegram username of the user being requested."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.UserController.credentialstelegram",
+        "description": ""
+      }
+    },
     "/cameras/test": {
       "post": {
         "tags": [

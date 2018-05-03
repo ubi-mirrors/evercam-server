@@ -57,9 +57,17 @@ defmodule User do
   def by_username_or_email(login) when login in["", nil], do: nil
   def by_username_or_email(login) do
     login = String.downcase(login)
-
     User
     |> where([u], u.username == ^login or u.email == ^login)
+    |> preload(:country)
+    |> Repo.one
+  end
+
+  def by_telegram_username(login) when login in["", nil], do: nil
+  def by_telegram_username(login) do
+    login = String.downcase(login)
+    User
+    |> where([u], u.telegram_username == ^login)
     |> preload(:country)
     |> Repo.one
   end

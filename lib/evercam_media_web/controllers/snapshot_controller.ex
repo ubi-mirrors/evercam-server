@@ -573,7 +573,7 @@ defmodule EvercamMediaWeb.SnapshotController do
     end
   end
 
-  defp snapshot_with_user(camera_exid, user, store_snapshot, notes \\ "") do
+  def snapshot_with_user(camera_exid, user, store_snapshot, notes \\ "") do
     camera = Camera.get_full(camera_exid)
     if Permission.Camera.can_snapshot?(user, camera) do
       construct_args(camera, store_snapshot, notes) |> fetch_snapshot

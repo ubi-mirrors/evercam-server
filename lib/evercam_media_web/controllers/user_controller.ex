@@ -20,6 +20,7 @@ defmodule EvercamMediaWeb.UserController do
           firstname :string, "", format: "text"
           lastname :string, "", format: "text"
           username :string, "", format: "text"
+          username_telegram :string, "", format: "text"
           password :string, "", format: "text"
           country_id :integer, ""
           email :string, "", format: "text"
@@ -100,6 +101,40 @@ defmodule EvercamMediaWeb.UserController do
     do
       conn
       |> render(UserView, "credentials.json", %{user: user})
+    end
+  end
+
+  swagger_path :credentialstelegram do
+    get "/users/telegram/{id}/credentials"
+    summary "Returns API credentials of given telegram user."
+    parameters do
+      id :path, :string, "Telegram username of the user being requested.", required: true
+    end
+    tag "Users"
+    response 200, "Success"
+    response 400, "Invalid telegram_username"
+    response 404, "User does not exit"
+  end
+
+  def credentialstelegram(conn, %{"id" => telegram_username}) do
+    caller = conn.assigns[:current_user]
+    user =
+      telegram_username
+      |> String.replace_trailing(".json", "")
+      |> User.by_telegram_username
+
+    cond do
+      !user ->
+        conn
+        |> put_status(404)
+        |> render(ErrorView, "error.json", %{message: "User does not exist."})
+      !caller || !Permission.User.can_view?(caller, user) ->
+        conn
+        |> put_status(401)
+        |> render(ErrorView, "error.json", %{message: "Unauthorized."})
+      true ->
+        conn
+        |> render(UserView, "show.json", %{user: user})
     end
   end
 

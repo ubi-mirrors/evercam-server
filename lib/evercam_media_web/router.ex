@@ -74,6 +74,7 @@ end
 
       get "/users/:id", UserController, :get
       get "/users/:id/credentials", UserController, :credentials
+      get "/users/telegram/:id/credentials", UserController, :credentialstelegram
       patch "/users/:id", UserController, :update
       options "/users/:id", UserController, :nothing
       delete "/users/:id", UserController, :delete
