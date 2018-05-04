@@ -67,7 +67,7 @@ defmodule User do
   def by_telegram_username(login) do
     login = String.downcase(login)
     User
-    |> where([u], u.telegram_username == ^login)
+    |> where([u], fragment("lower(?)", u.telegram_username) == ^login)
     |> preload(:country)
     |> Repo.one
   end
