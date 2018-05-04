@@ -58,6 +58,9 @@ config :evercam_media,
   start_camera_workers: System.get_env["START_CAMERA_WORKERS"]
 
 config :evercam_media,
+  start_evercam_bot: true
+
+config :evercam_media,
   start_timelapse_workers: true
 
 config :evercam_media,

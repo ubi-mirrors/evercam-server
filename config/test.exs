@@ -4,6 +4,9 @@ config :evercam_media,
   start_camera_workers: false
 
 config :evercam_media,
+  start_evercam_bot: false
+
+config :evercam_media,
   start_timelapse_workers: false
 
 # We don't run a server during test. If one is required,

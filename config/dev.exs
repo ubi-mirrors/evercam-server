@@ -4,6 +4,9 @@ config :evercam_media,
   start_camera_workers: System.get_env["START_CAMERA_WORKERS"]
 
 config :evercam_media,
+  start_evercam_bot: false
+
+config :evercam_media,
   start_timelapse_workers: false
 
 # For development, we disable any cache and enable

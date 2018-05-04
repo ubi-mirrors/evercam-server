@@ -93,7 +93,7 @@ defmodule EvercamMedia.EvercamBot.Commands do
         text = String.split("#{update.callback_query.message.text}", ".")
         id = Enum.at(text, 0)
         camera_exid = Enum.at(text, 1)
-        archive = Archive.by_camera_id(id)
+        archive = Archive.by_camera_id(Archive, id)
         last_archive = List.last(archive)
         video = EvercamMedia.TimelapseRecording.S3.do_load("#{camera_exid}/archives/#{last_archive.id}/#{last_archive.id}.gif")
         File.write!("clip.gif", video)
@@ -111,7 +111,7 @@ defmodule EvercamMedia.EvercamBot.Commands do
       case user do
         nil ->
           send_message "Unregistered user"
-        user ->
+        _user ->
           {:ok, _} = send_message "what do you want to see?",
           reply_markup: %Model.InlineKeyboardMarkup{
             inline_keyboard: [

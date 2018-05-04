@@ -36,10 +36,6 @@ defmodule EvercamMedia.EvercamBot.Poller do
     GenStage.cast __MODULE__, :update
   end
 
-  @doc """
-    Helpers
-  """
-
   defp process_messages({:ok, []}), do: -1
   defp process_messages({:ok, results}) do
     results
