@@ -710,6 +710,28 @@ defmodule EvercamMedia.Snapshot.Storage do
     end
   end
 
+  def delete_jpegs_with_timestamps(timestamps, camera_exid) do
+    Enum.each(timestamps, fn(timestamp) ->
+      url =
+        timestamp
+        |> parse_timestamp
+        |> point_to_seaweed
+        |> create_jpeg_url(timestamp, camera_exid)
+      spawn fn ->
+        hackney = [pool: :seaweedfs_download_pool, recv_timeout: 30_000]
+        HTTPoison.delete!("#{url}?recursive=true", [], hackney: hackney)
+      end
+    end)
+  end
+
+  defp create_jpeg_url(seaweedfs, timestamp, camera_exid) do
+    directory_path =
+      timestamp
+      |> Calendar.DateTime.Parse.unix!
+      |> Calendar.Strftime.strftime!("%Y/%m/%d/%H/%M_%S_000.jpg")
+    "#{seaweedfs}/#{camera_exid}/snapshots/recordings/#{directory_path}"
+  end
+
   def cleanup_all do
     CloudRecording.get_all_ephemeral
     |> Enum.map(fn(cloud_recording) -> cleanup(cloud_recording) end)

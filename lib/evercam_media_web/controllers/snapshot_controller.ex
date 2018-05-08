@@ -77,6 +77,44 @@ defmodule EvercamMediaWeb.SnapshotController do
     end
   end
 
+  swagger_path :delete do
+    post "/cameras/{id}/recordings/snapshots"
+    summary "Delete jpegs for a camera."
+    parameters do
+      id :path, :string, "The ID of the camera being requested.", required: true
+      from_date :query, :string, "From date for jpeg delete in unix"
+      to_date :query, :string, "To date for jpeg delete in unix"
+      api_id :query, :string, "The Evercam API id for the requester."
+      api_key :query, :string, "The Evercam API key for the requester."
+    end
+    tag "Cameras"
+    response 200, "Success"
+    response 401, "Invalid API keys"
+    response 400, "You can only request deletion in the same hour"
+  end
+
+  def delete(conn, %{"id" => camera_exid} = params) do
+    camera = Camera.get_full(camera_exid)
+    user = conn.assigns[:current_user]
+    from = convert_timestamp(params["from_date"])
+    to = convert_timestamp(params["to_date"])
+
+    with true <- Permission.Camera.can_delete?(user, camera),
+         :ok <- is_same_hour?(from, to)
+    do
+      spawn fn ->
+        Storage.seaweedfs_load_range(camera_exid, from, to)
+        |> Enum.map(fn(snapshot) -> snapshot.created_at end)
+        |> Storage.delete_jpegs_with_timestamps(camera_exid)
+      end
+      conn
+      |> json(%{status: true})
+    else
+      :not_same_hour -> render_error(conn, 400, "You can only request deletion in the same hour.")
+      _ -> render_error(conn, 403, "Forbidden.")
+    end
+  end
+
   swagger_path :test do
     post "/cameras/test"
     summary "Test the given camera."
@@ -780,5 +818,20 @@ defmodule EvercamMediaWeb.SnapshotController do
     |> Calendar.DateTime.from_erl!(timezone)
     |> Calendar.DateTime.shift_zone!("Etc/UTC")
     |> Calendar.DateTime.Format.unix
+  end
+
+  defp is_same_hour?(from, to) do
+    from_hour = get_hour_from_date(from)
+    to_hour = get_hour_from_date(to)
+    case from_hour == to_hour do
+      true -> :ok
+      _ -> :not_same_hour
+    end
+  end
+
+  defp get_hour_from_date(date) do
+    date
+    |> Calendar.DateTime.Parse.unix!
+    |> Calendar.Strftime.strftime!("%H")
   end
 end

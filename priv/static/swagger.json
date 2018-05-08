@@ -870,36 +870,6 @@
         "description": ""
       }
     },
-    "/users/telegram/{id}/credentials": {
-      "get": {
-        "tags": [
-          "Users"
-        ],
-        "summary": "Returns API credentials of given user.",
-        "responses": {
-          "404": {
-            "description": "User does not exit"
-          },
-          "400": {
-            "description": "Invalid password"
-          },
-          "200": {
-            "description": "Success"
-          }
-        },
-        "parameters": [
-          {
-            "type": "string",
-            "required": true,
-            "name": "id",
-            "in": "path",
-            "description": "Telegram username of the user being requested."
-          }
-        ],
-        "operationId": "EvercamMediaWeb.UserController.credentialstelegram",
-        "description": ""
-      }
-    },
     "/cameras/test": {
       "post": {
         "tags": [
@@ -2116,18 +2086,15 @@
     "/cameras/{id}/recordings/snapshots": {
       "post": {
         "tags": [
-          "Recordings"
+          "Cameras"
         ],
-        "summary": "Fetches a snapshot from the camera and stores it using the current timestamp.",
+        "summary": "Delete jpegs for a camera.",
         "responses": {
-          "504": {
-            "description": "Camera does not respond with a jpeg"
-          },
-          "403": {
-            "description": "Forbidden camera access"
-          },
           "401": {
             "description": "Invalid API keys"
+          },
+          "400": {
+            "description": "You can only request deletion in the same hour"
           },
           "200": {
             "description": "Success"
@@ -2144,9 +2111,16 @@
           {
             "type": "string",
             "required": false,
-            "name": "notes",
+            "name": "from_date",
             "in": "query",
-            "description": ""
+            "description": "From date for jpeg delete in unix"
+          },
+          {
+            "type": "string",
+            "required": false,
+            "name": "to_date",
+            "in": "query",
+            "description": "To date for jpeg delete in unix"
           },
           {
             "type": "string",
@@ -2163,7 +2137,7 @@
             "description": "The Evercam API key for the requester."
           }
         ],
-        "operationId": "EvercamMediaWeb.SnapshotController.create",
+        "operationId": "EvercamMediaWeb.SnapshotController.delete",
         "description": ""
       },
       "get": {
@@ -3725,6 +3699,36 @@
         "description": ""
       }
     },
+    "/users/telegram/{id}/credentials": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Returns API credentials of given telegram user.",
+        "responses": {
+          "404": {
+            "description": "User does not exit"
+          },
+          "400": {
+            "description": "Invalid telegram_username"
+          },
+          "200": {
+            "description": "Success"
+          }
+        },
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Telegram username of the user being requested."
+          }
+        ],
+        "operationId": "EvercamMediaWeb.UserController.credentialstelegram",
+        "description": ""
+      }
+    },
     "/cameras/{id}/nvr/stream/info": {
       "get": {
         "tags": [
@@ -4570,6 +4574,11 @@
       "title": "User",
       "properties": {
         "vat_number": {
+          "type": "string",
+          "format": "text",
+          "description": ""
+        },
+        "username_telegram": {
           "type": "string",
           "format": "text",
           "description": ""

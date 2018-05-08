@@ -105,6 +105,7 @@ end
       get "/cameras/:id/recordings/snapshots/:timestamp/nearest", SnapshotController, :nearest
       options "/cameras/:id/recordings/snapshots/:timestamp/nearest", SnapshotController, :nothing
       post "/cameras/:id/recordings/snapshots", SnapshotController, :create
+      delete "/cameras/:id/recordings/snapshots", SnapshotController, :delete
       get "/cameras/:id/recordings/snapshots/:year/:month/days", SnapshotController, :days
       options "/cameras/:id/recordings/snapshots/:year/:month/days", SnapshotController, :nothing
 
