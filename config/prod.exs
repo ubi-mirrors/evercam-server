@@ -75,11 +75,6 @@ config :evercam_media,
 
 config :quantum, :evercam_media,
   cron: [
-    snapshot_cleanup: [
-      task: {"EvercamMedia.Snapshot.Storage", "cleanup_all"},
-      schedule: "@hourly",
-      overlap: false
-    ],
     shared_reminder: [
       task: {"EvercamMedia.ShareRequestReminder", "check_share_requests"},
       schedule: "@hourly",

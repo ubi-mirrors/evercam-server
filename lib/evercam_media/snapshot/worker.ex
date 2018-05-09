@@ -82,6 +82,16 @@ defmodule EvercamMedia.Snapshot.Worker do
       snapshot_manager: snapshot_manager,
       poll_manager: poll_manager
     }
+
+    config = Map.get(args, :config)
+
+    args = case config.recording do
+      "off" -> args
+      _ ->
+        {:ok, deletion} = EvercamMedia.Snapshot.Deletion.start_link(args)
+        Map.merge(args, %{ deletion: deletion })
+    end
+
     {:producer, args}
   end
 

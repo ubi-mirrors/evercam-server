@@ -24,6 +24,8 @@ defmodule CloudRecording do
   def by_camera_id(camera_id) do
     CloudRecording
     |> where(camera_id: ^camera_id)
+    |> where([cl], cl.storage_duration != -1)
+    |> preload(:camera)
     |> Repo.one
   end
 

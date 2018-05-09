@@ -737,6 +737,7 @@ defmodule EvercamMedia.Snapshot.Storage do
     |> Enum.map(fn(cloud_recording) -> cleanup(cloud_recording) end)
   end
 
+  def cleanup(nil), do: :noop
   def cleanup(%CloudRecording{storage_duration: -1}), do: :noop
   def cleanup(%CloudRecording{status: "paused"}), do: :noop
   def cleanup(%CloudRecording{camera: nil}), do: :noop
