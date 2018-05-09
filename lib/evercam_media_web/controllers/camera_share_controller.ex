@@ -250,12 +250,18 @@ defmodule EvercamMediaWeb.CameraShareController do
          {:ok, _share} <- share_exists(conn, sharee, camera)
     do
       CameraShare.delete_share(sharee, camera)
+      spawn(fn -> delete_snapmails(sharee, camera) end)
       Camera.invalidate_user(sharee)
       Camera.invalidate_camera(camera)
       delete_share_to_zoho(Application.get_env(:evercam_media, :run_spawn), exid, User.get_fullname(sharee), caller.username)
       CameraActivity.log_activity(caller, camera, "stopped sharing", %{with: sharee.email, ip: user_request_ip(conn)})
       json(conn, %{})
     end
+  end
+
+  defp delete_snapmails(sharee, camera) do
+    SnapmailCamera.delete_by_sharee(sharee.id, camera.id)
+    Snapmail.delete_no_camera_snapmail()
   end
 
   defp delete_share_to_zoho(true, camera_exid, user_fullname, user_id) when user_id in ["garda", "gardashared", "construction", "oldconstruction", "smartcities"] do

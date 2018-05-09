@@ -42,6 +42,14 @@ defmodule SnapmailCamera do
     |> Repo.delete_all
   end
 
+  def delete_by_sharee(user_id, camera_id) do
+    SnapmailCamera
+    |> join(:inner, [snap_cam], snap in Snapmail, snap.id == snap_cam.snapmail_id)
+    |> where([snap_cam, snap], snap_cam.camera_id == ^camera_id)
+    |> where([snap_cam, snap], snap.user_id == ^user_id)
+    |> Repo.delete_all
+  end
+
   def delete_by_camera_id(camera_id) do
     SnapmailCamera
     |> where(camera_id: ^camera_id)

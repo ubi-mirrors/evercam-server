@@ -74,6 +74,22 @@ defmodule Snapmail do
     |> Repo.one
   end
 
+  def delete_no_camera_snapmail() do
+    Snapmail
+    |> join(:left, [snap], snap_cam in SnapmailCamera, snap_cam.snapmail_id == snap.id)
+    |> where([snap, snap_cam], is_nil(snap_cam.id))
+    |> Repo.all
+    |> Enum.map(fn(snapmail) -> snapmail.id end)
+    |> delete_multiple_by_id
+
+  end
+
+  def delete_multiple_by_id(ids) do
+    Snapmail
+    |> where([sm], sm.id in ^ids)
+    |> Repo.delete_all
+  end
+
   def delete_by_exid(exid) do
     Snapmail
     |> where(exid: ^exid)

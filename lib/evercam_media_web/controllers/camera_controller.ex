@@ -609,6 +609,7 @@ defmodule EvercamMediaWeb.CameraController do
     CloudRecording.delete_by_camera_id(camera.id)
     CameraShare.delete_by_camera_id(camera.id)
     CameraShareRequest.delete_by_camera_id(camera.id)
+    Snapmail.delete_no_camera_snapmail()
     Archive.delete_by_camera(camera.id)
     Compare.delete_by_camera(camera.id)
     Camera.delete_by_id(camera.id)
