@@ -403,8 +403,6 @@ defmodule EvercamMediaWeb.ArchiveController do
         case Repo.update(changeset) do
           {:ok, archive} ->
             updated_archive = archive |> Repo.preload(:camera) |> Repo.preload(:user)
-            send_archive_email(updated_archive.status, updated_archive)
-
             render(conn, ArchiveView, "show.json", %{archive: updated_archive})
           {:error, changeset} ->
             render_error(conn, 400, Util.parse_changeset(changeset))
@@ -540,19 +538,6 @@ defmodule EvercamMediaWeb.ArchiveController do
     random_string = Enum.concat(?a..?z, ?0..?9) |> Enum.take_random(4)
     "#{clip_exid}-#{random_string}"
   end
-
-  defp parse_status(nil, archive), do: archive.status
-  defp parse_status(status, _archive), do: status
-
-  defp parse_title(nil, archive), do: archive.title
-  defp parse_title(title, _archive), do: title
-
-  defp parse_public(nil, archive), do: archive.public
-  defp parse_public(public, _archive), do: public
-
-  defp send_archive_email(2, archive), do: EvercamMedia.UserMailer.archive_completed(archive, archive.user.email)
-  defp send_archive_email(3, archive), do: EvercamMedia.UserMailer.archive_failed(archive, archive.user.email)
-  defp send_archive_email(_, _), do: Logger.info "Archive updated!"
 
   defp deliver_content(conn, exid, archive_id) do
     archive_with_extension = String.split(archive_id, ".")
