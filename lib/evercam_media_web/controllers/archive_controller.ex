@@ -391,23 +391,15 @@ defmodule EvercamMediaWeb.ArchiveController do
       nil ->
         render_error(conn, 404, "Archive '#{archive_id}' not found!")
       archive ->
-        status = parse_status(params["status"], archive)
-        title = parse_title(params["title"], archive)
-        public = parse_public(params["public"], archive)
+        archive_params =
+          %{}
+          |> add_parameter("field", "status", params["status"])
+          |> add_parameter("field", "title", params["title"])
+          |> add_parameter("field", "public", params["public"])
+          |> add_parameter("field", "url", params["url"])
 
-        params =
-          params
-          |> Map.delete("id")
-          |> Map.delete("api_id")
-          |> Map.delete("api_key")
-          |> Map.merge(%{
-            "status" => status,
-            "title" => title,
-            "public" => public
-          })
 
-        changeset = Archive.changeset(archive, params)
-
+        changeset = Archive.changeset(archive, archive_params)
         case Repo.update(changeset) do
           {:ok, archive} ->
             updated_archive = archive |> Repo.preload(:camera) |> Repo.preload(:user)
@@ -418,6 +410,11 @@ defmodule EvercamMediaWeb.ArchiveController do
             render_error(conn, 400, Util.parse_changeset(changeset))
         end
     end
+  end
+
+  defp add_parameter(params, _field, _key, nil), do: params
+  defp add_parameter(params, "field", key, value) do
+    Map.put(params, key, value)
   end
 
   defp start_archive_creation(true, camera, archive, unix_from, unix_to, is_nvr) when is_nvr in [true, "true"] do
