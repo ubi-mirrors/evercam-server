@@ -48,15 +48,15 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
       File.mkdir_p(images_directory)
       kill_ffmpeg_pids(config.host, config.port, config.username, config.password)
       {:ok, _, _, status} = Calendar.DateTime.diff(start_date, end_date)
-      iterate(status, config, url, start_date, end_date, images_directory, upload_path, 1)
+      iterate(status, config, url, start_date, end_date, images_directory, upload_path)
     end
   end
 
-  defp iterate(:before, config, url, start_date, end_date, path, upload_path, index) do
+  defp iterate(:before, config, url, start_date, end_date, path, upload_path) do
     case scheduled_now?(config.schedule, start_date, config.timezone) do
       {:ok, true} ->
         Logger.debug "Extracting snapshot from NVR."
-        extract_image(config, url, start_date, path, upload_path, index)
+        extract_image(config, url, start_date, path, upload_path)
       {:ok, false} ->
         Logger.debug "Not Scheduled. Skip extracting snapshot from NVR."
       {:error, _message} ->
@@ -64,9 +64,9 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
     end
     next_start_date = start_date |> Calendar.DateTime.advance!(config.interval)
     {:ok, _, _, status} = Calendar.DateTime.diff(next_start_date, end_date)
-    iterate(status, config, url, next_start_date, end_date, path, upload_path, index + 1)
+    iterate(status, config, url, next_start_date, end_date, path, upload_path)
   end
-  defp iterate(_status, config, _url, start_date, end_date, path, upload_path, _index) do
+  defp iterate(_status, config, _url, start_date, end_date, path, upload_path) do
     :timer.sleep(:timer.seconds(5))
     snapshot_count = get_count(path)
     create_video_mp4(config.create_mp4, config, path, upload_path)
@@ -82,7 +82,7 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
       clean_images(path)
     end)
   end
-  def create_video_mp4(_, _config, _path, _upload_path), do: :nothing
+  def create_video_mp4(_, _config, path, _upload_path), do: clean_images(path)
 
   defp update_snapshot_extractor(config, snapshot_count) do
     snapshot_extractor = SnapshotExtractor.by_id(config.id)
@@ -100,9 +100,10 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
     end
   end
 
-  defp extract_image(config, url, start_date, path, upload_path, index) do
+  defp extract_image(config, url, start_date, path, upload_path) do
     image_name = start_date |> Calendar.Strftime.strftime!("%Y-%m-%d-%H-%M-%S")
-    images_path = "#{path}#{index}.jpg"
+    saved_file_name = start_date |> DateTime.to_unix
+    images_path = "#{path}#{saved_file_name}.jpg"
     upload_image_path = "#{upload_path}#{image_name}.jpg"
     save_current_jpeg_time(image_name, path)
     startdate_iso = convert_to_iso(start_date)
