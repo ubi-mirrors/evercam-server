@@ -51,6 +51,13 @@ defmodule CloudRecording do
     end
   end
 
+  def storage_duration(cloud_recording) do
+    case cloud_recording do
+      nil -> nil
+      cr -> cr.storage_duration
+    end
+  end
+
   def initial_sleep(cloud_recording) do
     if cloud_recording == nil || cloud_recording.frequency == 1 || cloud_recording.status == "off" do
       :rand.uniform(60) * 1000

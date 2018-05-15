@@ -84,6 +84,13 @@ defmodule EvercamMedia.Util do
       %{camera_id: camera_exid, status: status})
   end
 
+  def broadcast_camera_share(camera, username) do
+    EvercamMediaWeb.Endpoint.broadcast(
+      "users:#{username}",
+      "camera-share",
+      camera)
+  end
+
   def error_handler(error) do
     Logger.error inspect(error)
     Logger.error Exception.format_stacktrace System.stacktrace

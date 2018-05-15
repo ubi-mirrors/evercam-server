@@ -51,6 +51,7 @@ defmodule EvercamMedia.Intercom do
     |> add_session(user.username)
     |> add_status(status)
     |> add_company(company_id)
+    |> add_subscribe(status)
 
     json =
       case Poison.encode(intercom_new_user) do
@@ -91,6 +92,14 @@ defmodule EvercamMedia.Intercom do
   defp add_status(params, ""), do: params
   defp add_status(params, status) do
     put_in(params, [:custom_attributes, "status"], status)
+  end
+
+  defp add_subscribe(params, ""), do: params
+  defp add_subscribe(params, "Shared-Non-Registered") do
+    Map.put(params, "unsubscribed_from_emails", true)
+  end
+  defp add_subscribe(params, _status) do
+    Map.put(params, "unsubscribed_from_emails", false)
   end
 
   defp add_company(params, ""), do: params

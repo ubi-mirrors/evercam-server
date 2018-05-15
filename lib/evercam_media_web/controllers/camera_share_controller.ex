@@ -115,6 +115,7 @@ defmodule EvercamMediaWeb.CameraShareController do
                   Camera.invalidate_user(sharee)
                   Camera.invalidate_camera(camera)
                   CameraActivity.log_activity(caller, camera, "shared", %{with: sharee.email, ip: requester_ip}, next_datetime)
+                  broadcast_share_to_users(camera)
                 end)
                 add_contact_to_zoho(Application.get_env(:evercam_media, :run_spawn), zoho_camera, sharee, caller.username)
                 {[camera_share | shares], share_requests, changes, next_datetime}
@@ -141,6 +142,20 @@ defmodule EvercamMediaWeb.CameraShareController do
       |> put_status(:created)
       |> render(CameraShareView, "all_shares.json", %{shares: total_shares, share_requests: share_requests, errors: errors})
     end
+  end
+
+  def broadcast_share_to_users(camera) do
+    User.with_access_to(camera)
+    |> Enum.each(fn(user) ->
+      %{
+        camera_id: camera.exid,
+        name: camera.name,
+        status: camera.is_online,
+        cr_status: CloudRecording.recording(camera.cloud_recordings),
+        cr_storage_duration: CloudRecording.storage_duration(camera.cloud_recordings)
+      }
+      |> EvercamMedia.Util.broadcast_camera_share(user.username)
+    end)
   end
 
   defp add_contact_to_zoho(true, zoho_camera, user, user_id) when user_id in ["garda", "gardashared", "construction", "oldconstruction", "smartcities"] do
