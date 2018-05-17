@@ -17,6 +17,21 @@ defmodule EvercamMedia.SyncEvercamToZoho do
     Logger.info "Camera(s) sync successfully."
   end
 
+  def sync_contacts() do
+    User
+    |> Repo.all
+    |> Enum.filter(fn(u) -> u.payment_method != 5 end)
+    |> Enum.count
+    |> Enum.each(fn(user) ->
+      case Zoho.get_contact(user.email) do
+        {:ok, contact} -> contact
+        {:nodata, _message} ->
+          {:ok, _contact} = Zoho.insert_contact(user)
+        {:error} -> nil
+      end
+    end)
+  end
+
   def sync_camera_sharees(email_or_username) do
     user = User.by_username_or_email(email_or_username)
     cameras = Camera.for(user, false)
