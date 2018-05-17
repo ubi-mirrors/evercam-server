@@ -24,10 +24,11 @@ defmodule EvercamMedia.SyncEvercamToZoho do
     |> Enum.count
     |> Enum.each(fn(user) ->
       case Zoho.get_contact(user.email) do
-        {:ok, contact} -> contact
+        {:ok, _contact} -> Logger.info "Contact '#{user.email}' already exists in zoho."
         {:nodata, _message} ->
+          Logger.info "Start insert contact '#{user.email}' to zoho."
           {:ok, _contact} = Zoho.insert_contact(user)
-        {:error} -> nil
+        {:error} -> Logger.error "Error to insert"
       end
     end)
   end
