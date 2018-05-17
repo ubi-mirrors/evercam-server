@@ -21,7 +21,6 @@ defmodule EvercamMedia.SyncEvercamToZoho do
     User
     |> Repo.all
     |> Enum.filter(fn(u) -> u.payment_method != 5 end)
-    |> Enum.count
     |> Enum.each(fn(user) ->
       case Zoho.get_contact(user.email) do
         {:ok, _contact} -> Logger.info "Contact '#{user.email}' already exists in zoho."
