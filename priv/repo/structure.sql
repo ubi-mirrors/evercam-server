@@ -2,14 +2,15 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.6.8
--- Dumped by pg_dump version 10.0
+-- Dumped from database version 10.3 (Ubuntu 10.3-1)
+-- Dumped by pg_dump version 10.3 (Ubuntu 10.3-1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET row_security = off;
@@ -56,8 +57,6 @@ CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;
 COMMENT ON EXTENSION postgis IS 'PostGIS geometry, geography, and raster spatial types and functions';
 
 
-SET search_path = public, pg_catalog;
-
 SET default_tablespace = '';
 
 SET default_with_oids = false;
@@ -66,7 +65,7 @@ SET default_with_oids = false;
 -- Name: access_rights; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE access_rights (
+CREATE TABLE public.access_rights (
     id integer NOT NULL,
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone NOT NULL,
@@ -85,7 +84,7 @@ CREATE TABLE access_rights (
 -- Name: access_rights_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE access_rights_id_seq
+CREATE SEQUENCE public.access_rights_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -97,14 +96,14 @@ CREATE SEQUENCE access_rights_id_seq
 -- Name: access_rights_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE access_rights_id_seq OWNED BY access_rights.id;
+ALTER SEQUENCE public.access_rights_id_seq OWNED BY public.access_rights.id;
 
 
 --
 -- Name: sq_access_tokens; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE sq_access_tokens
+CREATE SEQUENCE public.sq_access_tokens
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -116,8 +115,8 @@ CREATE SEQUENCE sq_access_tokens
 -- Name: access_tokens; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE access_tokens (
-    id integer DEFAULT nextval('sq_access_tokens'::regclass) NOT NULL,
+CREATE TABLE public.access_tokens (
+    id integer DEFAULT nextval('public.sq_access_tokens'::regclass) NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     expires_at timestamp with time zone,
@@ -134,7 +133,7 @@ CREATE TABLE access_tokens (
 -- Name: add_ons_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE add_ons_id_seq
+CREATE SEQUENCE public.add_ons_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -146,8 +145,8 @@ CREATE SEQUENCE add_ons_id_seq
 -- Name: add_ons; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE add_ons (
-    id integer DEFAULT nextval('add_ons_id_seq'::regclass) NOT NULL,
+CREATE TABLE public.add_ons (
+    id integer DEFAULT nextval('public.add_ons_id_seq'::regclass) NOT NULL,
     user_id integer NOT NULL,
     add_ons_name text NOT NULL,
     period text NOT NULL,
@@ -166,7 +165,7 @@ CREATE TABLE add_ons (
 -- Name: apps; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE apps (
+CREATE TABLE public.apps (
     id integer NOT NULL,
     camera_id integer NOT NULL,
     local_recording boolean DEFAULT false NOT NULL,
@@ -180,7 +179,7 @@ CREATE TABLE apps (
 -- Name: apps_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE apps_id_seq
+CREATE SEQUENCE public.apps_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -192,14 +191,14 @@ CREATE SEQUENCE apps_id_seq
 -- Name: apps_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE apps_id_seq OWNED BY apps.id;
+ALTER SEQUENCE public.apps_id_seq OWNED BY public.apps.id;
 
 
 --
 -- Name: ar_internal_metadata; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE ar_internal_metadata (
+CREATE TABLE public.ar_internal_metadata (
     key character varying NOT NULL,
     value character varying,
     created_at timestamp without time zone NOT NULL,
@@ -211,7 +210,7 @@ CREATE TABLE ar_internal_metadata (
 -- Name: archives; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE archives (
+CREATE TABLE public.archives (
     id integer NOT NULL,
     camera_id integer NOT NULL,
     exid text NOT NULL,
@@ -233,7 +232,7 @@ CREATE TABLE archives (
 -- Name: archive_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE archive_id_seq
+CREATE SEQUENCE public.archive_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -245,14 +244,14 @@ CREATE SEQUENCE archive_id_seq
 -- Name: archive_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE archive_id_seq OWNED BY archives.id;
+ALTER SEQUENCE public.archive_id_seq OWNED BY public.archives.id;
 
 
 --
 -- Name: billing; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE billing (
+CREATE TABLE public.billing (
     id integer NOT NULL,
     user_id integer NOT NULL,
     timelapse integer,
@@ -266,7 +265,7 @@ CREATE TABLE billing (
 -- Name: billing_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE billing_id_seq
+CREATE SEQUENCE public.billing_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -278,14 +277,14 @@ CREATE SEQUENCE billing_id_seq
 -- Name: billing_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE billing_id_seq OWNED BY billing.id;
+ALTER SEQUENCE public.billing_id_seq OWNED BY public.billing.id;
 
 
 --
 -- Name: camera_activities; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE camera_activities (
+CREATE TABLE public.camera_activities (
     id integer NOT NULL,
     camera_id integer NOT NULL,
     access_token_id integer,
@@ -302,7 +301,7 @@ CREATE TABLE camera_activities (
 -- Name: camera_activities_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE camera_activities_id_seq
+CREATE SEQUENCE public.camera_activities_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -314,14 +313,14 @@ CREATE SEQUENCE camera_activities_id_seq
 -- Name: camera_activities_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE camera_activities_id_seq OWNED BY camera_activities.id;
+ALTER SEQUENCE public.camera_activities_id_seq OWNED BY public.camera_activities.id;
 
 
 --
 -- Name: camera_endpoints; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE camera_endpoints (
+CREATE TABLE public.camera_endpoints (
     id integer NOT NULL,
     camera_id integer,
     scheme text NOT NULL,
@@ -334,7 +333,7 @@ CREATE TABLE camera_endpoints (
 -- Name: camera_endpoints_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE camera_endpoints_id_seq
+CREATE SEQUENCE public.camera_endpoints_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -346,14 +345,14 @@ CREATE SEQUENCE camera_endpoints_id_seq
 -- Name: camera_endpoints_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE camera_endpoints_id_seq OWNED BY camera_endpoints.id;
+ALTER SEQUENCE public.camera_endpoints_id_seq OWNED BY public.camera_endpoints.id;
 
 
 --
 -- Name: camera_share_requests; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE camera_share_requests (
+CREATE TABLE public.camera_share_requests (
     id integer NOT NULL,
     camera_id integer NOT NULL,
     user_id integer NOT NULL,
@@ -371,7 +370,7 @@ CREATE TABLE camera_share_requests (
 -- Name: camera_share_requests_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE camera_share_requests_id_seq
+CREATE SEQUENCE public.camera_share_requests_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -383,14 +382,14 @@ CREATE SEQUENCE camera_share_requests_id_seq
 -- Name: camera_share_requests_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE camera_share_requests_id_seq OWNED BY camera_share_requests.id;
+ALTER SEQUENCE public.camera_share_requests_id_seq OWNED BY public.camera_share_requests.id;
 
 
 --
 -- Name: camera_shares; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE camera_shares (
+CREATE TABLE public.camera_shares (
     id integer NOT NULL,
     camera_id integer NOT NULL,
     user_id integer NOT NULL,
@@ -406,7 +405,7 @@ CREATE TABLE camera_shares (
 -- Name: camera_shares_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE camera_shares_id_seq
+CREATE SEQUENCE public.camera_shares_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -418,14 +417,14 @@ CREATE SEQUENCE camera_shares_id_seq
 -- Name: camera_shares_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE camera_shares_id_seq OWNED BY camera_shares.id;
+ALTER SEQUENCE public.camera_shares_id_seq OWNED BY public.camera_shares.id;
 
 
 --
 -- Name: sq_streams; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE sq_streams
+CREATE SEQUENCE public.sq_streams
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -437,8 +436,8 @@ CREATE SEQUENCE sq_streams
 -- Name: cameras; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE cameras (
-    id integer DEFAULT nextval('sq_streams'::regclass) NOT NULL,
+CREATE TABLE public.cameras (
+    id integer DEFAULT nextval('public.sq_streams'::regclass) NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     exid text NOT NULL,
@@ -450,7 +449,7 @@ CREATE TABLE cameras (
     is_online boolean,
     timezone text,
     last_online_at timestamp with time zone DEFAULT now(),
-    location geography(Point,4326),
+    location public.geography(Point,4326),
     mac_address macaddr,
     model_id integer,
     discoverable boolean DEFAULT false NOT NULL,
@@ -464,7 +463,7 @@ CREATE TABLE cameras (
 -- Name: sq_clients; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE sq_clients
+CREATE SEQUENCE public.sq_clients
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -476,8 +475,8 @@ CREATE SEQUENCE sq_clients
 -- Name: clients; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE clients (
-    id integer DEFAULT nextval('sq_clients'::regclass) NOT NULL,
+CREATE TABLE public.clients (
+    id integer DEFAULT nextval('public.sq_clients'::regclass) NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     api_id text NOT NULL,
@@ -492,7 +491,7 @@ CREATE TABLE clients (
 -- Name: cloud_recordings; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE cloud_recordings (
+CREATE TABLE public.cloud_recordings (
     id integer NOT NULL,
     camera_id integer NOT NULL,
     frequency integer NOT NULL,
@@ -506,7 +505,7 @@ CREATE TABLE cloud_recordings (
 -- Name: cloud_recordings_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE cloud_recordings_id_seq
+CREATE SEQUENCE public.cloud_recordings_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -518,14 +517,14 @@ CREATE SEQUENCE cloud_recordings_id_seq
 -- Name: cloud_recordings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE cloud_recordings_id_seq OWNED BY cloud_recordings.id;
+ALTER SEQUENCE public.cloud_recordings_id_seq OWNED BY public.cloud_recordings.id;
 
 
 --
 -- Name: compares_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE compares_id_seq
+CREATE SEQUENCE public.compares_id_seq
     START WITH 35
     INCREMENT BY 1
     NO MINVALUE
@@ -537,8 +536,8 @@ CREATE SEQUENCE compares_id_seq
 -- Name: compares; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE compares (
-    id integer DEFAULT nextval('compares_id_seq'::regclass) NOT NULL,
+CREATE TABLE public.compares (
+    id integer DEFAULT nextval('public.compares_id_seq'::regclass) NOT NULL,
     exid character varying(255) NOT NULL,
     name character varying(255) NOT NULL,
     before_date timestamp without time zone NOT NULL,
@@ -557,7 +556,7 @@ CREATE TABLE compares (
 -- Name: sq_countries; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE sq_countries
+CREATE SEQUENCE public.sq_countries
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -569,8 +568,8 @@ CREATE SEQUENCE sq_countries
 -- Name: countries; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE countries (
-    id integer DEFAULT nextval('sq_countries'::regclass) NOT NULL,
+CREATE TABLE public.countries (
+    id integer DEFAULT nextval('public.sq_countries'::regclass) NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     iso3166_a2 text NOT NULL,
@@ -582,7 +581,7 @@ CREATE TABLE countries (
 -- Name: licences; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE licences (
+CREATE TABLE public.licences (
     id integer NOT NULL,
     user_id integer NOT NULL,
     description text NOT NULL,
@@ -606,7 +605,7 @@ CREATE TABLE licences (
 -- Name: licences_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE licences_id_seq
+CREATE SEQUENCE public.licences_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -618,14 +617,14 @@ CREATE SEQUENCE licences_id_seq
 -- Name: licences_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE licences_id_seq OWNED BY licences.id;
+ALTER SEQUENCE public.licences_id_seq OWNED BY public.licences.id;
 
 
 --
 -- Name: meta_datas; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE meta_datas (
+CREATE TABLE public.meta_datas (
     id integer NOT NULL,
     user_id integer,
     camera_id integer,
@@ -641,7 +640,7 @@ CREATE TABLE meta_datas (
 -- Name: meta_datas_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE meta_datas_id_seq
+CREATE SEQUENCE public.meta_datas_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -653,14 +652,14 @@ CREATE SEQUENCE meta_datas_id_seq
 -- Name: meta_datas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE meta_datas_id_seq OWNED BY meta_datas.id;
+ALTER SEQUENCE public.meta_datas_id_seq OWNED BY public.meta_datas.id;
 
 
 --
 -- Name: motion_detections; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE motion_detections (
+CREATE TABLE public.motion_detections (
     id integer NOT NULL,
     camera_id integer NOT NULL,
     frequency integer,
@@ -685,7 +684,7 @@ CREATE TABLE motion_detections (
 -- Name: motion_detections_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE motion_detections_id_seq
+CREATE SEQUENCE public.motion_detections_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -697,14 +696,14 @@ CREATE SEQUENCE motion_detections_id_seq
 -- Name: motion_detections_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE motion_detections_id_seq OWNED BY motion_detections.id;
+ALTER SEQUENCE public.motion_detections_id_seq OWNED BY public.motion_detections.id;
 
 
 --
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE schema_migrations (
+CREATE TABLE public.schema_migrations (
     version bigint NOT NULL,
     inserted_at timestamp without time zone
 );
@@ -714,7 +713,7 @@ CREATE TABLE schema_migrations (
 -- Name: snapmail_cameras; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE snapmail_cameras (
+CREATE TABLE public.snapmail_cameras (
     id integer NOT NULL,
     snapmail_id integer NOT NULL,
     camera_id integer NOT NULL,
@@ -727,7 +726,7 @@ CREATE TABLE snapmail_cameras (
 -- Name: snapmail_cameras_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE snapmail_cameras_id_seq
+CREATE SEQUENCE public.snapmail_cameras_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -739,48 +738,14 @@ CREATE SEQUENCE snapmail_cameras_id_seq
 -- Name: snapmail_cameras_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE snapmail_cameras_id_seq OWNED BY snapmail_cameras.id;
-
-
---
--- Name: snapmail_logs; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE snapmail_logs (
-    id integer NOT NULL,
-    recipients text,
-    subject text,
-    body text,
-    image_timestamp text,
-    inserted_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL
-);
-
-
---
--- Name: snapmail_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE snapmail_logs_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: snapmail_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE snapmail_logs_id_seq OWNED BY snapmail_logs.id;
+ALTER SEQUENCE public.snapmail_cameras_id_seq OWNED BY public.snapmail_cameras.id;
 
 
 --
 -- Name: snapmails; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE snapmails (
+CREATE TABLE public.snapmails (
     id integer NOT NULL,
     exid character varying(255) NOT NULL,
     subject text NOT NULL,
@@ -801,7 +766,7 @@ CREATE TABLE snapmails (
 -- Name: snapmails_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE snapmails_id_seq
+CREATE SEQUENCE public.snapmails_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -813,14 +778,14 @@ CREATE SEQUENCE snapmails_id_seq
 -- Name: snapmails_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE snapmails_id_seq OWNED BY snapmails.id;
+ALTER SEQUENCE public.snapmails_id_seq OWNED BY public.snapmails.id;
 
 
 --
 -- Name: snapshot_extractors; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE snapshot_extractors (
+CREATE TABLE public.snapshot_extractors (
     id integer NOT NULL,
     camera_id integer NOT NULL,
     from_date timestamp with time zone NOT NULL,
@@ -832,9 +797,9 @@ CREATE TABLE snapshot_extractors (
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone,
     requestor text,
+    inject_to_cr boolean DEFAULT false,
     create_mp4 boolean DEFAULT false,
-    jpegs_to_dropbox boolean DEFAULT false,
-    inject_to_cr boolean DEFAULT false
+    jpegs_to_dropbox boolean DEFAULT false
 );
 
 
@@ -842,7 +807,7 @@ CREATE TABLE snapshot_extractors (
 -- Name: snapshot_extractors_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE snapshot_extractors_id_seq
+CREATE SEQUENCE public.snapshot_extractors_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -854,14 +819,14 @@ CREATE SEQUENCE snapshot_extractors_id_seq
 -- Name: snapshot_extractors_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE snapshot_extractors_id_seq OWNED BY snapshot_extractors.id;
+ALTER SEQUENCE public.snapshot_extractors_id_seq OWNED BY public.snapshot_extractors.id;
 
 
 --
 -- Name: sq_access_tokens_streams_rights; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE sq_access_tokens_streams_rights
+CREATE SEQUENCE public.sq_access_tokens_streams_rights
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -873,7 +838,7 @@ CREATE SEQUENCE sq_access_tokens_streams_rights
 -- Name: sq_devices; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE sq_devices
+CREATE SEQUENCE public.sq_devices
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -885,7 +850,7 @@ CREATE SEQUENCE sq_devices
 -- Name: sq_firmwares; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE sq_firmwares
+CREATE SEQUENCE public.sq_firmwares
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -897,7 +862,7 @@ CREATE SEQUENCE sq_firmwares
 -- Name: sq_users; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE sq_users
+CREATE SEQUENCE public.sq_users
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -909,7 +874,7 @@ CREATE SEQUENCE sq_users
 -- Name: sq_vendors; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE sq_vendors
+CREATE SEQUENCE public.sq_vendors
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -921,7 +886,7 @@ CREATE SEQUENCE sq_vendors
 -- Name: timelapse_recordings; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE timelapse_recordings (
+CREATE TABLE public.timelapse_recordings (
     id integer NOT NULL,
     camera_id integer NOT NULL,
     frequency integer NOT NULL,
@@ -937,7 +902,7 @@ CREATE TABLE timelapse_recordings (
 -- Name: timelapse_recordings_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE timelapse_recordings_id_seq
+CREATE SEQUENCE public.timelapse_recordings_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -949,14 +914,14 @@ CREATE SEQUENCE timelapse_recordings_id_seq
 -- Name: timelapse_recordings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE timelapse_recordings_id_seq OWNED BY timelapse_recordings.id;
+ALTER SEQUENCE public.timelapse_recordings_id_seq OWNED BY public.timelapse_recordings.id;
 
 
 --
 -- Name: timelapses; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE timelapses (
+CREATE TABLE public.timelapses (
     id integer NOT NULL,
     camera_id integer NOT NULL,
     exid character varying(255) NOT NULL,
@@ -986,7 +951,7 @@ CREATE TABLE timelapses (
 -- Name: timelapses_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE timelapses_id_seq
+CREATE SEQUENCE public.timelapses_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -998,15 +963,15 @@ CREATE SEQUENCE timelapses_id_seq
 -- Name: timelapses_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE timelapses_id_seq OWNED BY timelapses.id;
+ALTER SEQUENCE public.timelapses_id_seq OWNED BY public.timelapses.id;
 
 
 --
 -- Name: users; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE users (
-    id integer DEFAULT nextval('sq_users'::regclass) NOT NULL,
+CREATE TABLE public.users (
+    id integer DEFAULT nextval('public.sq_users'::regclass) NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     firstname text NOT NULL,
@@ -1045,7 +1010,7 @@ CREATE TABLE users (
 -- Name: users_old; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE users_old (
+CREATE TABLE public.users_old (
     id integer NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -1074,8 +1039,8 @@ CREATE TABLE users_old (
 -- Name: vendor_models; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE vendor_models (
-    id integer DEFAULT nextval('sq_firmwares'::regclass) NOT NULL,
+CREATE TABLE public.vendor_models (
+    id integer DEFAULT nextval('public.sq_firmwares'::regclass) NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     vendor_id integer NOT NULL,
@@ -1111,8 +1076,8 @@ CREATE TABLE vendor_models (
 -- Name: vendors; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE vendors (
-    id integer DEFAULT nextval('sq_vendors'::regclass) NOT NULL,
+CREATE TABLE public.vendors (
+    id integer DEFAULT nextval('public.sq_vendors'::regclass) NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     exid text NOT NULL,
@@ -1125,7 +1090,7 @@ CREATE TABLE vendors (
 -- Name: webhooks; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE webhooks (
+CREATE TABLE public.webhooks (
     id integer NOT NULL,
     camera_id integer NOT NULL,
     user_id integer NOT NULL,
@@ -1140,7 +1105,7 @@ CREATE TABLE webhooks (
 -- Name: webhooks_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE webhooks_id_seq
+CREATE SEQUENCE public.webhooks_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -1152,147 +1117,140 @@ CREATE SEQUENCE webhooks_id_seq
 -- Name: webhooks_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE webhooks_id_seq OWNED BY webhooks.id;
+ALTER SEQUENCE public.webhooks_id_seq OWNED BY public.webhooks.id;
 
 
 --
 -- Name: access_rights id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY access_rights ALTER COLUMN id SET DEFAULT nextval('access_rights_id_seq'::regclass);
+ALTER TABLE ONLY public.access_rights ALTER COLUMN id SET DEFAULT nextval('public.access_rights_id_seq'::regclass);
 
 
 --
 -- Name: apps id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY apps ALTER COLUMN id SET DEFAULT nextval('apps_id_seq'::regclass);
+ALTER TABLE ONLY public.apps ALTER COLUMN id SET DEFAULT nextval('public.apps_id_seq'::regclass);
 
 
 --
 -- Name: archives id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY archives ALTER COLUMN id SET DEFAULT nextval('archive_id_seq'::regclass);
+ALTER TABLE ONLY public.archives ALTER COLUMN id SET DEFAULT nextval('public.archive_id_seq'::regclass);
 
 
 --
 -- Name: billing id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY billing ALTER COLUMN id SET DEFAULT nextval('billing_id_seq'::regclass);
+ALTER TABLE ONLY public.billing ALTER COLUMN id SET DEFAULT nextval('public.billing_id_seq'::regclass);
 
 
 --
 -- Name: camera_activities id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY camera_activities ALTER COLUMN id SET DEFAULT nextval('camera_activities_id_seq'::regclass);
+ALTER TABLE ONLY public.camera_activities ALTER COLUMN id SET DEFAULT nextval('public.camera_activities_id_seq'::regclass);
 
 
 --
 -- Name: camera_endpoints id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY camera_endpoints ALTER COLUMN id SET DEFAULT nextval('camera_endpoints_id_seq'::regclass);
+ALTER TABLE ONLY public.camera_endpoints ALTER COLUMN id SET DEFAULT nextval('public.camera_endpoints_id_seq'::regclass);
 
 
 --
 -- Name: camera_share_requests id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY camera_share_requests ALTER COLUMN id SET DEFAULT nextval('camera_share_requests_id_seq'::regclass);
+ALTER TABLE ONLY public.camera_share_requests ALTER COLUMN id SET DEFAULT nextval('public.camera_share_requests_id_seq'::regclass);
 
 
 --
 -- Name: camera_shares id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY camera_shares ALTER COLUMN id SET DEFAULT nextval('camera_shares_id_seq'::regclass);
+ALTER TABLE ONLY public.camera_shares ALTER COLUMN id SET DEFAULT nextval('public.camera_shares_id_seq'::regclass);
 
 
 --
 -- Name: cloud_recordings id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY cloud_recordings ALTER COLUMN id SET DEFAULT nextval('cloud_recordings_id_seq'::regclass);
+ALTER TABLE ONLY public.cloud_recordings ALTER COLUMN id SET DEFAULT nextval('public.cloud_recordings_id_seq'::regclass);
 
 
 --
 -- Name: licences id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY licences ALTER COLUMN id SET DEFAULT nextval('licences_id_seq'::regclass);
+ALTER TABLE ONLY public.licences ALTER COLUMN id SET DEFAULT nextval('public.licences_id_seq'::regclass);
 
 
 --
 -- Name: meta_datas id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY meta_datas ALTER COLUMN id SET DEFAULT nextval('meta_datas_id_seq'::regclass);
+ALTER TABLE ONLY public.meta_datas ALTER COLUMN id SET DEFAULT nextval('public.meta_datas_id_seq'::regclass);
 
 
 --
 -- Name: motion_detections id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY motion_detections ALTER COLUMN id SET DEFAULT nextval('motion_detections_id_seq'::regclass);
+ALTER TABLE ONLY public.motion_detections ALTER COLUMN id SET DEFAULT nextval('public.motion_detections_id_seq'::regclass);
 
 
 --
 -- Name: snapmail_cameras id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY snapmail_cameras ALTER COLUMN id SET DEFAULT nextval('snapmail_cameras_id_seq'::regclass);
-
-
---
--- Name: snapmail_logs id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY snapmail_logs ALTER COLUMN id SET DEFAULT nextval('snapmail_logs_id_seq'::regclass);
+ALTER TABLE ONLY public.snapmail_cameras ALTER COLUMN id SET DEFAULT nextval('public.snapmail_cameras_id_seq'::regclass);
 
 
 --
 -- Name: snapmails id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY snapmails ALTER COLUMN id SET DEFAULT nextval('snapmails_id_seq'::regclass);
+ALTER TABLE ONLY public.snapmails ALTER COLUMN id SET DEFAULT nextval('public.snapmails_id_seq'::regclass);
 
 
 --
 -- Name: snapshot_extractors id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY snapshot_extractors ALTER COLUMN id SET DEFAULT nextval('snapshot_extractors_id_seq'::regclass);
+ALTER TABLE ONLY public.snapshot_extractors ALTER COLUMN id SET DEFAULT nextval('public.snapshot_extractors_id_seq'::regclass);
 
 
 --
 -- Name: timelapse_recordings id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY timelapse_recordings ALTER COLUMN id SET DEFAULT nextval('timelapse_recordings_id_seq'::regclass);
+ALTER TABLE ONLY public.timelapse_recordings ALTER COLUMN id SET DEFAULT nextval('public.timelapse_recordings_id_seq'::regclass);
 
 
 --
 -- Name: timelapses id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY timelapses ALTER COLUMN id SET DEFAULT nextval('timelapses_id_seq'::regclass);
+ALTER TABLE ONLY public.timelapses ALTER COLUMN id SET DEFAULT nextval('public.timelapses_id_seq'::regclass);
 
 
 --
 -- Name: webhooks id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY webhooks ALTER COLUMN id SET DEFAULT nextval('webhooks_id_seq'::regclass);
+ALTER TABLE ONLY public.webhooks ALTER COLUMN id SET DEFAULT nextval('public.webhooks_id_seq'::regclass);
 
 
 --
 -- Name: access_rights access_rights_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY access_rights
+ALTER TABLE ONLY public.access_rights
     ADD CONSTRAINT access_rights_pkey PRIMARY KEY (id);
 
 
@@ -1300,7 +1258,7 @@ ALTER TABLE ONLY access_rights
 -- Name: add_ons add_ons_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY add_ons
+ALTER TABLE ONLY public.add_ons
     ADD CONSTRAINT add_ons_pkey PRIMARY KEY (id);
 
 
@@ -1308,7 +1266,7 @@ ALTER TABLE ONLY add_ons
 -- Name: apps apps_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY apps
+ALTER TABLE ONLY public.apps
     ADD CONSTRAINT apps_pkey PRIMARY KEY (id);
 
 
@@ -1316,7 +1274,7 @@ ALTER TABLE ONLY apps
 -- Name: ar_internal_metadata ar_internal_metadata_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY ar_internal_metadata
+ALTER TABLE ONLY public.ar_internal_metadata
     ADD CONSTRAINT ar_internal_metadata_pkey PRIMARY KEY (key);
 
 
@@ -1324,7 +1282,7 @@ ALTER TABLE ONLY ar_internal_metadata
 -- Name: archives archives_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY archives
+ALTER TABLE ONLY public.archives
     ADD CONSTRAINT archives_pkey PRIMARY KEY (id);
 
 
@@ -1332,7 +1290,7 @@ ALTER TABLE ONLY archives
 -- Name: billing billing_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY billing
+ALTER TABLE ONLY public.billing
     ADD CONSTRAINT billing_pkey PRIMARY KEY (id);
 
 
@@ -1340,7 +1298,7 @@ ALTER TABLE ONLY billing
 -- Name: camera_endpoints camera_endpoints_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY camera_endpoints
+ALTER TABLE ONLY public.camera_endpoints
     ADD CONSTRAINT camera_endpoints_pkey PRIMARY KEY (id);
 
 
@@ -1348,7 +1306,7 @@ ALTER TABLE ONLY camera_endpoints
 -- Name: camera_share_requests camera_share_requests_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY camera_share_requests
+ALTER TABLE ONLY public.camera_share_requests
     ADD CONSTRAINT camera_share_requests_pkey PRIMARY KEY (id);
 
 
@@ -1356,7 +1314,7 @@ ALTER TABLE ONLY camera_share_requests
 -- Name: camera_shares camera_shares_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY camera_shares
+ALTER TABLE ONLY public.camera_shares
     ADD CONSTRAINT camera_shares_pkey PRIMARY KEY (id);
 
 
@@ -1364,7 +1322,7 @@ ALTER TABLE ONLY camera_shares
 -- Name: cloud_recordings cloud_recordings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY cloud_recordings
+ALTER TABLE ONLY public.cloud_recordings
     ADD CONSTRAINT cloud_recordings_pkey PRIMARY KEY (id);
 
 
@@ -1372,7 +1330,7 @@ ALTER TABLE ONLY cloud_recordings
 -- Name: compares compares_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY compares
+ALTER TABLE ONLY public.compares
     ADD CONSTRAINT compares_pkey PRIMARY KEY (id);
 
 
@@ -1380,7 +1338,7 @@ ALTER TABLE ONLY compares
 -- Name: licences licences_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY licences
+ALTER TABLE ONLY public.licences
     ADD CONSTRAINT licences_pkey PRIMARY KEY (id);
 
 
@@ -1388,7 +1346,7 @@ ALTER TABLE ONLY licences
 -- Name: meta_datas meta_datas_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY meta_datas
+ALTER TABLE ONLY public.meta_datas
     ADD CONSTRAINT meta_datas_pkey PRIMARY KEY (id);
 
 
@@ -1396,7 +1354,7 @@ ALTER TABLE ONLY meta_datas
 -- Name: motion_detections motion_detections_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY motion_detections
+ALTER TABLE ONLY public.motion_detections
     ADD CONSTRAINT motion_detections_pkey PRIMARY KEY (id);
 
 
@@ -1404,7 +1362,7 @@ ALTER TABLE ONLY motion_detections
 -- Name: access_tokens pk_access_tokens; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY access_tokens
+ALTER TABLE ONLY public.access_tokens
     ADD CONSTRAINT pk_access_tokens PRIMARY KEY (id);
 
 
@@ -1412,7 +1370,7 @@ ALTER TABLE ONLY access_tokens
 -- Name: clients pk_clients; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY clients
+ALTER TABLE ONLY public.clients
     ADD CONSTRAINT pk_clients PRIMARY KEY (id);
 
 
@@ -1420,7 +1378,7 @@ ALTER TABLE ONLY clients
 -- Name: countries pk_countries; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY countries
+ALTER TABLE ONLY public.countries
     ADD CONSTRAINT pk_countries PRIMARY KEY (id);
 
 
@@ -1428,7 +1386,7 @@ ALTER TABLE ONLY countries
 -- Name: vendor_models pk_firmwares; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY vendor_models
+ALTER TABLE ONLY public.vendor_models
     ADD CONSTRAINT pk_firmwares PRIMARY KEY (id);
 
 
@@ -1436,7 +1394,7 @@ ALTER TABLE ONLY vendor_models
 -- Name: cameras pk_streams; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY cameras
+ALTER TABLE ONLY public.cameras
     ADD CONSTRAINT pk_streams PRIMARY KEY (id);
 
 
@@ -1444,7 +1402,7 @@ ALTER TABLE ONLY cameras
 -- Name: users pk_users; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY users
+ALTER TABLE ONLY public.users
     ADD CONSTRAINT pk_users PRIMARY KEY (id);
 
 
@@ -1452,7 +1410,7 @@ ALTER TABLE ONLY users
 -- Name: users_old pk_users_old; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY users_old
+ALTER TABLE ONLY public.users_old
     ADD CONSTRAINT pk_users_old PRIMARY KEY (id);
 
 
@@ -1460,7 +1418,7 @@ ALTER TABLE ONLY users_old
 -- Name: vendors pk_vendors; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY vendors
+ALTER TABLE ONLY public.vendors
     ADD CONSTRAINT pk_vendors PRIMARY KEY (id);
 
 
@@ -1468,7 +1426,7 @@ ALTER TABLE ONLY vendors
 -- Name: schema_migrations schema_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY schema_migrations
+ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
 
 
@@ -1476,23 +1434,15 @@ ALTER TABLE ONLY schema_migrations
 -- Name: snapmail_cameras snapmail_cameras_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY snapmail_cameras
+ALTER TABLE ONLY public.snapmail_cameras
     ADD CONSTRAINT snapmail_cameras_pkey PRIMARY KEY (id);
-
-
---
--- Name: snapmail_logs snapmail_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY snapmail_logs
-    ADD CONSTRAINT snapmail_logs_pkey PRIMARY KEY (id);
 
 
 --
 -- Name: snapmails snapmails_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY snapmails
+ALTER TABLE ONLY public.snapmails
     ADD CONSTRAINT snapmails_pkey PRIMARY KEY (id);
 
 
@@ -1500,7 +1450,7 @@ ALTER TABLE ONLY snapmails
 -- Name: snapshot_extractors snapshot_extractors_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY snapshot_extractors
+ALTER TABLE ONLY public.snapshot_extractors
     ADD CONSTRAINT snapshot_extractors_pkey PRIMARY KEY (id);
 
 
@@ -1508,7 +1458,7 @@ ALTER TABLE ONLY snapshot_extractors
 -- Name: timelapse_recordings timelapse_recordings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY timelapse_recordings
+ALTER TABLE ONLY public.timelapse_recordings
     ADD CONSTRAINT timelapse_recordings_pkey PRIMARY KEY (id);
 
 
@@ -1516,7 +1466,7 @@ ALTER TABLE ONLY timelapse_recordings
 -- Name: timelapses timelapses_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY timelapses
+ALTER TABLE ONLY public.timelapses
     ADD CONSTRAINT timelapses_pkey PRIMARY KEY (id);
 
 
@@ -1524,7 +1474,7 @@ ALTER TABLE ONLY timelapses
 -- Name: webhooks webhooks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY webhooks
+ALTER TABLE ONLY public.webhooks
     ADD CONSTRAINT webhooks_pkey PRIMARY KEY (id);
 
 
@@ -1721,101 +1671,101 @@ CREATE UNIQUE INDEX user_username_unique_index ON public.users USING btree (user
 -- Name: compares compares_camera_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY compares
-    ADD CONSTRAINT compares_camera_id_fkey FOREIGN KEY (camera_id) REFERENCES cameras(id);
+ALTER TABLE ONLY public.compares
+    ADD CONSTRAINT compares_camera_id_fkey FOREIGN KEY (camera_id) REFERENCES public.cameras(id);
 
 
 --
 -- Name: compares compares_requested_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY compares
-    ADD CONSTRAINT compares_requested_by_fkey FOREIGN KEY (requested_by) REFERENCES users(id);
+ALTER TABLE ONLY public.compares
+    ADD CONSTRAINT compares_requested_by_fkey FOREIGN KEY (requested_by) REFERENCES public.users(id);
 
 
 --
 -- Name: licences licences_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY licences
-    ADD CONSTRAINT licences_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id);
+ALTER TABLE ONLY public.licences
+    ADD CONSTRAINT licences_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
 -- Name: meta_datas meta_datas_camera_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY meta_datas
-    ADD CONSTRAINT meta_datas_camera_id_fkey FOREIGN KEY (camera_id) REFERENCES cameras(id);
+ALTER TABLE ONLY public.meta_datas
+    ADD CONSTRAINT meta_datas_camera_id_fkey FOREIGN KEY (camera_id) REFERENCES public.cameras(id);
 
 
 --
 -- Name: meta_datas meta_datas_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY meta_datas
-    ADD CONSTRAINT meta_datas_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id);
+ALTER TABLE ONLY public.meta_datas
+    ADD CONSTRAINT meta_datas_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
 -- Name: snapmail_cameras snapmail_cameras_camera_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY snapmail_cameras
-    ADD CONSTRAINT snapmail_cameras_camera_id_fkey FOREIGN KEY (camera_id) REFERENCES cameras(id);
+ALTER TABLE ONLY public.snapmail_cameras
+    ADD CONSTRAINT snapmail_cameras_camera_id_fkey FOREIGN KEY (camera_id) REFERENCES public.cameras(id);
 
 
 --
 -- Name: snapmail_cameras snapmail_cameras_snapmail_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY snapmail_cameras
-    ADD CONSTRAINT snapmail_cameras_snapmail_id_fkey FOREIGN KEY (snapmail_id) REFERENCES snapmails(id);
+ALTER TABLE ONLY public.snapmail_cameras
+    ADD CONSTRAINT snapmail_cameras_snapmail_id_fkey FOREIGN KEY (snapmail_id) REFERENCES public.snapmails(id);
 
 
 --
 -- Name: snapmails snapmails_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY snapmails
-    ADD CONSTRAINT snapmails_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id);
+ALTER TABLE ONLY public.snapmails
+    ADD CONSTRAINT snapmails_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
 -- Name: snapshot_extractors snapshot_extractors_camera_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY snapshot_extractors
-    ADD CONSTRAINT snapshot_extractors_camera_id_fkey FOREIGN KEY (camera_id) REFERENCES cameras(id);
+ALTER TABLE ONLY public.snapshot_extractors
+    ADD CONSTRAINT snapshot_extractors_camera_id_fkey FOREIGN KEY (camera_id) REFERENCES public.cameras(id);
 
 
 --
 -- Name: timelapse_recordings timelapse_recordings_camera_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY timelapse_recordings
-    ADD CONSTRAINT timelapse_recordings_camera_id_fkey FOREIGN KEY (camera_id) REFERENCES cameras(id);
+ALTER TABLE ONLY public.timelapse_recordings
+    ADD CONSTRAINT timelapse_recordings_camera_id_fkey FOREIGN KEY (camera_id) REFERENCES public.cameras(id);
 
 
 --
 -- Name: timelapses timelapses_camera_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY timelapses
-    ADD CONSTRAINT timelapses_camera_id_fkey FOREIGN KEY (camera_id) REFERENCES cameras(id);
+ALTER TABLE ONLY public.timelapses
+    ADD CONSTRAINT timelapses_camera_id_fkey FOREIGN KEY (camera_id) REFERENCES public.cameras(id);
 
 
 --
 -- Name: timelapses timelapses_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY timelapses
-    ADD CONSTRAINT timelapses_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id);
+ALTER TABLE ONLY public.timelapses
+    ADD CONSTRAINT timelapses_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
 -- PostgreSQL database dump complete
 --
 
-INSERT INTO "schema_migrations" (version) VALUES (20150622102645), (20150629144629), (20150629183319), (20160616160229), (20160712101523), (20160720125939), (20160727112052), (20160830055709), (20161202114834), (20161202115000), (20161213162000), (20161219130300), (20161221070146), (20161221070226), (20170103162400), (20170112110000), (20170213140200), (20170222114100), (20170414141100), (20170419105000), (20171009070501), (20171213120725), (20171220062816), (20171222101825), (20180102124912), (20180122051210), (20180130103936), (20180411104000), (20180416121600), (20180420054301), (20180502103548);
+INSERT INTO "schema_migrations" (version) VALUES (20150622102645), (20150629144629), (20150629183319), (20160616160229), (20160712101523), (20160720125939), (20160727112052), (20160830055709), (20161202114834), (20161202115000), (20161213162000), (20161219130300), (20161221070146), (20161221070226), (20170103162400), (20170112110000), (20170213140200), (20170222114100), (20170414141100), (20170419105000), (20171009070501), (20180411104000), (20180416121600);
 
