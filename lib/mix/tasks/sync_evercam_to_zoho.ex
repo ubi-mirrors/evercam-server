@@ -27,6 +27,7 @@ defmodule EvercamMedia.SyncEvercamToZoho do
         {:nodata, _message} ->
           Logger.info "Start insert contact '#{user.email}' to zoho."
           {:ok, _contact} = Zoho.insert_contact(user)
+          :timer.sleep(10000)
         {:error} -> Logger.error "Error to insert"
       end
     end)
