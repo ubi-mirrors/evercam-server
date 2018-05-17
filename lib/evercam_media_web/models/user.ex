@@ -58,7 +58,7 @@ defmodule User do
   def by_username_or_email(login) do
     login = String.downcase(login)
     User
-    |> where([u], u.username == ^login or u.email == ^login)
+    |> where([u], fragment("lower(?)", u.username) == ^login or fragment("lower(?)", u.email) == ^login)
     |> preload(:country)
     |> Repo.one
   end
