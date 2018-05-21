@@ -33,7 +33,6 @@ defmodule EvercamMediaWeb.CameraView do
       last_polled_at: Util.ecto_datetime_to_unix(camera.last_polled_at),
       last_online_at: Util.ecto_datetime_to_unix(camera.last_online_at),
       is_online_email_owner_notification: is_send_notification?(camera.alert_emails, user),
-      alert_emails: camera.alert_emails,
       is_online: camera.is_online,
       is_public: camera.is_public,
       discoverable: camera.discoverable,
