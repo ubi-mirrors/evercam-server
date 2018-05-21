@@ -99,8 +99,11 @@ defmodule EvercamMediaWeb.UserController do
     with :ok <- ensure_user_exists(user, username, conn),
          :ok <- password(params["password"], user, conn)
     do
-      conn
-      |> render(UserView, "credentials.json", %{user: user})
+      spawn(fn ->
+        changeset = User.changeset(user, %{"last_login_at" => Calendar.DateTime.to_erl(Calendar.DateTime.now_utc)})
+        Repo.update(changeset)
+      end)
+      conn |> render(UserView, "credentials.json", %{user: user})
     end
   end
 
