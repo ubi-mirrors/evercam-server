@@ -85,6 +85,35 @@ defmodule EvercamMediaWeb.CompareController do
     end
   end
 
+  def update(conn, %{"id" => camera_exid, "compare_id" => compare_id} = params) do
+    current_user = conn.assigns[:current_user]
+    camera = Camera.get_full(camera_exid)
+
+    with :ok <- ensure_camera_exists(camera, camera_exid, conn),
+         :ok <- ensure_can_list(current_user, camera, conn)
+    do
+      case Compare.by_exid(compare_id) do
+        nil ->
+          render_error(conn, 404, "Compare archive '#{compare_id}' not found!")
+        compare_archive ->
+
+          update_params =
+            %{}
+            |> add_parameter("field", "name", params["name"])
+            |> add_parameter("field", "embed_code", params["embed_code"])
+
+          changeset = Compare.changeset(compare_archive, update_params)
+          case Repo.update(changeset) do
+            {:ok, compare} ->
+              # updated_archive = archive |> Repo.preload(:camera) |> Repo.preload(:user)
+              render(conn, CompareView, "show.json", %{compare: compare})
+            {:error, changeset} ->
+              render_error(conn, 400, Util.parse_changeset(changeset))
+          end
+      end
+    end
+  end
+
   swagger_path :create do
     post "/cameras/{id}/compares"
     summary "Create new compare."

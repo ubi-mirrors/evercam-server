@@ -186,6 +186,8 @@ end
       get "/cameras/:id/compares", CompareController, :index
       post "/cameras/:id/compares", CompareController, :create
       options "/cameras/:id/compares", CompareController, :nothing
+      patch "/cameras/:id/compares/:compare_id", CompareController, :update
+      options "/cameras/:id/compares/:compare_id", CompareController, :nothing
       delete "/cameras/:id/compares/:compare_id", CompareController, :delete
       options "/cameras/:id/compares/:compare_id", CompareController, :delete
 
