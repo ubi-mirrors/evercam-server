@@ -105,7 +105,6 @@ defmodule EvercamMediaWeb.CompareController do
           changeset = Compare.changeset(compare_archive, update_params)
           case Repo.update(changeset) do
             {:ok, compare} ->
-              # updated_archive = archive |> Repo.preload(:camera) |> Repo.preload(:user)
               render(conn, CompareView, "show.json", %{compare: compare})
             {:error, changeset} ->
               render_error(conn, 400, Util.parse_changeset(changeset))
