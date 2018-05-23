@@ -1,8 +1,8 @@
 defmodule EvercamMedia.SyncEvercamToIntercom do
   require Logger
 
-  @intercom_url System.get_env["INTERCOM_URL"] || "https://api.intercom.io/users"
-  @intercom_token System.get_env["INTERCOM_ACCESS_TOKEN"] || "dG9rOmI2YzU5NGY3XzdhYzVfNGM2Ml84MmUzXzU3YWYzOWY1YTU4MDoxOjA="
+  @intercom_url System.get_env["INTERCOM_URL"]
+  @intercom_token System.get_env["INTERCOM_ACCESS_TOKEN"]
 
   def get_users(next_page \\ nil) do
     api_url =
