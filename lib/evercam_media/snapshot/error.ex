@@ -93,7 +93,7 @@ defmodule EvercamMedia.Snapshot.Error do
         {504, %{message: "Camera responded with a Forbidden message.", response: parse_response(error)}}
       :unauthorized ->
         Logger.debug "[#{camera_exid}] [snapshot_error] [unauthorized]"
-        update_camera_status("#{camera_exid}", timestamp, false, "unauthorized", 100)
+        update_camera_status("#{camera_exid}", timestamp, false, "unauthorized", 50)
         {504, %{message: "Please check the username and password.", response: parse_response(error)}}
       :device_error ->
         Logger.debug "[#{camera_exid}] [snapshot_error] [device_error]"

@@ -75,6 +75,11 @@ config :evercam_media,
 
 config :quantum, :evercam_media,
   cron: [
+    kill_ffmpegs: [
+      task: {"EvercamMedia.Util", "kill_all_ffmpegs"},
+      schedule: "@daily",
+      overlap: false
+    ],
     shared_reminder: [
       task: {"EvercamMedia.ShareRequestReminder", "check_share_requests"},
       schedule: "@hourly",

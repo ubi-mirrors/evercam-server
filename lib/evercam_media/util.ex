@@ -140,4 +140,8 @@ defmodule EvercamMedia.Util do
     |> Base.encode16
     |> String.downcase
   end
+
+  def kill_all_ffmpegs do
+    Porcelain.shell("for pid in $(ps -ef | grep ffmpeg | grep 'rtsp://' | grep -v grep |  awk '{print $2}'); do kill -9 $pid; done")
+  end
 end

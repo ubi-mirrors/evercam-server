@@ -75,6 +75,7 @@ defmodule EvercamMedia.Snapshot.DBHandler do
     Camera.get_full(camera_exid)
   end
 
+  defp pause_camera_requests(camera, "unauthorized", 0), do: do_pause_camera(camera, 10000)
   defp pause_camera_requests(camera, _error_code, 0), do: do_pause_camera(camera, 5000)
   defp pause_camera_requests(_camera, _error_code, _reminder), do: :noop
 
@@ -118,18 +119,11 @@ defmodule EvercamMedia.Snapshot.DBHandler do
   defp do_log_camera_status(camera, status, datetime, extra \\ nil) do
     case ConCache.get(:current_camera_status, camera.exid) do
       nil ->
-        ConCache.dirty_put(:current_camera_status, camera.exid, declare_camera_status(status))
+        ConCache.dirty_put(:current_camera_status, camera.exid, status)
         insert_a_log(camera, status, datetime, extra)
+      cache_value when cache_value == status -> :noop
       _ ->
-        log_status_from_concache(ConCache.get(:current_camera_status, camera.exid), camera, status, datetime, extra)
-    end
-  end
-
-  defp log_status_from_concache(cache_value, camera, status, datetime, extra) do
-    case cache_value |> humanize_status == status do
-      true -> :noop
-      false ->
-        ConCache.dirty_put(:current_camera_status, camera.exid, declare_camera_status(status))
+        ConCache.dirty_put(:current_camera_status, camera.exid, status)
         insert_a_log(camera, status, datetime, extra)
     end
   end
@@ -140,12 +134,6 @@ defmodule EvercamMedia.Snapshot.DBHandler do
     SnapshotRepo.insert(changeset)
     send_notification(status, camera, camera.alert_emails)
   end
-
-  defp declare_camera_status("online"), do: true
-  defp declare_camera_status("offline"), do: false
-
-  defp humanize_status(true), do: "online"
-  defp humanize_status(false), do: "offline"
 
   defp send_notification(_status, _camera, alert_emails) when alert_emails in [nil, ""], do: :noop
   defp send_notification(status, camera, _alert_emails) do

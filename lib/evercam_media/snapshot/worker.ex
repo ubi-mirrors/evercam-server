@@ -187,11 +187,16 @@ defmodule EvercamMedia.Snapshot.Worker do
     try_snapshot(state, config, camera_exid, timestamp, reply_to, worker, 1)
   end
 
-  defp try_snapshot(_state, config, camera_exid, _timestamp, reply_to, worker, 3) do
+  defp try_snapshot(_state, config, camera_exid, old_timestamp, reply_to, worker, 3) do
     spawn fn ->
-      timestamp = Calendar.DateTime.Format.unix(Calendar.DateTime.now_utc)
+      new_timestamp = Calendar.DateTime.Format.unix(Calendar.DateTime.now_utc)
       result = CamClient.fetch_snapshot(config)
       ConCache.delete(:camera_lock, camera_exid)
+      timestamp =
+        case result do
+          {:error, _error} -> old_timestamp
+          _ -> new_timestamp
+        end
       send worker, {:camera_reply, result, timestamp, reply_to}
     end
   end
