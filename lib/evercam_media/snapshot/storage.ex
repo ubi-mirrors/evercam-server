@@ -101,9 +101,10 @@ defmodule EvercamMedia.Snapshot.Storage do
   end
 
   def nearest(camera_exid, timestamp) do
+    parse_timestamp = timestamp |> Calendar.DateTime.Parse.unix!
     list_of_snapshots =
       camera_exid
-      |> get_camera_apps_list
+      |> get_camera_apps_list(parse_timestamp)
       |> Enum.flat_map(fn(app) -> do_seaweedfs_load_range(camera_exid, timestamp, app) end)
       |> Enum.sort_by(fn(snapshot) -> snapshot.created_at end)
 
@@ -245,15 +246,19 @@ defmodule EvercamMedia.Snapshot.Storage do
 
   defp get_camera_apps_list(camera_exid, request_date \\ nil)
   defp get_camera_apps_list(camera_exid, nil) do
-    request_from_seaweedfs("#{@seaweedfs}/#{camera_exid}/snapshots/", "Directories", "Name")
+    request_from_seaweedfs("#{@seaweedfs}/#{camera_exid}/snapshots/", "Directories", "Name") |> reject_snapmail
   end
   defp get_camera_apps_list(camera_exid, request_date) do
     case point_to_seaweed(request_date) do
       base_url when base_url == @seaweedfs_1 ->
-        ["timelapse", "recordings", "snapmail", "archives"]
+        ["timelapse", "recordings", "archives"]
       _ ->
-        request_from_seaweedfs("#{@seaweedfs}/#{camera_exid}/snapshots/", "Directories", "Name")
+        request_from_seaweedfs("#{@seaweedfs}/#{camera_exid}/snapshots/", "Directories", "Name") |> reject_snapmail
     end
+  end
+
+  defp reject_snapmail(list) do
+    List.delete(list, "snapmail")
   end
 
   defp request_from_seaweedfs(url, type, attribute) do
