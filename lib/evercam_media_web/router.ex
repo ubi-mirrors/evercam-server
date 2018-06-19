@@ -123,6 +123,8 @@ end
       get "/cameras/:id/recordings/snapshots/:year/:month/:day/:hour", SnapshotController, :hour
       options "/cameras/:id/recordings/snapshots/:year/:month/:day/:hour", SnapshotController, :nothing
       get "/cameras/:id/logs", LogController, :show
+      get "/cameras/:id/response-time", LogController, :response_time
+      options "/cameras/:id/response-time", LogController, :nothing
       get "/cameras/:id/apps/cloud-recording", CloudRecordingController, :show
       post "/cameras/:id/apps/cloud-recording", CloudRecordingController, :create
       get "/cameras/:id/apps/timelapse-recording", TimelapseRecordingController, :show

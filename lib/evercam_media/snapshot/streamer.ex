@@ -71,7 +71,7 @@ defmodule EvercamMedia.Snapshot.Streamer do
 
   def stream(camera) do
     timestamp = Calendar.DateTime.now_utc |> Calendar.DateTime.Format.unix
-    response = camera |> construct_args |> CamClient.fetch_snapshot
+    response = camera |> construct_args(timestamp) |> CamClient.fetch_snapshot
 
     case response do
       {:ok, data} ->
@@ -86,8 +86,10 @@ defmodule EvercamMedia.Snapshot.Streamer do
     Phoenix.PubSub.Local.subscribers(EvercamMedia.PubSub, "cameras:#{camera_exid}", 0)
   end
 
-  defp construct_args(camera) do
+  defp construct_args(camera, timestamp) do
     %{
+      camera_exid: camera.exid,
+      timestamp: timestamp,
       url: Camera.snapshot_url(camera),
       vendor_exid: Camera.get_vendor_attr(camera, :exid),
       username: Camera.username(camera),

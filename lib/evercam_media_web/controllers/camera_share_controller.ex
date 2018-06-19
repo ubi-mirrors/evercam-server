@@ -128,8 +128,8 @@ defmodule EvercamMediaWeb.CameraShareController do
                 {:ok, camera_share_request} ->
                   spawn(fn ->
                     send_email_notification(caller, camera, email, camera_share_request.message, camera_share_request.key)
-                    CameraActivity.log_activity(caller, camera, "shared", %{with: email, ip: requester_ip}, next_datetime)
-                    Intercom.intercom_activity(Application.get_env(:evercam_media, :create_intercom_user), get_user_model(email), get_user_agent(conn), requester_ip, "Shared-Non-Registered")
+                    CameraActivity.log_activity(caller, camera, "shared", %{with: camera_share_request.email, ip: requester_ip}, next_datetime)
+                    Intercom.intercom_activity(Application.get_env(:evercam_media, :create_intercom_user), get_user_model(camera_share_request.email), get_user_agent(conn), requester_ip, "Shared-Non-Registered")
                   end)
                   {shares, [camera_share_request | share_requests], changes, next_datetime}
                 {:error, changeset} ->
