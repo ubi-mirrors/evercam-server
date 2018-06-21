@@ -48,7 +48,7 @@ defmodule EvercamMedia.Intercom do
       }
     }
     |> add_userid(user.username)
-    |> add_session(user.username)
+    |> add_session(user.username, status)
     |> add_status(status)
     |> add_company(company_id)
     |> add_subscribe(status)
@@ -84,8 +84,9 @@ defmodule EvercamMedia.Intercom do
     Map.put(params, "user_id", id)
   end
 
-  defp add_session(params, user_id) when user_id in [nil, ""], do: params
-  defp add_session(params, _user_id) do
+  defp add_session(params, user_id, _status) when user_id in [nil, ""], do: params
+  defp add_session(params, _user_id, "Shared-Non-Registered"), do: Map.put(params, "new_session", false)
+  defp add_session(params, _user_id, _status) do
     Map.put(params, "new_session", true)
   end
 
