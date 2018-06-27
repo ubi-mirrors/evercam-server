@@ -5,6 +5,7 @@ defmodule EvercamMediaWeb.UserSocket do
   ## Channels
   channel "users:*", EvercamMediaWeb.UserChannel
   channel "cameras:*", EvercamMediaWeb.CameraChannel
+  channel "livetail:*", EvercamMediaWeb.LivetailChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket, check_origin: false
@@ -22,6 +23,10 @@ defmodule EvercamMediaWeb.UserSocket do
   # See `Phoenix.Token` documentation for examples in
   # performing token verification on connect.
   def connect(params, socket) do
+    socket =
+      socket
+      |> assign(:ip, params["ip"])
+      |> assign(:source, params["source"])
     case Auth.validate(params["api_id"], params["api_key"], "") do
       {:valid, user} ->
         {:ok, assign(socket, :current_user, user)}

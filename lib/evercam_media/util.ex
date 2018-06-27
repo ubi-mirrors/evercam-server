@@ -91,6 +91,13 @@ defmodule EvercamMedia.Util do
       camera)
   end
 
+  def broadcast_camera_response(camera_exid, timestamp, response_time, description, response_type) do
+    EvercamMediaWeb.Endpoint.broadcast(
+      "livetail:#{camera_exid}",
+      "camera-response",
+      %{timestamp: timestamp, response_time: response_time, response_type: response_type, description: description})
+  end
+
   def error_handler(error) do
     Logger.error inspect(error)
     Logger.error Exception.format_stacktrace System.stacktrace

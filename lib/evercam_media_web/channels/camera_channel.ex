@@ -15,6 +15,10 @@ defmodule EvercamMediaWeb.CameraChannel do
     end
   end
 
+  def terminate(_msg, socket) do
+    {:noreply, socket}
+  end
+
   def handle_info({:after_join, camera_exid}, socket) do
     StreamerSupervisor.start_streamer(camera_exid)
     {:noreply, socket}

@@ -614,7 +614,9 @@ defmodule EvercamMediaWeb.SnapshotController do
   def snapshot_with_user(camera_exid, user, store_snapshot, notes \\ "") do
     camera = Camera.get_full(camera_exid)
     if Permission.Camera.can_snapshot?(user, camera) do
-      construct_args(camera, store_snapshot, notes) |> fetch_snapshot
+      construct_args(camera, store_snapshot, notes)
+      |> Map.put(:description, "Live")
+      |> fetch_snapshot
     else
       {403, %{message: "Forbidden"}}
     end
@@ -655,7 +657,9 @@ defmodule EvercamMediaWeb.SnapshotController do
   defp update_thumbnail(nil), do: :noop
   defp update_thumbnail(camera) do
     if camera.is_online && !Camera.recording?(camera) do
-      construct_args(camera, true, "Evercam Thumbnail") |> fetch_snapshot(3)
+      construct_args(camera, true, "Evercam Thumbnail")
+      |> Map.put(:description, "Thumbnail")
+      |> fetch_snapshot(3)
     end
   end
 
@@ -665,7 +669,7 @@ defmodule EvercamMediaWeb.SnapshotController do
 
     case Storage.seaweedfs_load_range(camera.exid, from, Calendar.DateTime.Format.unix(to)) do
       [] ->
-        function = fn -> construct_args(camera, true, params["notes"]) |> fetch_snapshot end
+        function = fn -> construct_args(camera, true, params["notes"]) |> Map.put(:description, "Create snapshot") |> fetch_snapshot end
         exec_with_timeout(function, 25)
       snapshot_list ->
         snapshot = List.last(snapshot_list)
@@ -695,6 +699,7 @@ defmodule EvercamMediaWeb.SnapshotController do
   defp construct_args(params) do
     %{
       vendor_exid: params["vendor_id"],
+      description: "Test snapshot",
       url: "#{params["external_url"]}/#{params["jpg_url"]}",
       username: params["cam_username"],
       password: params["cam_password"]

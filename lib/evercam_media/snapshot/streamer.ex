@@ -86,9 +86,30 @@ defmodule EvercamMedia.Snapshot.Streamer do
     Phoenix.PubSub.Local.subscribers(EvercamMedia.PubSub, "cameras:#{camera_exid}", 0)
   end
 
+  def parse_clients(camera_exid) do
+    pids = Phoenix.PubSub.Local.subscribers(EvercamMedia.PubSub, "cameras:#{camera_exid}", 0)
+    Enum.map(pids, fn(pid) ->
+      socket = Phoenix.Channel.Server.socket(pid)
+      case socket do
+        %Phoenix.Socket{assigns: %{current_user: user, ip: ip, source: source}} ->
+          "{#{user.username}"
+          |> check_empty_nil(ip)
+          |> check_empty_nil(source)
+        %Phoenix.Socket{assigns: %{ip: ip, source: source}} -> "{#{ip}, #{source}}"
+        _ -> ""
+      end
+    end)
+    |> Enum.filter(fn(v) -> v != "" end)
+    |> Enum.join(", ")
+  end
+
+  defp check_empty_nil(desc, value) when value in [nil, ""], do: desc
+  defp check_empty_nil(desc, value), do: "#{desc}, #{value}"
+
   defp construct_args(camera, timestamp) do
     %{
       camera_exid: camera.exid,
+      description: "Live View (clients: #{parse_clients(camera.exid)})",
       timestamp: timestamp,
       url: Camera.snapshot_url(camera),
       vendor_exid: Camera.get_vendor_attr(camera, :exid),

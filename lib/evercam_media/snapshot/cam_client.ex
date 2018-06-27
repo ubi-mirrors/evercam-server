@@ -25,7 +25,7 @@ defmodule EvercamMedia.Snapshot.CamClient do
             _ -> HTTPClient.get(:basic_auth, args[:url], username, password)
           end
         end)
-      spawn(fn -> save_response_time(args[:camera_exid], args[:timestamp], response, time/1_000_000) end)
+      spawn(fn -> save_response_time(args[:camera_exid], args[:timestamp], args[:description], response, time/1_000_000) end)
       parse_snapshot_response(response)
     catch _type, error ->
       {:error, error}
@@ -90,22 +90,26 @@ defmodule EvercamMedia.Snapshot.CamClient do
     String.split(args[:auth], ":")
   end
 
-  defp save_response_time(nil, _timestamp, _response, _time), do: :noop
-  defp save_response_time(_camera_exid, nil, _response, _time), do: :noop
-  defp save_response_time(camera_exid, timestamp, response, time) do
+  defp save_response_time(nil, _timestamp, _description, _response, _time), do: :noop
+  defp save_response_time(_camera_exid, nil, _description, _response, _time), do: :noop
+  defp save_response_time(camera_exid, timestamp, description, response, time) do
     date_time = Calendar.DateTime.Parse.unix!(timestamp)
+    snapshot_response_time = Float.round(time, 4)
 
     response_times =
       ConCache.dirty_get_or_store(:camera_response_times, camera_exid, fn() -> [date_time] end)
       |> reset_response_time_list(date_time)
+      |> List.insert_at(-1, timestamp)
 
     response_times =
       case parse_snapshot_response(response) do
         {:ok, _} ->
-          List.insert_at(response_times, -1, Float.round(time, 4))
+          Util.broadcast_camera_response(camera_exid, timestamp, snapshot_response_time, description, :ok)
+          List.insert_at(response_times, -1, "[Snapshot] [#{snapshot_response_time}] [#{description}]")
         {:error, error} ->
-          error_no = error |> Error.parse |> error_code
-          List.insert_at(response_times, -1, error_no)
+          error_reason = error |> Error.parse
+          Util.broadcast_camera_response(camera_exid, timestamp, snapshot_response_time, description, error_reason)
+          List.insert_at(response_times, -1, "[Error] [#{snapshot_response_time}] [#{error_reason}]")
       end
     ConCache.dirty_put(:camera_response_times, camera_exid, response_times)
   end
@@ -117,6 +121,7 @@ defmodule EvercamMedia.Snapshot.CamClient do
       {:ok, seconds, _, :after} when seconds > 1800 ->
         response_times
         |> List.replace_at(0, Calendar.DateTime.advance!(last_date_time, 1))
+        |> List.delete_at(1)
         |> List.delete_at(1)
       _ -> response_times
     end
