@@ -45,9 +45,6 @@ defmodule EvercamMedia.Snapshot.Streamer do
       camera == nil ->
         Logger.debug "[#{camera_exid}] Shutting down streamer, camera doesn't exist"
         StreamerSupervisor.stop_streamer(camera_exid)
-      camera.is_online && ConCache.get(:snapshot_error, camera_exid) > 0 ->
-        Logger.debug "[#{camera_exid}] Checking ..."
-        spawn fn -> stream(camera) end
       length(subscribers(camera_exid)) == 0 ->
         Logger.debug "[#{camera_exid}] Shutting down streamer, no subscribers"
         StreamerSupervisor.stop_streamer(camera_exid)
@@ -92,9 +89,11 @@ defmodule EvercamMedia.Snapshot.Streamer do
       socket = Phoenix.Channel.Server.socket(pid)
       case socket do
         %Phoenix.Socket{assigns: %{current_user: user, ip: ip, source: source}} ->
-          "{#{user.username}"
-          |> check_empty_nil(ip)
-          |> check_empty_nil(source)
+          desc =
+            "#{user.username}"
+            |> check_empty_nil(ip)
+            |> check_empty_nil(source)
+          "{#{desc}}"
         %Phoenix.Socket{assigns: %{ip: ip, source: source}} -> "{#{ip}, #{source}}"
         _ -> ""
       end

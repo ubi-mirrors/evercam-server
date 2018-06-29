@@ -126,26 +126,4 @@ defmodule EvercamMedia.Snapshot.CamClient do
       _ -> response_times
     end
   end
-
-  defp error_code(:system_limit), do: 0.5
-  defp error_code(:emfile), do: 1
-  defp error_code(:case_clause), do: 1.5
-  defp error_code(:bad_request), do: 2
-  defp error_code(:closed), do: 2.5
-  defp error_code(:nxdomain), do: 3
-  defp error_code(:ehostunreach), do: 3.5
-  defp error_code(:enetunreach), do: 4
-  defp error_code(:req_timedout), do: 4.5
-  defp error_code(:timeout), do: 5
-  defp error_code(:connect_timeout), do: 5.5
-  defp error_code(:econnrefused), do: 6
-  defp error_code(:not_found), do: 6.5
-  defp error_code(:forbidden), do: 7
-  defp error_code(:unauthorized), do: 7.5
-  defp error_code(:device_error), do: 8
-  defp error_code(:device_busy), do: 8.5
-  defp error_code(:invalid_operation), do: 9
-  defp error_code(:moved), do: 9.5
-  defp error_code(:not_a_jpeg), do: 10
-  defp error_code(_error), do: 0
 end
