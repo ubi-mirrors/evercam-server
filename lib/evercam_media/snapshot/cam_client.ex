@@ -94,7 +94,7 @@ defmodule EvercamMedia.Snapshot.CamClient do
   defp save_response_time(_camera_exid, nil, _description, _response, _time), do: :noop
   defp save_response_time(camera_exid, timestamp, description, response, time) do
     date_time = Calendar.DateTime.Parse.unix!(timestamp)
-    snapshot_response_time = Float.round(time, 4)
+    snapshot_response_time = Float.round(time, 3)
 
     response_times =
       ConCache.dirty_get_or_store(:camera_response_times, camera_exid, fn() -> [date_time] end)

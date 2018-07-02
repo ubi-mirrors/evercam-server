@@ -230,6 +230,6 @@ defmodule EvercamMedia.Snapshot.Worker do
   defp add_missing_params(config, timestamp, attempt) do
     config
     |> Map.put(:timestamp, timestamp)
-    |> Map.put(:description, "Recordings retry #{attempt}")
+    |> Map.put(:description, "Recordings attempt #{attempt}")
   end
 end
