@@ -74,15 +74,17 @@ defmodule EvercamMedia.Snapshot.Worker do
   Initialize the camera server
   """
   def init(args) do
+    {:ok, storage_manager} = GenStage.start_link(EvercamMedia.Snapshot.StorageHandler, :ok)
     {:ok, snapshot_manager} = GenStage.start_link(EvercamMedia.Snapshot.DBHandler, :ok)
     {:ok, poll_manager} = GenStage.start_link(EvercamMedia.Snapshot.PollHandler, :ok)
-    {:ok, poller} = EvercamMedia.Snapshot.Poller.start_link(args)
     args = Map.merge args, %{
-      poller: poller,
+      storage_manager: storage_manager,
       snapshot_manager: snapshot_manager,
       poll_manager: poll_manager
     }
 
+    {:ok, poller} = EvercamMedia.Snapshot.Poller.start_link(args)
+    args = Map.merge(args, %{ poller: poller })
     config = Map.get(args, :config)
 
     args = case config.recording do

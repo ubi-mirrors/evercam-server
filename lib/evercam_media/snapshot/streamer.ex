@@ -8,6 +8,7 @@ defmodule EvercamMedia.Snapshot.Streamer do
   alias EvercamMedia.Snapshot.CamClient
   alias EvercamMedia.Snapshot.DBHandler
   alias EvercamMedia.Snapshot.Error
+  alias EvercamMedia.Snapshot.Storage
   alias EvercamMedia.Snapshot.StreamerSupervisor
   require Logger
 
@@ -66,6 +67,10 @@ defmodule EvercamMedia.Snapshot.Streamer do
     {:noreply, [], state}
   end
 
+  #####################
+  # Private functions #
+  #####################
+
   def stream(camera) do
     timestamp = Calendar.DateTime.now_utc |> Calendar.DateTime.Format.unix
     response = camera |> construct_args(timestamp) |> CamClient.fetch_snapshot
@@ -74,6 +79,7 @@ defmodule EvercamMedia.Snapshot.Streamer do
       {:ok, data} ->
         Util.broadcast_snapshot(camera.exid, data, timestamp)
         DBHandler.update_camera_status(camera.exid, timestamp, true)
+        spawn fn -> Storage.update_cache_and_save_thumbnail(camera.exid, timestamp, data) end
       {:error, error} ->
         Error.parse(error) |> Error.handle(camera.exid, timestamp, error)
     end

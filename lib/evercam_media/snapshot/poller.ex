@@ -8,6 +8,7 @@ defmodule EvercamMedia.Snapshot.Poller do
   use GenStage
   require Logger
   alias EvercamMedia.Snapshot.Worker
+  alias EvercamMedia.Snapshot.StreamerSupervisor
   import EvercamMedia.Schedule, only: [scheduled_now?: 3]
 
   ################
@@ -103,11 +104,13 @@ defmodule EvercamMedia.Snapshot.Poller do
     state = put_in(state, [:config, :is_paused], false)
     {:ok, timer} = Map.fetch(state, :timer)
     :erlang.cancel_timer(timer)
-    timestamp = Calendar.DateTime.now!("UTC") |> Calendar.DateTime.Format.unix
+
     case scheduled_now?(state.config.schedule, state.config.recording, state.config.timezone) do
       {:ok, true} ->
         Logger.debug "Polling camera: #{state.name} for snapshot"
-        Worker.get_snapshot(state.name, {:poll, timestamp})
+        state.name
+        |> StreamerSupervisor.find_streamer
+        |> do_request(state)
       {:ok, false} ->
         Logger.debug "Not Scheduled. Skip fetching snapshot from #{inspect state.name}"
       {:error, _message} ->
@@ -128,6 +131,20 @@ defmodule EvercamMedia.Snapshot.Poller do
   #######################
   ## Private functions ##
   #######################
+
+  defp do_request(nil, state) do
+    timestamp = Calendar.DateTime.now!("UTC") |> Calendar.DateTime.Format.unix
+    Worker.get_snapshot(state.name, {:poll, timestamp})
+  end
+  defp do_request(_pid, state) do
+    Logger.debug "Do not request to camera: #{state.name} because streamer is running."
+    case ConCache.get(:camera_thumbnail, state.config.camera_exid) do
+      {_, timestamp, image} ->
+        data = {state.name, timestamp, image}
+        GenStage.sync_info(state.storage_manager, {:save_snapshot, data})
+      _ -> :noop
+    end
+  end
 
   defp start_timer(sleep, message, false, _pause_sleep) do
     Process.send_after(self(), message, sleep)
