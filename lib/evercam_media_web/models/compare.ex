@@ -59,6 +59,16 @@ defmodule Compare do
     |> Repo.delete_all
   end
 
+  def get_last_by_camera(camera_id) do
+    Compare
+    |> where(camera_id: ^camera_id)
+    |> preload(:camera)
+    |> preload(:user)
+    |> order_by(desc: :inserted_at)
+    |> limit(1)
+    |> Repo.one
+  end
+
   def required_fields do
     @required_fields |> Enum.map(fn(field) -> String.to_atom(field) end)
   end

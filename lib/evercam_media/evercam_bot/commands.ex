@@ -9,95 +9,80 @@ defmodule EvercamMedia.EvercamBot.Commands do
   """
   command ["start"] do
     Logger.log :info, "Command /start"
-    send_message "Wellcome, write anything to show the main menu"
+    send_message "Wellcome, write anything to show the main menu",
+    reply_markup: %Model.ReplyKeyboardMarkup{
+      keyboard: [
+        [
+          %{
+            text: "Live view",
+          },
+        ],
+        [
+          %{
+            text: "View all images",
+          },
+        ],
+        [
+          %{
+            text: "Last comparison",
+          },
+        ],
+        [
+          %{
+            text: "Last clip",
+          },
+        ]
+      ]
+    }
   end
 
   callback_query_command "choose" do
     Logger.log :info, "Callback Query Command /choose"
     id = String.downcase(update.callback_query.from.username)
     user = User.by_telegram_username(id)
-    cameras_list = Camera.for(user, true)
 
     case update.callback_query.data do
 
-      "/choose live" ->
-            Enum.each(cameras_list, fn(camera) ->
-              {:ok, _} = send_message "#{camera.exid}",
-                  reply_markup: %Model.InlineKeyboardMarkup{
-                    inline_keyboard: [
-                      [
-                        %{
-                          callback_data: "/choose mycamera",
-                          text: "\xF0\x9F\x93\xB9 #{camera.name}"
-                        },
-                      ],
-                    ]
-                  }
-            end)
-
-      "/choose all" ->
-        Enum.each(cameras_list, fn(camera) ->
-          camera_exid = "#{camera.exid}"
-          {200, reponse} = EvercamMediaWeb.SnapshotController.snapshot_with_user(camera_exid, user, false)
-          File.write!("image.png", reponse[:image])
-          send_photo("image.png")
-        end)
-
       "/choose mycamera" ->
         camera_exid = "#{update.callback_query.message.text}"
-        {200, reponse} = EvercamMediaWeb.SnapshotController.snapshot_with_user(camera_exid, user, false)
-        File.write!("image.png", reponse[:image])
-        send_photo("image.png")
-
-      "/choose comparison" ->
-        Enum.each(cameras_list, fn(camera) ->
-          send_message "#{camera.id}.#{camera.exid}",
-              reply_markup: %Model.InlineKeyboardMarkup{
-                inline_keyboard: [
-                  [
-                    %{
-                      callback_data: "/choose mycomparison",
-                      text: "\xF0\x9F\x93\xB9 #{camera.name}"
-                    },
-                  ],
-                ]
-              }
-        end)
-
-        "/choose clip" ->
-          Enum.each(cameras_list, fn(camera) ->
-            send_message "#{camera.id}.#{camera.exid}",
-                reply_markup: %Model.InlineKeyboardMarkup{
-                  inline_keyboard: [
-                    [
-                      %{
-                        callback_data: "/choose myclip",
-                        text: "\xF0\x9F\x93\xB9 #{camera.name}"
-                      },
-                    ],
-                  ]
-                }
-          end)
+        case EvercamMediaWeb.SnapshotController.snapshot_with_user(camera_exid, user, false) do
+          {200, response} ->
+            File.write!("image.png", response[:image])
+            send_photo("image.png")
+            File.rm!("image.png")
+          {_, response} ->
+            send_message "#{camera_exid}: #{response.message}"
+        end
 
       "/choose mycomparison" ->
         text = String.split("#{update.callback_query.message.text}", ".")
         id = Enum.at(text, 0)
         camera_exid = Enum.at(text, 1)
-        compare = Compare.get_by_camera(id)
-        last_compare = List.last(compare)
-        video = EvercamMedia.TimelapseRecording.S3.do_load("#{camera_exid}/compares/#{last_compare.id}/#{last_compare.id}.gif")
-        File.write!("compare.gif", video)
-        send_video("compare.gif")
+        compare = Compare.get_last_by_camera(id)
+
+        case EvercamMedia.TimelapseRecording.S3.do_load("#{camera_exid}/compares/#{compare.exid}/#{compare.exid}.mp4") do
+          {:ok, response} ->
+            File.write("compare.mp4", response)
+            send_video("compare.mp4")
+            File.rm!("compare.mp4")
+          {:error, response} ->
+            send_message "#{camera_exid}: #{response.message}"
+        end
 
       "/choose myclip" ->
         text = String.split("#{update.callback_query.message.text}", ".")
         id = Enum.at(text, 0)
         camera_exid = Enum.at(text, 1)
-        archive = Archive.by_camera_id(Archive, id)
-        last_archive = List.last(archive)
-        video = EvercamMedia.TimelapseRecording.S3.do_load("#{camera_exid}/archives/#{last_archive.id}/#{last_archive.id}.gif")
-        File.write!("clip.gif", video)
-        send_video("clip.gif")
+        archive = Archive.get_last_by_camera(id)
+
+        case EvercamMedia.TimelapseRecording.S3.do_load("#{camera_exid}/clips/#{archive.exid}/#{archive.exid}.mp4") do
+          {:ok, response} ->
+            File.write("clip.mp4", response)
+            send_video("clip.mp4")
+            File.rm!("clip.mp4")
+          {:error, response} ->
+            send_message "#{camera_exid}: #{response.message}"
+        end
       end
   end
 
@@ -106,41 +91,76 @@ defmodule EvercamMedia.EvercamBot.Commands do
     You may use it as a fallback.
   """
   message do
-      id = update.message.chat.username
-      user = User.by_telegram_username(id)
-      case user do
-        nil ->
-          send_message "Unregistered user"
-        _user ->
-          {:ok, _} = send_message "what do you want to see?",
-          reply_markup: %Model.InlineKeyboardMarkup{
-            inline_keyboard: [
-              [
-                %{
-                  callback_data: "/choose live",
-                  text: "Live view",
-                },
-              ],
-              [
-              %{
-                callback_data: "/choose all",
-                text: "View all images",
-              },
-              ],
-              [
-                %{
-                  callback_data: "/choose comparison",
-                  text: "Last Comparison",
-                },
-              ],
-              [
-                %{
-                  callback_data: "/choose clip",
-                  text: "Last Clip",
-                },
-              ]
-            ]
-          }
-      end
+    id = update.message.chat.username
+    user = User.by_telegram_username(id)
+    cameras_list = Camera.for(user, true)
+    case user do
+      nil ->
+        send_message "Unregistered user"
+      _user ->
+        case update.message.text do
+          "Live view" ->
+            Enum.each(cameras_list, fn(camera) ->
+              {:ok, _} = send_message "#{camera.exid}",
+                reply_markup: %Model.InlineKeyboardMarkup{
+                  inline_keyboard: [
+                    [
+                      %{
+                        callback_data: "/choose mycamera",
+                        text: "\xF0\x9F\x93\xB9 #{camera.name}"
+                      },
+                    ],
+                  ]
+                }
+              end)
+
+          "View all images" ->
+            Enum.each(cameras_list, fn(camera) ->
+              camera_exid = "#{camera.exid}"
+              case EvercamMediaWeb.SnapshotController.snapshot_with_user(camera_exid, user, false) do
+                {200, response} ->
+                  File.write!("image.png", response[:image])
+                  send_photo("image.png")
+                  File.rm!("image.png")
+                {_, response} ->
+                  send_message "#{camera_exid}: #{response.message}"
+              end
+            end)
+
+          "Last comparison" ->
+            Enum.each(cameras_list, fn(camera) ->
+              send_message "#{camera.id}.#{camera.exid}",
+                reply_markup: %Model.InlineKeyboardMarkup{
+                  inline_keyboard: [
+                    [
+                      %{
+                        callback_data: "/choose mycomparison",
+                        text: "\xF0\x9F\x93\xB9 #{camera.name}"
+                      },
+                    ],
+                  ]
+                }
+              end)
+
+            "Last clip" ->
+              Enum.each(cameras_list, fn(camera) ->
+                send_message "#{camera.id}.#{camera.exid}",
+                  reply_markup: %Model.InlineKeyboardMarkup{
+                    inline_keyboard: [
+                      [
+                        %{
+                          callback_data: "/choose myclip",
+                          text: "\xF0\x9F\x93\xB9 #{camera.name}"
+                        },
+                      ],
+                    ]
+                  }
+                end)
+
+              _ ->
+                send_message "Command not found"
+                Logger.log :info, "Command not found"
+        end
+    end
   end
 end

@@ -88,6 +88,16 @@ defmodule Archive do
     |> Repo.all
   end
 
+  def get_last_by_camera(id) do
+    Archive
+    |> where(camera_id: ^id)
+    |> preload(:camera)
+    |> preload(:user)
+    |> order_by(desc: :created_at)
+    |> limit(1)
+    |> Repo.one
+  end
+
   def required_fields do
     @required_fields |> Enum.map(fn(field) -> String.to_atom(field) end)
   end
