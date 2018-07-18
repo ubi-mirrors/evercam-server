@@ -85,7 +85,7 @@ defmodule EvercamMedia.UserMailer do
       subject: "#{User.get_fullname(user)} has shared the camera #{camera.name} with you.",
       from: @from,
       "h:Reply-To": user.email,
-      bcc: "#{user.email},marco@evercam.io,vinnie@evercam.io,aine@evercam.io",
+      bcc: "#{user.email},marco@evercam.io,vinnie@evercam.io,erin@evercam.io",
       attachments: get_attachments(thumbnail),
       html: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "sign_up_to_share_email.html", user: user, camera: camera, message: message, key: key, sharee: email, thumbnail_available: !!thumbnail, year: @year),
       text: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "sign_up_to_share_email.txt", user: user, camera: camera, message: message, key: key)
@@ -108,7 +108,7 @@ defmodule EvercamMedia.UserMailer do
       to: user.email,
       subject: "#{email} did not accept your request to view your camera",
       from: @from,
-      bcc: "marco@evercam.io,vinnie@evercam.io,aine@evercam.io",
+      bcc: "marco@evercam.io,vinnie@evercam.io,erin@evercam.io",
       attachments: get_attachments(thumbnail),
       html: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "revoke_share_request.html", user: user, camera: camera, sharee: email, thumbnail_available: !!thumbnail, year: @year),
       text: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "revoke_share_request.txt", user: user, camera: camera, sharee: email)
@@ -120,7 +120,7 @@ defmodule EvercamMedia.UserMailer do
       to: user.email,
       subject: "A new camera has been added to your account",
       from: @from,
-      bcc: "marco@evercam.io,vinnie@evercam.io,aine@evercam.io",
+      bcc: "marco@evercam.io,vinnie@evercam.io,erin@evercam.io",
       attachments: get_attachments(thumbnail),
       html: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "camera_create_notification.html", user: user, camera: camera, thumbnail_available: !!thumbnail, year: @year),
       text: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "camera_create_notification.txt", user: user, camera: camera)
