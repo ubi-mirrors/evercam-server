@@ -62,6 +62,27 @@ defmodule EvercamMedia.Intercom do
     tag_user(user.email, get_tag_name(company_id))
   end
 
+  def update_intercom_user(false, _user, _old_username, _user_agent, _requester_ip), do: :noop
+  def update_intercom_user(true, user, old_username, user_agent, requester_ip) do
+    headers = ["Authorization": "Bearer #{@intercom_token}",  "Accept": "Accept:application/json", "Content-Type": "application/json"]
+
+    case get_user(old_username) do
+      {:ok, response} ->
+        intercom_user = response.body |> Poison.decode!
+        intercom_new_user = %{
+          "id": intercom_user["id"],
+          "email": user.email,
+          "user_id": user.username,
+          "name": user.firstname <> " " <> user.lastname,
+          "last_seen_user_agent": user_agent,
+          "last_seen_ip": requester_ip,
+        }
+        |> Poison.encode!
+        HTTPoison.post(@intercom_url, intercom_new_user, headers)
+      _ -> ""
+    end
+  end
+
   def tag_user(_email, ""), do: :noop
   def tag_user(email, tag) do
     intercom_url = @intercom_url |> String.replace("users", "tags")

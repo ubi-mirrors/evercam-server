@@ -280,10 +280,10 @@ defmodule EvercamMediaWeb.UserController do
 
   def update(conn, %{"id" => username} = params) do
     current_user = conn.assigns[:current_user]
-    user =
-      params["id"]
-      |> String.replace_trailing(".json", "")
-      |> User.by_username_or_email
+    requester_ip = user_request_ip(conn)
+    user_agent = get_user_agent(conn)
+    username = username |> String.replace_trailing(".json", "")
+    user = User.by_username_or_email(username)
 
     with :ok <- ensure_user_exists(user, username, conn),
          :ok <- ensure_can_view(current_user, user, conn),
@@ -304,6 +304,7 @@ defmodule EvercamMediaWeb.UserController do
       case Repo.update(changeset) do
         {:ok, user} ->
           updated_user = user |> Repo.preload(:country, force: true)
+          Intercom.update_intercom_user(Application.get_env(:evercam_media, :create_intercom_user), user, username, user_agent, requester_ip)
           conn |> render(UserView, "show.json", %{user: updated_user})
         {:error, changeset} ->
           render_error(conn, 400, Util.parse_changeset(changeset))
