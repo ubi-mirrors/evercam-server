@@ -62,6 +62,7 @@ defmodule EvercamMedia.Snapshot.DBHandler do
       status == true ->
         ConCache.dirty_put(:snapshot_error, camera.exid, 0)
       status == false && camera.is_online != status && error_total >= 100 ->
+        ConCache.dirty_put(:snapshot_error, camera.exid, 0)
         change_camera_status(camera, timestamp, false, error_code)
         Logger.info "[#{camera_exid}] [update_status] [offline] [#{error_code}]"
       status == false && camera.is_online != status ->
