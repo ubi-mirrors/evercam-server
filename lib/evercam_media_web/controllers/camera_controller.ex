@@ -233,7 +233,7 @@ defmodule EvercamMediaWeb.CameraController do
                 }
               )
               update_camera_worker(Application.get_env(:evercam_media, :run_spawn), camera.exid)
-              update_camera_to_zoho(Application.get_env(:evercam_media, :run_spawn), camera, caller.username)
+              update_camera_to_zoho(false, camera, caller.username)
               conn
               |> render("show.json", %{camera: camera, user: caller})
             {:error, changeset} ->
@@ -295,7 +295,7 @@ defmodule EvercamMediaWeb.CameraController do
         is_public: false
       }
       renamed_camera = Map.put(camera, :name, "#{camera.name} (Deleted)")
-      update_camera_to_zoho(Application.get_env(:evercam_media, :run_spawn), renamed_camera, caller.username)
+      update_camera_to_zoho(false, renamed_camera, caller.username)
       camera
       |> Camera.delete_changeset(camera_params)
       |> Repo.update!
@@ -359,7 +359,7 @@ defmodule EvercamMediaWeb.CameraController do
           CameraActivity.log_activity(caller, camera, "created", %{ip: user_request_ip(conn), agent: get_user_agent(conn)})
           Camera.invalidate_user(caller)
           send_email_notification(Application.get_env(:evercam_media, :run_spawn), caller, full_camera)
-          add_camera_to_zoho(Application.get_env(:evercam_media, :run_spawn), full_camera, caller.username)
+          add_camera_to_zoho(false, full_camera, caller.username)
           conn
           |> put_status(:created)
           |> render("show.json", %{camera: full_camera, user: caller})

@@ -89,11 +89,7 @@ defmodule EvercamMediaWeb.CameraShareController do
          :ok <- caller_has_permission(conn, caller, camera)
     do
       requester_ip = user_request_ip(conn)
-      zoho_camera =
-        case Zoho.get_camera(camera.exid) do
-          {:ok, zoho_camera} -> zoho_camera
-          _ -> %{}
-        end
+      zoho_camera = %{}
 
       fetch_shares =
         Enum.reduce(email_array, {[], [], [], Ecto.DateTime.utc}, fn email, {shares, share_requests, changes, datetime} = _acc ->
@@ -117,7 +113,7 @@ defmodule EvercamMediaWeb.CameraShareController do
                   CameraActivity.log_activity(caller, camera, "shared", %{with: sharee.email, ip: requester_ip}, next_datetime)
                   broadcast_share_to_users(camera)
                 end)
-                add_contact_to_zoho(Application.get_env(:evercam_media, :run_spawn), zoho_camera, sharee, caller.username)
+                add_contact_to_zoho(false, zoho_camera, sharee, caller.username)
                 {[camera_share | shares], share_requests, changes, next_datetime}
               {:error, changeset} ->
                 {shares, share_requests, [attach_email_to_message(changeset, email) | changes], next_datetime}
@@ -268,7 +264,7 @@ defmodule EvercamMediaWeb.CameraShareController do
       spawn(fn -> delete_snapmails(sharee, camera) end)
       Camera.invalidate_user(sharee)
       Camera.invalidate_camera(camera)
-      delete_share_to_zoho(Application.get_env(:evercam_media, :run_spawn), exid, User.get_fullname(sharee), caller.username)
+      delete_share_to_zoho(false, exid, User.get_fullname(sharee), caller.username)
       CameraActivity.log_activity(caller, camera, "stopped sharing", %{with: sharee.email, ip: user_request_ip(conn)})
       json(conn, %{})
     end
