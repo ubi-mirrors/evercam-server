@@ -56,7 +56,7 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
     case scheduled_now?(config.schedule, start_date, config.timezone) do
       {:ok, true} ->
         Logger.debug "Extracting snapshot from NVR."
-        extract_image(config, url, start_date, path, upload_path)
+        extract_image(config, url, start_date, path, upload_path, config.timezone)
       {:ok, false} ->
         Logger.debug "Not Scheduled. Skip extracting snapshot from NVR."
       {:error, _message} ->
@@ -100,7 +100,7 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
     end
   end
 
-  defp extract_image(config, url, start_date, path, upload_path) do
+  defp extract_image(config, url, start_date, path, upload_path, timezone) do
     image_name = start_date |> Calendar.Strftime.strftime!("%Y-%m-%d-%H-%M-%S")
     saved_file_name = start_date |> DateTime.to_unix
     images_path = "#{path}#{saved_file_name}.jpg"
@@ -112,21 +112,21 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
     Porcelain.shell("ffmpeg -rtsp_transport tcp -stimeout 10000000 -i '#{stream_url}' -vframes 1 -y #{images_path}").out
     spawn(fn ->
       File.exists?(images_path)
-      |> upload_and_inject_image(config, images_path, upload_image_path, start_date)
+      |> upload_and_inject_image(config, images_path, upload_image_path, start_date, timezone)
     end)
   end
 
-  defp upload_and_inject_image(true, config, image_path, upload_image_path, start_date) do
+  defp upload_and_inject_image(true, config, image_path, upload_image_path, start_date, timezone) do
     upload_image(config.jpegs_to_dropbox, image_path, upload_image_path)
-    inject_to_cr(config.inject_to_cr, config.exid, image_path, start_date)
+    inject_to_cr(config.inject_to_cr, config.exid, image_path, start_date, timezone)
   end
-  defp upload_and_inject_image(_, _config, _image_path, _upload_image_path, _start_date), do: :noop
+  defp upload_and_inject_image(_, _config, _image_path, _upload_image_path, _start_date, _timezone), do: :noop
 
-  defp inject_to_cr(status, exid, image_path, start_date)  when status in [true, "true"] do
+  defp inject_to_cr(status, exid, image_path, start_date, timezone)  when status in [true, "true"] do
     {:ok, image} = File.read("#{image_path}")
-    seaweedfs_save(exid, start_date |> DateTime.to_unix, image, "Evercam Proxy")
+    seaweedfs_save(exid, shift_zone_to_utc(start_date, timezone) |> DateTime.to_unix, image, "Evercam Proxy")
   end
-  defp inject_to_cr(_, _exid, _image_path, _start_date), do: :noop
+  defp inject_to_cr(_, _exid, _image_path, _start_date, _timezone), do: :noop
 
   defp upload_image(status, image_path, upload_image_path) when status in [true, "true"] do
     client = ElixirDropbox.Client.new(System.get_env["DROP_BOX_TOKEN"])
@@ -159,5 +159,11 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
 
   defp clean_images(images_directory) do
     File.rm_rf!(images_directory)
+  end
+
+  defp shift_zone_to_utc(date, timezone) do
+    %{year: year, month: month, day: day, hour: hour, minute: minute, second: second} = date
+    Calendar.DateTime.from_erl!({{year, month, day}, {hour, minute, second}}, timezone)
+    |> Calendar.DateTime.shift_zone!("UTC")
   end
 end
