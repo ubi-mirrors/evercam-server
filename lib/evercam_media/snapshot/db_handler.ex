@@ -95,14 +95,17 @@ defmodule EvercamMedia.Snapshot.DBHandler do
       |> Calendar.DateTime.Parse.unix!
       |> Calendar.DateTime.to_erl
       |> Ecto.DateTime.cast!
-    log_camera_status(camera, status, datetime, error_code)
 
     try do
       params = construct_camera(datetime, status, camera.is_online == status)
-      changeset = Camera.changeset(camera, params)
-      camera = Repo.update!(changeset)
-      broadcast_change_to_users(camera)
+      camera =
+        camera
+        |> Camera.changeset(params)
+        |> Repo.update!
+
       Camera.invalidate_camera(camera)
+      log_camera_status(camera, status, datetime, error_code)
+      broadcast_change_to_users(camera)
     catch _type, error ->
       Util.error_handler(error)
     end
