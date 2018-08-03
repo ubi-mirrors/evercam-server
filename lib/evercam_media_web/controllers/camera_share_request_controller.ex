@@ -115,7 +115,8 @@ defmodule EvercamMediaWeb.CameraShareRequestController do
         EvercamMedia.UserMailer.revoked_share_request_notification(share_request.user, share_request.camera, share_request.email)
       end)
     catch _type, error ->
-      Util.error_handler(error)
+      Logger.error inspect(error)
+      Logger.error Exception.format_stacktrace System.stacktrace
     end
   end
 

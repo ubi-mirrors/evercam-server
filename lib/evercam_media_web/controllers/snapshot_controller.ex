@@ -761,7 +761,8 @@ defmodule EvercamMediaWeb.SnapshotController do
       Task.async(fn() -> function.() end)
       |> Task.await(:timer.seconds(timeout))
     catch _type, error ->
-        Util.error_handler(error)
+        Logger.error inspect(error)
+        Logger.error Exception.format_stacktrace System.stacktrace
       {504, %{message: "Request timed out."}}
     end
   end

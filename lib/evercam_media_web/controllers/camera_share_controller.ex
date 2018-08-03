@@ -369,7 +369,8 @@ defmodule EvercamMediaWeb.CameraShareController do
         EvercamMedia.UserMailer.camera_shared_notification(user, camera, to_email, message)
       end)
     catch _type, error ->
-      Util.error_handler(error)
+      Logger.error inspect(error)
+      Logger.error Exception.format_stacktrace System.stacktrace
     end
   end
 
@@ -379,7 +380,8 @@ defmodule EvercamMediaWeb.CameraShareController do
         EvercamMedia.UserMailer.camera_share_request_notification(user, camera, to_email, message, share_request_key)
       end)
     catch _type, error ->
-      Util.error_handler(error)
+      Logger.error inspect(error)
+      Logger.error Exception.format_stacktrace System.stacktrace
     end
   end
 

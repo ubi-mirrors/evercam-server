@@ -653,7 +653,8 @@ defmodule EvercamMediaWeb.CameraController do
         EvercamMedia.UserMailer.camera_create_notification(user, camera)
       end
     catch _type, error ->
-      Util.error_handler(error)
+      Logger.error inspect(error)
+      Logger.error Exception.format_stacktrace System.stacktrace
     end
   end
   defp send_email_notification(_mode, _user, _camera), do: :noop

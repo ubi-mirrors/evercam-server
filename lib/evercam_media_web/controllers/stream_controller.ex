@@ -55,7 +55,8 @@ defmodule EvercamMediaWeb.StreamController do
       200
     rescue
       error ->
-        Util.error_handler(error)
+        Logger.error inspect(error)
+        Logger.error Exception.format_stacktrace System.stacktrace
         401
     end
   end
@@ -131,7 +132,8 @@ defmodule EvercamMediaWeb.StreamController do
         |> MetaData.insert_meta
       end)
     catch _type, error ->
-      Util.error_handler(error)
+      Logger.error inspect(error)
+      Logger.error Exception.format_stacktrace System.stacktrace
     end
   end
 

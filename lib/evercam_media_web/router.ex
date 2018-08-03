@@ -88,7 +88,6 @@ end
       patch "/cameras/:id", CameraController, :update
       options "/cameras/:id", CameraController, :nothing
       put "/cameras/:id", CameraController, :transfer
-      options "/cameras/:id", CameraController, :nothing
       delete "/cameras/:id", CameraController, :delete
       post "/cameras", CameraController, :create
       get "/cameras/:id/thumbnail", SnapshotController, :thumbnail
@@ -160,7 +159,6 @@ end
       patch "/snapmails/:id/unsubscribe/:email", SnapmailController, :unsubscribe
       options "/snapmails/:id/unsubscribe/:email", SnapmailController, :nothing
       delete "/snapmails/:id", SnapmailController, :delete
-      options "/snapmails/:id", SnapmailController, :nothing
 
       get "/timelapses", TimelapseController, :user_all
       get "/cameras/:id/timelapses", TimelapseController, :all
@@ -169,7 +167,6 @@ end
       patch "/cameras/:id/timelapses/:timelapse_id", TimelapseController, :update
       options "/cameras/:id/timelapses/:timelapse_id", TimelapseController, :nothing
       delete "/cameras/:id/timelapses/:timelapse_id", TimelapseController, :delete
-      options "/cameras/:id/timelapses/:timelapse_id", TimelapseController, :nothing
 
       get "/cameras/:id/nvr/recordings/:year/:month/days", CloudRecordingController, :nvr_days
       get "/cameras/:id/nvr/recordings/:year/:month/:day/hours", CloudRecordingController, :nvr_hours
@@ -191,7 +188,6 @@ end
       patch "/cameras/:id/compares/:compare_id", CompareController, :update
       options "/cameras/:id/compares/:compare_id", CompareController, :nothing
       delete "/cameras/:id/compares/:compare_id", CompareController, :delete
-      options "/cameras/:id/compares/:compare_id", CompareController, :delete
 
       post "/sdk/nvr/reboot", SDKController, :nvr_reboot
       options "/sdk/nvr/reboot", SDKController, :nothing

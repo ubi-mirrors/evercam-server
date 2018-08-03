@@ -187,25 +187,6 @@ defmodule EvercamMediaWeb.ArchiveController do
     end
   end
 
-  swagger_path :create do
-    post "/cameras/{id}/archives"
-    summary "Create new archive."
-    parameters do
-      id :path, :string, "Unique identifier for camera.", required: true
-      title :query, :string, "", required: true
-      from_date :query, :string, "Unix timestamp", required: true
-      to_date :query, :string, "Unix timestamp", required: true
-      is_nvr_archive :query, :boolean, ""
-      api_id :query, :string, "The Evercam API id for the requester."
-      api_key :query, :string, "The Evercam API key for the requester."
-    end
-    tag "Archives"
-    response 200, "Success"
-    response 400, "Bad Request"
-    response 401, "Invalid API keys or Unauthorized"
-    response 404, "Camera does not exist"
-  end
-
   swagger_path :update do
     patch "/cameras/{id}/archives/{archive_id}"
     summary "Updates full or partial data for an existing archive."

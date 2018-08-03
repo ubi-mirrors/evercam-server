@@ -107,7 +107,8 @@ defmodule EvercamMedia.Snapshot.DBHandler do
       log_camera_status(camera, status, datetime, error_code)
       broadcast_change_to_users(camera)
     catch _type, error ->
-      Util.error_handler(error)
+      Logger.error inspect(error)
+      Logger.error Exception.format_stacktrace System.stacktrace
     end
     do_pause_camera(camera, 5000, false)
   end

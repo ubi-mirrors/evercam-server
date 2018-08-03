@@ -127,7 +127,7 @@ defmodule CameraShare do
     |> where([cs, cam], cam.owner_id == ^user_id)
     |> join(:inner, [u], user in User)
     |> where([cs, cam, user], user.id == cs.user_id)
-    |> where([cs, cam, user], not user.id in ^remove_already_shared)
+    |> where([cs, cam, user], user.id not in ^remove_already_shared)
     |> preload(:user)
     |> Repo.all
   end

@@ -37,12 +37,12 @@ defmodule EvercamMediaWeb.PublicView do
 
   def render("geojson.json", %{cameras: cameras}) do
     %{
-      "type": "FeatureCollection",
-      "features": [
+      type: "FeatureCollection",
+      features: [
         Enum.map(cameras, fn(camera) ->
           %{
-            "type": "Feature",
-            "properties": %{
+            type: "Feature",
+            properties: %{
               "marker-color": "#DC4C3F",
               "Current Thumbnail Tag": "<img width='140' src='#{thumbnail_url(camera)}' />",
               "Current Thumbnail URL": thumbnail_url(camera),
@@ -56,9 +56,9 @@ defmodule EvercamMediaWeb.PublicView do
               "Vendor/Model": "#{Camera.get_vendor_attr(camera, :name)} / #{Camera.get_model_attr(camera, :name)}",
               "marker-symbol": "circle"
             },
-            "geometry": %{
-              "type": "Point",
-              "coordinates": Tuple.to_list(camera.location.coordinates)
+            geometry: %{
+              type: "Point",
+              coordinates: Tuple.to_list(camera.location.coordinates)
             }
           }
         end)

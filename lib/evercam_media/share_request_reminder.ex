@@ -6,7 +6,7 @@ defmodule EvercamMedia.ShareRequestReminder do
   """
 
   alias EvercamMedia.Repo
-  alias EvercamMedia.Util
+  require Logger
 
   def check_share_requests do
     seconds_to_day_before = (60 * 60 * 24) * (-22)
@@ -65,7 +65,8 @@ defmodule EvercamMedia.ShareRequestReminder do
         EvercamMedia.UserMailer.camera_share_request_notification(user, camera, to_email, message, share_request_key)
       end)
     catch _type, error ->
-      Util.error_handler(error)
+      Logger.error inspect(error)
+      Logger.error Exception.format_stacktrace System.stacktrace
     end
   end
 end

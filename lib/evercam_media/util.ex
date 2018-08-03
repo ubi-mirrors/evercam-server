@@ -98,11 +98,6 @@ defmodule EvercamMedia.Util do
       %{timestamp: timestamp, response_time: response_time, response_type: response_type, description: description})
   end
 
-  def error_handler(error) do
-    Logger.error inspect(error)
-    Logger.error Exception.format_stacktrace System.stacktrace
-  end
-
   defp format_token_message(args) do
     [""]
     |> Enum.into(args)

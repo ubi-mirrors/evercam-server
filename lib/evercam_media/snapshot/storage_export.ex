@@ -73,6 +73,10 @@ defmodule EvercamMedia.Snapshot.Storage.Export do
   @seaweedfs Application.get_env(:evercam_media, :seaweedfs_url)
   @hackney_opts [pool: :seaweedfs_upload_pool]
 
+  def init(args) do
+    {:ok, args}
+  end
+
   def start_link([]) do
     GenServer.start_link(__MODULE__, [])
   end

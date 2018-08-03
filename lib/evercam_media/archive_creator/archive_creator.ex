@@ -7,7 +7,6 @@ defmodule EvercamMedia.ArchiveCreator.ArchiveCreator do
   require Logger
   alias EvercamMedia.Repo
   alias EvercamMedia.Snapshot.Storage
-  alias EvercamMedia.Util
 
   @root_dir Application.get_env(:evercam_media, :storage_dir)
 
@@ -63,7 +62,8 @@ defmodule EvercamMedia.ArchiveCreator.ArchiveCreator do
         end
       rescue
         error ->
-          Util.error_handler(error)
+          Logger.error inspect(error)
+          Logger.error Exception.format_stacktrace System.stacktrace
           failed_creation(archive)
       end
     end
