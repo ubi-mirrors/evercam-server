@@ -124,13 +124,13 @@ defmodule EvercamMediaWeb.StreamController do
   defp insert_meta_data(rtsp_url, action, camera_id, ip, token) do
     try do
       stream_in = get_stream_info(rtsp_url)
+      pid =
+        rtsp_url
+        |> ffmpeg_pids
+        |> List.first
 
-      rtsp_url
-      |> ffmpeg_pids
-      |> Enum.each(fn(pid) ->
-        construct_params(camera_id, action, ip, pid, rtsp_url, token, stream_in)
-        |> MetaData.insert_meta
-      end)
+      construct_params(camera_id, action, ip, pid, rtsp_url, token, stream_in)
+      |> MetaData.insert_meta
     catch _type, error ->
       Logger.error inspect(error)
       Logger.error Exception.format_stacktrace System.stacktrace
