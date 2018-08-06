@@ -87,7 +87,7 @@ defmodule EvercamMedia.Mixfile do
       {:httpoison, github: "ijunaid8989/httpoison", override: true},
       {:jsx, "~> 2.8.2", override: true},
       {:mailgun, github: "evercam/mailgun"},
-      {:nadia, "~> 0.4.3"},
+      {:nadia, "~> 0.4.4"},
       {:phoenix, "~> 1.3.3", override: true},
       {:phoenix_ecto, "~> 3.2.3"},
       {:phoenix_html, "~> 2.9.3"},

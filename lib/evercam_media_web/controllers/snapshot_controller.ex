@@ -641,7 +641,7 @@ defmodule EvercamMediaWeb.SnapshotController do
     |> handle_test_response
   end
 
-  defp snapshot_thumbnail(camera_exid, user, update_thumbnail?) do
+  def snapshot_thumbnail(camera_exid, user, update_thumbnail?) do
     camera = Camera.get_full(camera_exid)
     if update_thumbnail?, do: spawn(fn -> update_thumbnail(camera) end)
     with true <- Permission.Camera.can_snapshot?(user, camera),

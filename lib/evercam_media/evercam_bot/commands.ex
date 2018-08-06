@@ -42,17 +42,11 @@ defmodule EvercamMedia.EvercamBot.Commands do
     user = User.by_telegram_username(id)
 
     case update.callback_query.data do
-
       "/choose mycamera" ->
         camera_exid = "#{update.callback_query.message.text}"
-        case EvercamMediaWeb.SnapshotController.snapshot_with_user(camera_exid, user, false) do
-          {200, response} ->
-            File.write!("image.png", response[:image])
-            send_photo("image.png")
-            File.rm!("image.png")
-          {_, response} ->
-            send_message "#{camera_exid}: #{response.message}"
-        end
+        camera = Camera.get_full(camera_exid)
+        camera
+        |> get_photo(user, update)
 
       "/choose mycomparison" ->
         text = String.split("#{update.callback_query.message.text}", ".")
@@ -61,12 +55,8 @@ defmodule EvercamMedia.EvercamBot.Commands do
         compare = Compare.get_last_by_camera(id)
 
         case EvercamMedia.TimelapseRecording.S3.do_load("#{camera_exid}/compares/#{compare.exid}/#{compare.exid}.mp4") do
-          {:ok, response} ->
-            File.write("compare.mp4", response)
-            send_video("compare.mp4")
-            File.rm!("compare.mp4")
-          {:error, response} ->
-            send_message "#{camera_exid}: #{response.message}"
+          {:ok, response} -> send_file(response, update)
+          {:error, response} -> send_message "#{camera_exid}: #{response.message}"
         end
 
       "/choose myclip" ->
@@ -76,12 +66,8 @@ defmodule EvercamMedia.EvercamBot.Commands do
         archive = Archive.get_last_by_camera(id)
 
         case EvercamMedia.TimelapseRecording.S3.do_load("#{camera_exid}/clips/#{archive.exid}/#{archive.exid}.mp4") do
-          {:ok, response} ->
-            File.write("clip.mp4", response)
-            send_video("clip.mp4")
-            File.rm!("clip.mp4")
-          {:error, response} ->
-            send_message "#{camera_exid}: #{response.message}"
+          {:ok, response} -> send_file(response, update)
+          {:error, response} -> send_message "#{camera_exid}: #{response.message}"
         end
       end
   end
@@ -115,17 +101,7 @@ defmodule EvercamMedia.EvercamBot.Commands do
               end)
 
           "View all images" ->
-            Enum.each(cameras_list, fn(camera) ->
-              camera_exid = "#{camera.exid}"
-              case EvercamMediaWeb.SnapshotController.snapshot_with_user(camera_exid, user, false) do
-                {200, response} ->
-                  File.write!("image.png", response[:image])
-                  send_photo("image.png")
-                  File.rm!("image.png")
-                {_, response} ->
-                  send_message "#{camera_exid}: #{response.message}"
-              end
-            end)
+            Enum.each(cameras_list, fn(camera) -> get_photo(camera, user, update) end)
 
           "Last comparison" ->
             Enum.each(cameras_list, fn(camera) ->
@@ -162,5 +138,42 @@ defmodule EvercamMedia.EvercamBot.Commands do
                 Logger.log :info, "Command not found"
         end
     end
+  end
+
+  defp get_message(nil), do: "Camera not found"
+  defp get_message(camera) do
+    case camera.is_online do
+      true -> "#{camera.name} is online but we can not get the live view, here is the last thumbnail:"
+      false -> "#{camera.name} is offline, here is the last thumbnail:"
+    end
+  end
+
+  defp get_photo(nil, _user, _update), do: Logger.log :info, "Camera not found"
+  defp get_photo(_nil, nil, _update), do: Logger.log :info, "User not found"
+  defp get_photo(camera, user, update) do
+    case EvercamMediaWeb.SnapshotController.snapshot_with_user(camera.exid, user, false) do
+      {200, response} -> send_image(response[:image], update)
+      {_, _} ->
+        camera
+        |> get_message
+        |> send_message
+        case EvercamMediaWeb.SnapshotController.snapshot_thumbnail(camera.exid, user, camera.is_online) do
+          {200, img} -> send_image(img[:image], update)
+          {404, img} -> send_image(img[:image], update)
+          {403, img} -> send_message "#{img.message}"
+        end
+    end
+  end
+
+  defp send_image(image, update) do
+    File.write!("image.png", image)
+    send_photo("image.png")
+    File.rm!("image.png")
+  end
+
+  defp send_file(video, update) do
+    File.write("video.mp4", video)
+    send_video("video.mp4")
+    File.rm!("video.mp4")
   end
 end
