@@ -43,9 +43,8 @@ defmodule EvercamMedia.EvercamBot.Commands do
 
     case update.callback_query.data do
       "/choose mycamera" ->
-        camera_exid = "#{update.callback_query.message.text}"
-        camera = Camera.get_full(camera_exid)
-        camera
+        "#{update.callback_query.message.text}"
+        |> Camera.get_full
         |> get_photo(user, update)
 
       "/choose mycomparison" ->
@@ -149,7 +148,7 @@ defmodule EvercamMedia.EvercamBot.Commands do
   end
 
   defp get_photo(nil, _user, _update), do: Logger.log :info, "Camera not found"
-  defp get_photo(_nil, nil, _update), do: Logger.log :info, "User not found"
+  defp get_photo(_camera, nil, _update), do: Logger.log :info, "User not found"
   defp get_photo(camera, user, update) do
     case EvercamMediaWeb.SnapshotController.snapshot_with_user(camera.exid, user, false) do
       {200, response} -> send_image(response[:image], update)
