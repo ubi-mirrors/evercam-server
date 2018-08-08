@@ -56,7 +56,6 @@ defmodule EvercamMediaWeb.StreamController do
     rescue
       error ->
         Logger.error inspect(error)
-        Logger.error Exception.format_stacktrace System.stacktrace
         401
     end
   end

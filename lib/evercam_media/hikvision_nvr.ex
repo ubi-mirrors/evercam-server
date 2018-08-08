@@ -32,8 +32,8 @@ defmodule EvercamMedia.HikvisionNVR do
     xml = "#{xml}<metadataDescriptor>//metadata.psia.org/VideoMotion</metadataDescriptor></metadataList></CMSearchDescription>"
 
     url = "http://#{host}:#{port}/PSIA/ContentMgmt/search"
-    case HTTPoison.post!(url, xml, ["Content-Type": "application/x-www-form-urlencoded", "Authorization": "Basic #{Base.encode64("#{username}:#{password}")}", "SOAPAction": "http://www.w3.org/2003/05/soap-envelope"]) do
-      %HTTPoison.Response{body: body} -> {:ok, body}
+    case HTTPoison.post(url, xml, ["Content-Type": "application/x-www-form-urlencoded", "Authorization": "Basic #{Base.encode64("#{username}:#{password}")}", "SOAPAction": "http://www.w3.org/2003/05/soap-envelope"]) do
+      {:ok, %HTTPoison.Response{body: body}} -> {:ok, body}
       _ ->
         Logger.error "[get_stream_urls] [#{url}] [#{xml}]"
         {:error}
@@ -47,8 +47,8 @@ defmodule EvercamMedia.HikvisionNVR do
     xml = "<?xml version='1.0' encoding='utf-8'?><trackDailyParam><year>#{year}</year><monthOfYear>#{month}</monthOfYear></trackDailyParam>"
 
     post_url = "http://#{host}:#{port}/ISAPI/ContentMgmt/record/tracks/#{channel}/dailyDistribution"
-    case HTTPoison.post!(post_url, xml, ["Content-Type": "application/x-www-form-urlencoded", "Authorization": "Basic #{Base.encode64("#{username}:#{password}")}"]) do
-      %HTTPoison.Response{body: body} -> {:ok, body}
+    case HTTPoison.post(post_url, xml, ["Content-Type": "application/x-www-form-urlencoded", "Authorization": "Basic #{Base.encode64("#{username}:#{password}")}"]) do
+      {:ok, %HTTPoison.Response{body: body}} -> {:ok, body}
       _ ->
         Logger.error "[get_recording_days] [#{post_url}] [#{xml}]"
         {:error}
