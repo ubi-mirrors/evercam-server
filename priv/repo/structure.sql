@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 10.3 (Ubuntu 10.3-1)
--- Dumped by pg_dump version 10.3 (Ubuntu 10.3-1)
+-- Dumped from database version 10.4 (Ubuntu 10.4-0ubuntu0.18.04)
+-- Dumped by pg_dump version 10.4 (Ubuntu 10.4-0ubuntu0.18.04)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -1045,11 +1045,11 @@ CREATE TABLE public.vendor_models (
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     vendor_id integer NOT NULL,
     name text NOT NULL,
-    config json NOT NULL,
+    config json,
     exid text DEFAULT ''::text NOT NULL,
     jpg_url text DEFAULT ''::text NOT NULL,
-    h264_url text DEFAULT ''::text NOT NULL,
-    mjpg_url text DEFAULT ''::text NOT NULL,
+    h264_url text DEFAULT ''::text,
+    mjpg_url text DEFAULT ''::text,
     shape text DEFAULT ''::text,
     resolution text DEFAULT ''::text,
     official_url text DEFAULT ''::text,
@@ -1068,7 +1068,10 @@ CREATE TABLE public.vendor_models (
     discontinued boolean DEFAULT false NOT NULL,
     username text,
     password text,
-    channel integer
+    channel integer,
+    mpeg4_url character varying DEFAULT ''::character varying,
+    mobile_url character varying DEFAULT ''::character varying,
+    lowres_url character varying DEFAULT ''::character varying
 );
 
 
@@ -1767,5 +1770,5 @@ ALTER TABLE ONLY public.timelapses
 -- PostgreSQL database dump complete
 --
 
-INSERT INTO "schema_migrations" (version) VALUES (20150622102645), (20150629144629), (20150629183319), (20160616160229), (20160712101523), (20160720125939), (20160727112052), (20160830055709), (20161202114834), (20161202115000), (20161213162000), (20161219130300), (20161221070146), (20161221070226), (20170103162400), (20170112110000), (20170213140200), (20170222114100), (20170414141100), (20170419105000), (20171009070501), (20180411104000), (20180416121600);
+INSERT INTO "schema_migrations" (version) VALUES (20150622102645), (20150629144629), (20150629183319), (20160616160229), (20160712101523), (20160720125939), (20160727112052), (20160830055709), (20161202114834), (20161202115000), (20161213162000), (20161219130300), (20161221070146), (20161221070226), (20170103162400), (20170112110000), (20170213140200), (20170222114100), (20170414141100), (20170419105000), (20171009070501), (20180411104000), (20180416121600), (20180807101800);
 

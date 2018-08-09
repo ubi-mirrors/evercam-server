@@ -5,7 +5,7 @@ defmodule EvercamMedia.VendorModelControllerTest do
   setup do
     vendor = Repo.insert!(%Vendor{exid: "vendor0", name: "Vendor XYZ", known_macs: []})
     model =
-      %VendorModel{vendor_id: vendor.id, name: "Model XYZ", exid: "model0", config: %{}}
+      %VendorModel{vendor_id: vendor.id, name: "Model XYZ", exid: "model0"}
       |> Repo.insert!
       |> Repo.preload(:vendor)
 

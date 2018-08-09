@@ -221,8 +221,8 @@ defmodule Camera do
     cond do
       res_url(camera, type) != "" ->
         res_url(camera, type)
-      res_url(camera, type) == "" && get_model_attr(camera, :config) != "" ->
-        res_url(camera.vendor_model, type)
+      res_url(camera, type) == "" && VendorModel.get_url(camera.vendor_model, type) != nil ->
+        VendorModel.get_url(camera.vendor_model, type)
       true ->
         ""
     end

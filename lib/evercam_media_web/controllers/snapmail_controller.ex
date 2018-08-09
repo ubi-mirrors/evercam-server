@@ -322,7 +322,7 @@ defmodule EvercamMediaWeb.SnapmailController do
 
   defp ensure_cameras_exist("update", _conn, camera_exids, _user) when camera_exids in [nil, ""], do: {:ok, nil}
   defp ensure_cameras_exist("create", conn, camera_exids, _user) when camera_exids in [nil, ""] do
-    render_error(conn, 404, %{"camera_exids": ["can't be blank"]})
+    render_error(conn, 404, %{camera_exids: ["can't be blank"]})
   end
   defp ensure_cameras_exist(_action, conn, camera_exids, user) do
     cameras_list =

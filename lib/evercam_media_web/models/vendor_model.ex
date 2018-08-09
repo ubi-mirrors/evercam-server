@@ -2,7 +2,9 @@ defmodule VendorModel do
   use EvercamMediaWeb, :model
   import Ecto.Query
   alias EvercamMedia.Repo
-  alias EvercamMedia.Util
+
+  @required_fields ~w(exid name jpg_url vendor_id)
+  @optional_fields ~w(username password h264_url mjpg_url mpeg4_url mobile_url lowres_url shape resolution official_url more_info audio_url poe wifi upnp ptz infrared varifocal sd_card audio_io discontinued onvif psia channel updated_at created_at)
 
   schema "vendor_models" do
     belongs_to :vendor, Vendor, foreign_key: :vendor_id
@@ -15,6 +17,9 @@ defmodule VendorModel do
     field :jpg_url, :string
     field :h264_url, :string
     field :mjpg_url, :string
+    field :mpeg4_url, :string
+    field :mobile_url, :string
+    field :lowres_url, :string
     field :shape, :string
     field :resolution, :string
     field :official_url, :string
@@ -32,7 +37,7 @@ defmodule VendorModel do
     field :onvif, :boolean
     field :psia, :boolean
     field :channel, :integer
-    field :config, EvercamMedia.Types.JSON
+    timestamps(inserted_at: :created_at, type: Ecto.DateTime, default: Ecto.DateTime.utc)
   end
 
   def by_exid(exid) do
@@ -106,11 +111,28 @@ defmodule VendorModel do
   end
   def get_channel(_camera, channel), do: channel
 
-  def get_url(model, attr \\ "jpg") do
-    Util.deep_get(model.config, ["snapshots", "#{attr}"], "")
-  end
+  def get_url(model, attr \\ "jpg")
+  def get_url(nil, _attr), do: ""
+  def get_url(model, "jpg"), do: model.jpg_url
+  def get_url(model, "h264"), do: model.h264_url
+  def get_url(model, "lowres"), do: model.lowres_url
+  def get_url(model, "mpeg4"), do: model.mpeg4_url
+  def get_url(model, "mpeg"), do: model.mpeg4_url
+  def get_url(model, "mjpg"), do: model.mjpg_url
+  def get_url(model, "mobile"), do: model.mobile_url
+  def get_url(model, "audio"), do: model.audio_url
 
   def get_image_url(model_full, type \\ "original") do
     "https://evercam-public-assets.s3.amazonaws.com/#{model_full.vendor.exid}/#{model_full.exid}/#{type}.jpg"
+  end
+
+  def required_fields do
+    @required_fields |> Enum.map(fn(field) -> String.to_atom(field) end)
+  end
+
+  def changeset(model, params \\ :invalid) do
+    model
+    |> cast(params, @required_fields ++ @optional_fields)
+    |> validate_required(required_fields())
   end
 end

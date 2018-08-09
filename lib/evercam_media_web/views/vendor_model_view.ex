@@ -19,6 +19,10 @@ defmodule EvercamMediaWeb.VendorModelView do
       jpg_url: vendor_model.jpg_url,
       h264_url: vendor_model.h264_url,
       mjpg_url: vendor_model.mjpg_url,
+      mpeg4_url: vendor_model.mpeg4_url,
+      mobile_url: vendor_model.mobile_url,
+      lowres_url: vendor_model.lowres_url,
+
       shape: vendor_model.shape,
       resolution: vendor_model.resolution,
       official_url: vendor_model.official_url,
@@ -46,8 +50,8 @@ defmodule EvercamMediaWeb.VendorModelView do
         },
         auth: %{
           basic: %{
-            username: vendor_model.config["auth"]["basic"]["username"],
-            password: vendor_model.config["auth"]["basic"]["password"]
+            username: vendor_model.username,
+            password: vendor_model.password
           }
         }
       },
