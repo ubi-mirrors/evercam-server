@@ -36,7 +36,7 @@ defmodule EvercamMediaWeb.StreamController do
   defp ensure_nvr_hls(_conn, _params, _is_nvr), do: 200
 
   defp ensure_nvr_stream(conn, params, is_nvr) when is_nvr in [nil, ""] do
-    requester_ip = user_request_ip(conn)
+    requester_ip = get_requester_ip(conn, params["requester"])
     conn
     |> put_status(request_stream(params["camera_id"], params["name"], requester_ip, :kill))
     |> text("")
@@ -44,6 +44,9 @@ defmodule EvercamMediaWeb.StreamController do
   defp ensure_nvr_stream(conn, _params, _nvr) do
     conn |> put_status(200) |> text("")
   end
+
+  defp get_requester_ip(conn, requester) when requester in [nil, ""], do: user_request_ip(conn)
+  defp get_requester_ip(_conn, requester), do: requester
 
   defp request_stream(camera_exid, token, ip, command) do
     try do
