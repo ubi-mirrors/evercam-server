@@ -123,13 +123,17 @@ defmodule EvercamMediaWeb.StreamController do
   defp insert_meta_data(rtsp_url, action, camera_id, ip, token) do
     try do
       stream_in = get_stream_info(rtsp_url)
-      pid =
-        rtsp_url
-        |> ffmpeg_pids
-        |> List.first
+      case has_params(stream_in) do
+        false ->
+          pid =
+            rtsp_url
+            |> ffmpeg_pids
+            |> List.first
 
-      construct_params(camera_id, action, ip, pid, rtsp_url, token, stream_in)
-      |> MetaData.insert_meta
+          construct_params(camera_id, action, ip, pid, rtsp_url, token, stream_in)
+          |> MetaData.insert_meta
+        _ -> Logger.debug "Stream not working for camera: #{camera_id}"
+      end
     catch _type, error ->
       Logger.error inspect(error)
       Logger.error Exception.format_stacktrace System.stacktrace
@@ -166,6 +170,10 @@ defmodule EvercamMediaWeb.StreamController do
       process_id: pid,
       extra: extra
     }
+  end
+
+  defp has_params(video_params) do
+    video_params[:width] == "0" && video_params[:height] == "0" && video_params[:avg_frame_rate] == "0/0"
   end
 
   defp contain_attr?(item, attr) do

@@ -145,6 +145,7 @@ defmodule EvercamMedia.Util do
 
   def kill_all_ffmpegs do
     Porcelain.shell("for pid in $(ps -ef | grep ffmpeg | grep 'rtsp://' | grep -v grep |  awk '{print $2}'); do kill -9 $pid; done")
+    MetaData.delete_all()
     spawn(fn -> Camera.all |> Enum.map(&(invalidate_response_time_cache &1)) end)
   end
 
