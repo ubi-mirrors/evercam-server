@@ -12,13 +12,13 @@ defmodule UserTest do
     refute User.changeset(%User{}, Map.merge(params, %{email: "spa ces@example.com"})).valid?
 
     assert User.changeset(%User{}, Map.merge(params, %{email: "regular@example.com"})).valid?
-    assert User.changeset(%User{}, Map.merge(params, %{email: "no_dot_in_domain@example"})).valid?
-    assert User.changeset(%User{}, Map.merge(params, %{email: "unicode@はじめよう.みんな"})).valid?
-    assert User.changeset(%User{}, Map.merge(params, %{email: "plus+-minus@example.com"})).valid?
+    assert User.changeset(%User{}, Map.merge(params, %{email: "no_dot_in_domain@example"})).valid? == false
+    assert User.changeset(%User{}, Map.merge(params, %{email: "unicode@はじめよう.みんな"})).valid? == false
+    assert User.changeset(%User{}, Map.merge(params, %{email: "plus+-minus@example.com"})).valid? == false
   end
 
   test "firstname and lastname is correct", %{params: params} do
-    params = Map.merge(params, %{email: "test@local"})
+    params = Map.merge(params, %{email: "test@local.com"})
 
     refute User.changeset(%User{}, Map.merge(params, %{firstname: nil, lastname: nil})).valid?
     refute User.changeset(%User{}, Map.merge(params, %{firstname: "  ", lastname: "  "})).valid?
