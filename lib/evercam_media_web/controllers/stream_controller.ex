@@ -176,8 +176,11 @@ defmodule EvercamMediaWeb.StreamController do
   end
 
   defp has_params(video_params) do
-    video_params[:width] == "0" && video_params[:height] == "0" && video_params[:avg_frame_rate] == "0/0"
+    is_valid(video_params[:width]) && is_valid(video_params[:height]) && is_valid(video_params[:avg_frame_rate])
   end
+
+  defp is_valid(value) when value in [nil, "", "0", "0/0"], do: true
+  defp is_valid(_value), do: false
 
   defp contain_attr?(item, attr) do
     case :binary.match(item, "#{attr}=") do
