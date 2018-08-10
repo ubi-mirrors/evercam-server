@@ -246,7 +246,11 @@ defmodule Camera do
   end
 
   def rtsp_url(camera, network \\ "external", type \\ "h264", include_auth \\ true) do
-    auth = if include_auth, do: "#{auth(camera)}@", else: ""
+    auth =
+      case include_auth do
+        true -> check_auth("#{auth(camera)}@")
+        _ -> ""
+      end
     path = url_path(camera, type)
     host = host(camera)
     port = port(camera, network, "rtsp")
@@ -254,6 +258,13 @@ defmodule Camera do
     case path != "" && host != "" && "#{port}" != "" && "#{port}" != 0 do
       true -> "rtsp://#{auth}#{host}:#{port}#{path}"
       false -> ""
+    end
+  end
+
+  defp check_auth(auth) do
+    case auth do
+      ":@" -> ""
+      _ -> auth
     end
   end
 
