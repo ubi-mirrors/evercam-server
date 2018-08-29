@@ -68,7 +68,8 @@ defmodule EvercamMedia.Mixfile do
     :sweet_xml,
     :phoenix_swagger,
     :ex_json_schema,
-    :nadia
+    :nadia,
+    :geoip
   ]
 
   # Specifies which paths to compile per environment
@@ -112,7 +113,8 @@ defmodule EvercamMedia.Mixfile do
       {:configparser_ex, "~> 0.2.1"},
       {:sweet_xml, "~> 0.6", optional: true},
       {:phoenix_swagger, "~> 0.7.0"},
-      {:ex_json_schema, "~> 0.5"}
+      {:ex_json_schema, "~> 0.5"},
+      {:geoip, "~> 0.2"}
     ]
   end
 end

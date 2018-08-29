@@ -225,10 +225,12 @@ defmodule EvercamMediaWeb.CameraController do
             {:ok, camera} ->
               Camera.invalidate_camera(camera)
               camera = Camera.get_full(camera.exid)
-              CameraActivity.log_activity(caller, camera, "edited",
+              CameraActivity.log_activity(caller, camera, "camera edited",
                 %{
                   ip: user_request_ip(conn),
-                  agent: get_user_agent(conn),
+                  country: params["u_country"],
+                  country_code: params["u_country_code"],
+                  agent: get_user_agent(conn, params["agent"]),
                   cam_settings: add_settings_key(old_camera, camera, camera_changeset.changes)
                 }
               )
@@ -281,7 +283,7 @@ defmodule EvercamMediaWeb.CameraController do
     response 404, "Camera does not exist or Unauthorized"
   end
 
-  def delete(conn, %{"id" => exid}) do
+  def delete(conn, %{"id" => exid} = params) do
     caller = conn.assigns[:current_user]
     camera = Camera.get_full(exid)
 
@@ -300,6 +302,17 @@ defmodule EvercamMediaWeb.CameraController do
       |> Camera.delete_changeset(camera_params)
       |> Repo.update!
 
+      spawn(fn ->
+        CameraActivity.log_activity(caller, %{ id: 0, exid: camera.exid },
+          "camera deleted",
+          %{
+            ip: user_request_ip(conn),
+            country: params["u_country"],
+            country_code: params["u_country_code"],
+            agent: get_user_agent(conn, params["agent"])
+          }
+        )
+      end)
       spawn(fn -> delete_snapshot_worker(camera) end)
       spawn(fn -> delete_camera_worker(camera) end)
       json(conn, %{})
@@ -356,7 +369,14 @@ defmodule EvercamMediaWeb.CameraController do
             |> Repo.preload(:cloud_recordings, force: true)
             |> Repo.preload(:vendor_model, force: true)
             |> Repo.preload([vendor_model: :vendor], force: true)
-          CameraActivity.log_activity(caller, camera, "created", %{ip: user_request_ip(conn), agent: get_user_agent(conn)})
+          CameraActivity.log_activity(caller, camera, "camera created",
+            %{
+              ip: user_request_ip(conn),
+              country: params["u_country"],
+              country_code: params["u_country_code"],
+              agent: get_user_agent(conn, params["agent"])
+            }
+          )
           Camera.invalidate_user(caller)
           send_email_notification(Application.get_env(:evercam_media, :run_spawn), caller, full_camera)
           add_camera_to_zoho(false, full_camera, caller.username)

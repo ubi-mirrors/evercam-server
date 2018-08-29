@@ -7,7 +7,6 @@ defmodule EvercamMediaWeb.UserController do
   alias EvercamMedia.Repo
   alias EvercamMedia.Util
   alias EvercamMedia.Intercom
-  import EvercamMedia.Validation.Log
   require Logger
 
   def swagger_definitions do
@@ -102,6 +101,11 @@ defmodule EvercamMediaWeb.UserController do
       spawn(fn ->
         changeset = User.changeset(user, %{"last_login_at" => Calendar.DateTime.to_erl(Calendar.DateTime.now_utc)})
         Repo.update(changeset)
+
+        extra =
+          %{ agent: get_user_agent(conn, params["agent"]) }
+          |> Map.merge(get_requester_Country(user_request_ip(conn), params["u_country"], params["u_country_code"]))
+        CameraActivity.log_activity(user, %{ id: 0, exid: "" }, "login", extra)
       end)
       conn |> render(UserView, "credentials.json", %{user: user})
     end
@@ -159,7 +163,7 @@ defmodule EvercamMediaWeb.UserController do
 
   def create(conn, params) do
     with :ok <- ensure_application(conn, params["token"]),
-         :ok <- ensure_country(params["country"], conn)
+         {:ok, country_id} <- ensure_country(params["country"], conn)
     do
       requester_ip = user_request_ip(conn)
       user_agent = get_user_agent(conn)
@@ -168,12 +172,12 @@ defmodule EvercamMediaWeb.UserController do
       api_key = UUID.uuid4(:hex)
 
       params =
-        case Country.get_by_code(params["country"]) do
-          {:ok, country} -> Map.merge(params, %{"country_id" => country.id}) |> Map.delete("country")
-          {:error, nil} -> Map.delete(params, "country")
-        end
-
-      params = Map.merge(params, %{"api_id" => api_id, "api_key" => api_key})
+        params
+        |> add_parameter("country_id", country_id)
+        |> add_parameter("api_id", api_id)
+        |> add_parameter("api_key", api_key)
+        |> add_parameter("telegram_username", params["telegram_username"])
+        |> Map.delete("country")
 
       params =
         case has_share_request_key?(share_request_key) do
@@ -183,8 +187,6 @@ defmodule EvercamMediaWeb.UserController do
           false ->
             Map.delete(params, "share_request_key")
         end
-
-      params = add_parameter(params, :telegram_username, params["telegram_username"])
 
       changeset = User.changeset(%User{}, params)
       case Repo.insert(changeset) do
@@ -281,30 +283,28 @@ defmodule EvercamMediaWeb.UserController do
   def update(conn, %{"id" => username} = params) do
     current_user = conn.assigns[:current_user]
     requester_ip = user_request_ip(conn)
-    user_agent = get_user_agent(conn)
+    user_agent = get_user_agent(conn, params["agent"])
     username = username |> String.replace_trailing(".json", "")
-    user = User.by_username_or_email(username)
+    old_user = User.by_username_or_email(username)
 
-    with :ok <- ensure_user_exists(user, username, conn),
-         :ok <- ensure_can_view(current_user, user, conn),
-         :ok <- ensure_country(params["country"], conn)
+    with :ok <- ensure_user_exists(old_user, username, conn),
+         :ok <- ensure_can_view(current_user, old_user, conn),
+         {:ok, country_id} <- ensure_country(params["country"], conn)
     do
-      user_params = %{
-        firstname: firstname(params["firstname"], user),
-        lastname: lastname(params["lastname"], user),
-        email: email(params["email"], user)
-      }
+      user_params =
+        %{}
+        |> add_parameter(:firstname, params["firstname"])
+        |> add_parameter(:lastname, params["lastname"])
+        |> add_parameter(:email, params["email"])
+        |> add_parameter(:telegram_username, params["telegram_username"])
+        |> add_parameter(:country_id, country_id)
 
-      user_params = add_parameter(user_params, :telegram_username, params["telegram_username"])
-      user_params = case country(params["country"], user) do
-        nil -> Map.delete(user_params, "country")
-        country_id -> Map.merge(user_params, %{country_id: country_id}) |> Map.delete("country")
-      end
-      changeset = User.changeset(user, user_params)
+      changeset = User.changeset(old_user, user_params)
       case Repo.update(changeset) do
-        {:ok, user} ->
-          updated_user = user |> Repo.preload(:country, force: true)
-          Intercom.update_intercom_user(Application.get_env(:evercam_media, :create_intercom_user), user, username, user_agent, requester_ip)
+        {:ok, new_user} ->
+          updated_user = new_user |> Repo.preload(:country, force: true)
+          insert_activity(old_user, updated_user, requester_ip, user_agent, params["u_country"], params["u_country_code"])
+          Intercom.update_intercom_user(Application.get_env(:evercam_media, :create_intercom_user), updated_user, username, user_agent, requester_ip)
           conn |> render(UserView, "show.json", %{user: updated_user})
         {:error, changeset} ->
           render_error(conn, 400, Util.parse_changeset(changeset))
@@ -355,24 +355,16 @@ defmodule EvercamMediaWeb.UserController do
     response 404, "User does not exist"
   end
 
-  def user_activities(conn, %{"id" => username} = params) do
+  def user_activities(conn, params) do
     current_user = conn.assigns[:current_user]
     from = parse_from(params["from"])
     to = parse_to(params["to"])
     types = parse_types(params["types"])
 
-    user =
-      username
-      |> String.replace_trailing(".json", "")
-      |> User.by_username
-
-    full_name = user |> User.get_fullname
-
-    with :ok <- ensure_user_exists(user, username, conn),
-         :ok <- ensure_can_view(current_user, user, conn),
-         :ok <- params |> validate_params |> ensure_params(conn)
+    with :ok <- authorized(conn, current_user)
     do
-      user_logs = CameraActivity.for_a_user(full_name, from, to, types)
+      user = current_user |> Repo.preload(:access_tokens, force: true)
+      user_logs = CameraActivity.for_a_user(user.access_tokens.id, from, to, types)
 
       conn
       |> render(LogView, "user_logs.json", %{user_logs: user_logs})
@@ -390,29 +382,34 @@ defmodule EvercamMediaWeb.UserController do
     Intercom.delete_user(user.username)
   end
 
+  defp insert_activity(caller, updated_user, ip, agent, country, country_code) do
+    spawn(fn ->
+      camera = %{id: 0, exid: ""}
+      CameraActivity.log_activity(caller, camera, "user edited",
+        %{
+          ip: ip,
+          agent: agent,
+          country: country,
+          country_code: country_code,
+          user_settings: %{ old: set_settings(caller), new: set_settings(updated_user) }
+        }
+      )
+    end)
+  end
+
+  defp set_settings(user) do
+    %{
+      firstname: user.firstname,
+      lastname: user.lastname,
+      username: user.username,
+      email: user.email,
+      country: Util.deep_get(user, [:country, :name], "")
+    }
+  end
+
   defp add_parameter(params, _key, nil), do: params
   defp add_parameter(params, key, value) do
     Map.put(params, key, value)
-  end
-
-  defp firstname(firstname, user) when firstname in [nil, ""], do: user.firstname
-  defp firstname(firstname, _user),  do: firstname
-
-  defp lastname(lastname, user) when lastname in [nil, ""], do: user.lastname
-  defp lastname(lastname, _user), do: lastname
-
-  defp email(email, user) when email in [nil, ""], do: user.email
-  defp email(email, _user), do: email
-
-  defp country(country_id, user) when country_id in [nil, ""] do
-    case user.country do
-      nil -> nil
-      country -> country.id
-    end
-  end
-  defp country(country_id, _user) do
-    country = Country.by_iso3166(country_id)
-    country.id
   end
 
   defp ensure_user_exists(nil, username, conn) do
@@ -436,12 +433,12 @@ defmodule EvercamMediaWeb.UserController do
     end
   end
 
-  defp ensure_country(country_id, _conn) when country_id in [nil, ""], do: :ok
+  defp ensure_country(country_id, _conn) when country_id in [nil, ""], do: {:ok, nil}
   defp ensure_country(country_id, conn) do
     country = Country.by_iso3166(country_id)
     case country do
       nil -> render_error(conn, 400, "Country isn't valid!")
-      _ -> :ok
+      _ -> {:ok, country.id}
     end
   end
 
@@ -490,9 +487,6 @@ defmodule EvercamMediaWeb.UserController do
   defp parse_types(types) when types in [nil, ""], do: nil
   defp parse_types(types), do: types |> String.split(",", trim: true) |> Enum.map(&String.trim/1)
 
-  defp ensure_params(:ok, _conn), do: :ok
-  defp ensure_params({:invalid, message}, conn), do: render_error(conn, 400, message)
-
   defp accepted_request_notification(share_request) do
     try do
       Task.start(fn ->
@@ -503,4 +497,7 @@ defmodule EvercamMediaWeb.UserController do
       Logger.error Exception.format_stacktrace System.stacktrace
     end
   end
+
+  defp authorized(conn, nil), do: render_error(conn, 401, "Unauthorized.")
+  defp authorized(_conn, _current_user), do: :ok
 end

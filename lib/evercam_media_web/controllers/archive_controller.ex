@@ -214,7 +214,7 @@ defmodule EvercamMediaWeb.ArchiveController do
          :ok <- ensure_camera_exists(camera, exid, conn),
          :ok <- ensure_can_list(current_user, camera, conn)
     do
-      update_clip(conn, camera, params, archive_id)
+      update_clip(conn, current_user, camera, params, archive_id)
     end
   end
 
@@ -261,7 +261,7 @@ defmodule EvercamMediaWeb.ArchiveController do
     response 404, "Camera does not exist"
   end
 
-  def delete(conn, %{"id" => exid, "archive_id" => archive_id}) do
+  def delete(conn, %{"id" => exid, "archive_id" => archive_id} = params) do
     current_user = conn.assigns[:current_user]
     camera = Camera.get_full(exid)
 
@@ -271,7 +271,12 @@ defmodule EvercamMediaWeb.ArchiveController do
     do
       Archive.delete_by_exid(archive_id)
       spawn(fn -> Storage.delete_archive(camera.exid, archive_id) end)
-      CameraActivity.log_activity(current_user, camera, "archive deleted", %{ip: user_request_ip(conn)})
+      extra = %{
+        name: archive.title,
+        agent: get_user_agent(conn, params["agent"])
+      }
+      |> Map.merge(get_requester_Country(user_request_ip(conn), params["u_country"], params["u_country_code"]))
+      CameraActivity.log_activity(current_user, camera, "archive deleted", extra)
       json(conn, %{})
     end
   end
@@ -281,7 +286,8 @@ defmodule EvercamMediaWeb.ArchiveController do
     case Repo.insert(changeset) do
       {:ok, archive} ->
         archive = archive |> Repo.preload(:camera) |> Repo.preload(:user)
-        CameraActivity.log_activity(current_user, camera, "saved media URL", %{ip: user_request_ip(conn)})
+        extra = %{ip: user_request_ip(conn), agent: get_user_agent(conn, params["agent"]), country: params["u_country"], country_code: params["u_country_code"]}
+        CameraActivity.log_activity(current_user, camera, "saved media URL", extra)
         render(conn |> put_status(:created), ArchiveView, "show.json", %{archive: archive})
       {:error, changeset} ->
         render_error(conn, 400, Util.parse_changeset(changeset))
@@ -295,7 +301,8 @@ defmodule EvercamMediaWeb.ArchiveController do
     case Repo.insert(changeset) do
       {:ok, archive} ->
         archive = archive |> Repo.preload(:camera) |> Repo.preload(:user)
-        CameraActivity.log_activity(current_user, camera, "file uploaded", %{ip: user_request_ip(conn)})
+        extra = %{ip: user_request_ip(conn), agent: get_user_agent(conn, params["agent"]), country: params["u_country"], country_code: params["u_country_code"]}
+        CameraActivity.log_activity(current_user, camera, "file uploaded", extra)
         copy_uploaded_file(Application.get_env(:evercam_media, :run_spawn), camera.exid, archive.exid, params["file_url"], params["file_extension"])
         render(conn |> put_status(:created), ArchiveView, "show.json", %{archive: archive})
       {:error, changeset} ->
@@ -332,7 +339,8 @@ defmodule EvercamMediaWeb.ArchiveController do
         case Repo.insert(changeset) do
           {:ok, archive} ->
             archive = archive |> Repo.preload(:camera) |> Repo.preload(:user)
-            CameraActivity.log_activity(current_user, camera, "archive created", %{ip: user_request_ip(conn)})
+            extra = %{ip: user_request_ip(conn), agent: get_user_agent(conn, params["agent"]), country: params["u_country"], country_code: params["u_country_code"]}
+            CameraActivity.log_activity(current_user, camera, "archive created", extra)
             start_archive_creation(Application.get_env(:evercam_media, :run_spawn), camera, archive, unix_from, unix_to, params["is_nvr_archive"])
             render(conn |> put_status(:created), ArchiveView, "show.json", %{archive: archive})
           {:error, changeset} ->
@@ -367,7 +375,7 @@ defmodule EvercamMediaWeb.ArchiveController do
     Archive.changeset(%Archive{}, archive_params)
   end
 
-  defp update_clip(conn, _camera, params, archive_id) do
+  defp update_clip(conn, user, camera, params, archive_id) do
     case Archive.by_exid(archive_id) do
       nil ->
         render_error(conn, 404, "Archive '#{archive_id}' not found!")
@@ -384,6 +392,15 @@ defmodule EvercamMediaWeb.ArchiveController do
         case Repo.update(changeset) do
           {:ok, archive} ->
             updated_archive = archive |> Repo.preload(:camera) |> Repo.preload(:user)
+            CameraActivity.log_activity(user, camera, "archive edited",
+              %{
+                name: archive.title,
+                ip: user_request_ip(conn),
+                agent: get_user_agent(conn, params["agent"]),
+                country: params["u_country"],
+                country_code: params["u_country_code"]
+              }
+            )
             render(conn, ArchiveView, "show.json", %{archive: updated_archive})
           {:error, changeset} ->
             render_error(conn, 400, Util.parse_changeset(changeset))

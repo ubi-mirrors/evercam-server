@@ -161,6 +161,12 @@ defmodule EvercamMediaWeb.CompareController do
             |> Repo.preload(:camera)
             |> Repo.preload(:user)
 
+          extra = %{
+            name: compare.name,
+            agent: get_user_agent(conn, params["agent"])
+          }
+          |> Map.merge(get_requester_Country(user_request_ip(conn), params["u_country"], params["u_country_code"]))
+          CameraActivity.log_activity(current_user, camera, "compare created", extra)
           start_export(Application.get_env(:evercam_media, :run_spawn), camera_exid, compare.exid, params)
           render(conn |> put_status(:created), CompareView, "show.json", %{compare: created_compare})
         {:error, changeset} ->
@@ -184,7 +190,7 @@ defmodule EvercamMediaWeb.CompareController do
     response 404, "Camera does not exist or Compare archive not found."
   end
 
-  def delete(conn, %{"id" => camera_exid, "compare_id" => compare_id}) do
+  def delete(conn, %{"id" => camera_exid, "compare_id" => compare_id} = params) do
     current_user = conn.assigns[:current_user]
     camera = Camera.get_full(camera_exid)
 
@@ -193,7 +199,12 @@ defmodule EvercamMediaWeb.CompareController do
          :ok <- ensure_can_delete(current_user, camera, conn, compare.user.username)
     do
       Compare.delete_by_exid(compare.exid)
-      CameraActivity.log_activity(current_user, camera, "compare deleted", %{ip: user_request_ip(conn)})
+      extra = %{
+        name: compare.name,
+        agent: get_user_agent(conn, params["agent"])
+      }
+      |> Map.merge(get_requester_Country(user_request_ip(conn), params["u_country"], params["u_country_code"]))
+      CameraActivity.log_activity(current_user, camera, "compare deleted", extra)
       delete_files(compare, camera_exid)
       json(conn, %{})
     end

@@ -46,9 +46,9 @@ defmodule CameraActivity do
     |> SnapshotRepo.delete_all
   end
 
-  def for_a_user(full_name, from, to, types) do
+  def for_a_user(token_id, from, to, types) do
     CameraActivity
-    |> where(name: ^full_name)
+    |> where(access_token_id: ^token_id)
     |> where([c], c.done_at >= ^from and c.done_at <= ^to)
     |> with_types_if_specified(types)
     |> order_by([c], desc: c.done_at)

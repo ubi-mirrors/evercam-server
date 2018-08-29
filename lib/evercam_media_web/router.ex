@@ -78,7 +78,7 @@ end
       patch "/users/:id", UserController, :update
       options "/users/:id", UserController, :nothing
       delete "/users/:id", UserController, :delete
-      get "/users/:id/activities", UserController, :user_activities
+      get "/users/session/activities", UserController, :user_activities
 
       get "/cameras", CameraController, :index
       options "/cameras", CameraController, :nothing
@@ -122,6 +122,8 @@ end
       get "/cameras/:id/recordings/snapshots/:year/:month/:day/:hour", SnapshotController, :hour
       options "/cameras/:id/recordings/snapshots/:year/:month/:day/:hour", SnapshotController, :nothing
       get "/cameras/:id/logs", LogController, :show
+      post "/logs", LogController, :create
+      options "/logs", LogController, :nothing
       get "/cameras/:id/response-time", LogController, :response_time
       options "/cameras/:id/response-time", LogController, :nothing
       get "/cameras/:id/apps/cloud-recording", CloudRecordingController, :show

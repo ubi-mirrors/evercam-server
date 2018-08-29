@@ -89,6 +89,10 @@ defmodule EvercamMediaWeb.CameraShareController do
          :ok <- caller_has_permission(conn, caller, camera)
     do
       requester_ip = user_request_ip(conn)
+      extra =
+        %{ agent: get_user_agent(conn, params["agent"]) }
+        |> Map.merge(get_requester_Country(requester_ip, params["u_country"], params["u_country_code"]))
+
       zoho_camera = %{}
 
       fetch_shares =
@@ -110,7 +114,7 @@ defmodule EvercamMediaWeb.CameraShareController do
                   end
                   Camera.invalidate_user(sharee)
                   Camera.invalidate_camera(camera)
-                  CameraActivity.log_activity(caller, camera, "shared", %{with: sharee.email, ip: requester_ip}, next_datetime)
+                  CameraActivity.log_activity(caller, camera, "shared", Map.merge(extra, %{with: sharee.email}), next_datetime)
                   broadcast_share_to_users(camera)
                 end)
                 add_contact_to_zoho(false, zoho_camera, sharee, caller.username)
@@ -124,7 +128,7 @@ defmodule EvercamMediaWeb.CameraShareController do
                 {:ok, camera_share_request} ->
                   spawn(fn ->
                     send_email_notification(caller, camera, email, camera_share_request.message, camera_share_request.key)
-                    CameraActivity.log_activity(caller, camera, "shared", %{with: camera_share_request.email, ip: requester_ip}, next_datetime)
+                    CameraActivity.log_activity(caller, camera, "shared", Map.merge(extra, %{with: camera_share_request.email}), next_datetime)
                     Intercom.intercom_activity(Application.get_env(:evercam_media, :create_intercom_user), get_user_model(camera_share_request.email), get_user_agent(conn), requester_ip, "Shared-Non-Registered")
                   end)
                   {shares, [camera_share_request | share_requests], changes, next_datetime}
@@ -207,7 +211,7 @@ defmodule EvercamMediaWeb.CameraShareController do
     response 404, "Camera does not exist or Share not found"
   end
 
-  def update(conn, %{"id" => exid, "email" => email, "rights" => rights}) do
+  def update(conn, %{"id" => exid, "email" => email, "rights" => rights} = params) do
     caller = conn.assigns[:current_user]
     camera = Camera.get_full(exid)
     sharee = User.by_username_or_email(email)
@@ -220,7 +224,11 @@ defmodule EvercamMediaWeb.CameraShareController do
       share_changeset = CameraShare.changeset(camera_share, %{rights: rights})
       if share_changeset.valid? do
         CameraShare.update_share(sharee, camera, rights)
-        CameraActivity.log_activity(caller, camera, "updated share", %{with: sharee.email, ip: user_request_ip(conn)})
+
+        extra =
+          %{ with: sharee.email, agent: get_user_agent(conn, params["agent"]) }
+          |> Map.merge(get_requester_Country(user_request_ip(conn), params["u_country"], params["u_country_code"]))
+        CameraActivity.log_activity(caller, camera, "updated share", extra)
         Camera.invalidate_user(sharee)
         Camera.invalidate_camera(camera)
         camera_share =
@@ -250,7 +258,7 @@ defmodule EvercamMediaWeb.CameraShareController do
     response 404, "Camera does not exist or Share not found"
   end
 
-  def delete(conn, %{"id" => exid, "email" => email}) do
+  def delete(conn, %{"id" => exid, "email" => email} = params) do
     caller = conn.assigns[:current_user]
     camera = Camera.get_full(exid)
     sharee = User.by_username_or_email(email)
@@ -265,7 +273,11 @@ defmodule EvercamMediaWeb.CameraShareController do
       Camera.invalidate_user(sharee)
       Camera.invalidate_camera(camera)
       delete_share_to_zoho(false, exid, User.get_fullname(sharee), caller.username)
-      CameraActivity.log_activity(caller, camera, "stopped sharing", %{with: sharee.email, ip: user_request_ip(conn)})
+
+      extra =
+        %{ with: sharee.email, agent: get_user_agent(conn, params["agent"]) }
+        |> Map.merge(get_requester_Country(user_request_ip(conn), params["u_country"], params["u_country_code"]))
+      CameraActivity.log_activity(caller, camera, "stopped sharing", extra)
       json(conn, %{})
     end
   end

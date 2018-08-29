@@ -13,7 +13,7 @@ defmodule User do
     belongs_to :country, Country, foreign_key: :country_id
     has_many :cameras, Camera, foreign_key: :owner_id
     has_many :camera_shares, CameraShare
-    has_many :access_tokens, AccessToken
+    has_one :access_tokens, AccessToken
 
     field :username, :string
     field :telegram_username, :string
@@ -85,6 +85,7 @@ defmodule User do
     User
     |> where(api_id: ^api_id)
     |> where(api_key: ^api_key)
+    # |> preload(:access_tokens)
     |> Repo.one
   end
 
