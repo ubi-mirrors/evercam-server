@@ -126,6 +126,15 @@ defmodule EvercamMedia.UserMailer do
       text: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "camera_create_notification.txt", user: user, camera: camera)
   end
 
+  def password_reset_request(user) do
+    Mailgun.Client.send_email @config,
+      to: user.email,
+      subject: "Password reset requested for Evercam",
+      from: @from,
+      html: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "password_reset_request.html", user: user, year: @year),
+      text: Phoenix.View.render_to_string(EvercamMediaWeb.EmailView, "password_reset_request.txt", user: user)
+  end
+
   def archive_completed(archive, email) do
     thumbnail = get_thumbnail(archive.camera)
     Mailgun.Client.send_email @config,

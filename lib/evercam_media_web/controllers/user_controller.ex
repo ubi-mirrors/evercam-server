@@ -230,6 +230,50 @@ defmodule EvercamMediaWeb.UserController do
     end
   end
 
+  def password_reset_token(conn, %{"id" => email}) do
+    email = String.downcase(email)
+
+    with {:ok, user} <- user_exists(conn, email)
+    do
+      user_params =
+        case validate_reset_token(user.reset_token, user.token_expires_at) do
+          true -> %{reset_token: user.reset_token, token_expires_at: user.token_expires_at}
+          _ ->
+            expires =
+              Calendar.DateTime.now_utc
+              |> Calendar.DateTime.advance!(60 * 60 * 24)
+              |> Calendar.DateTime.to_erl
+            %{reset_token: UUID.uuid4(:hex), token_expires_at: expires}
+        end
+
+      changeset = User.changeset(user, user_params)
+      case Repo.update(changeset) do
+        {:ok, updated_user} ->
+          EvercamMedia.UserMailer.password_reset_request(updated_user)
+          conn |> put_status(200) |> json(%{message: "We’ve sent you an email with instructions for changing your password."})
+        {:error, changeset} ->
+          render_error(conn, 400, Util.parse_changeset(changeset))
+      end
+    end
+  end
+
+  def password_update(conn, %{"id" => email} = params) do
+    email = String.downcase(email)
+    with {:ok, user} <- user_exists(conn, email),
+         :ok <- is_valid_token(conn, params["token"], user.reset_token),
+         :ok <- is_expired_token(conn, user.token_expires_at)
+    do
+      user_params = %{reset_token: "", token_expires_at: Calendar.DateTime.now_utc, password: params["password"]}
+      changeset = User.changeset(user, user_params)
+      case Repo.update(changeset) do
+        {:ok, _updated_user} ->
+          conn |> put_status(200) |> json(%{message: "Password changed successfully."})
+        {:error, changeset} ->
+          render_error(conn, 400, Util.parse_changeset(changeset))
+      end
+    end
+  end
+
   swagger_path :user_exist do
     post "/users/exist/{input}"
     summary "Check the existence of the user."
@@ -380,6 +424,50 @@ defmodule EvercamMediaWeb.UserController do
     Camera.invalidate_user(user)
     User.invalidate_share_users(user)
     Intercom.delete_user(user.username)
+  end
+
+  defp user_exists(conn, email) do
+    case User.by_username_or_email(email) do
+      nil -> render_error(conn, 404, "User not found.")
+      %User{} = user -> {:ok, user}
+    end
+  end
+
+  defp validate_reset_token(token, _token_expires_at) when token in [nil, ""], do: false
+  defp validate_reset_token(_token, token_expires_at) when token_expires_at in [nil, ""], do: false
+  defp validate_reset_token(_token, token_expires_at) do
+    current_date = Calendar.DateTime.now_utc
+    expire_date =
+      token_expires_at
+      |> Ecto.DateTime.to_erl
+      |> Calendar.DateTime.from_erl!("UTC")
+
+    case Calendar.DateTime.diff(current_date, expire_date) do
+      {:ok, _, _, :before} -> true
+      _ -> false
+    end
+  end
+
+  def is_valid_token(conn, param_token, token) do
+    case (param_token == token) do
+      true -> :ok
+      false -> render_error(conn, 404, "Invalid token.")
+    end
+  end
+
+  def is_expired_token(conn, token_expires_at) do
+    current_date = Calendar.DateTime.now_utc
+    expire_date =
+      token_expires_at
+      |> Ecto.DateTime.to_erl
+      |> Calendar.DateTime.from_erl!("UTC")
+
+    case Calendar.DateTime.diff(expire_date, current_date) do
+      {:ok, seconds, _, :before} ->
+        IO.inspect seconds
+        render_error(conn, 404, "your password reset token has been expired.")
+      _ -> :ok
+    end
   end
 
   defp insert_activity(caller, updated_user, ip, agent, country, country_code) do
