@@ -230,7 +230,7 @@ defmodule EvercamMediaWeb.UserController do
     end
   end
 
-  def password_reset_token(conn, %{"id" => email}) do
+  def password_reset_token(conn, %{"id" => email} = params) do
     email = String.downcase(email)
 
     with {:ok, user} <- user_exists(conn, email)
@@ -249,6 +249,11 @@ defmodule EvercamMediaWeb.UserController do
       changeset = User.changeset(user, user_params)
       case Repo.update(changeset) do
         {:ok, updated_user} ->
+          extra = %{
+            agent: get_user_agent(conn, params["agent"])
+          }
+          |> Map.merge(get_requester_Country(user_request_ip(conn), params["u_country"], params["u_country_code"]))
+          CameraActivity.log_activity(updated_user, %{id: 0, exid: ""}, "requested for password reset", extra)
           EvercamMedia.UserMailer.password_reset_request(updated_user)
           conn |> put_status(200) |> json(%{message: "We’ve sent you an email with instructions for changing your password."})
         {:error, changeset} ->
@@ -266,7 +271,12 @@ defmodule EvercamMediaWeb.UserController do
       user_params = %{reset_token: "", token_expires_at: Calendar.DateTime.now_utc, password: params["password"]}
       changeset = User.changeset(user, user_params)
       case Repo.update(changeset) do
-        {:ok, _updated_user} ->
+        {:ok, updated_user} ->
+          extra = %{
+            agent: get_user_agent(conn, params["agent"])
+          }
+          |> Map.merge(get_requester_Country(user_request_ip(conn), params["u_country"], params["u_country_code"]))
+          CameraActivity.log_activity(updated_user, %{id: 0, exid: ""}, "password changed", extra)
           conn |> put_status(200) |> json(%{message: "Password changed successfully."})
         {:error, changeset} ->
           render_error(conn, 400, Util.parse_changeset(changeset))
@@ -473,15 +483,12 @@ defmodule EvercamMediaWeb.UserController do
   defp insert_activity(caller, updated_user, ip, agent, country, country_code) do
     spawn(fn ->
       camera = %{id: 0, exid: ""}
-      CameraActivity.log_activity(caller, camera, "user edited",
-        %{
-          ip: ip,
-          agent: agent,
-          country: country,
-          country_code: country_code,
-          user_settings: %{ old: set_settings(caller), new: set_settings(updated_user) }
-        }
-      )
+      extra = %{
+        agent: agent,
+        user_settings: %{ old: set_settings(caller), new: set_settings(updated_user) }
+      }
+      |> Map.merge(get_requester_Country(ip, country, country_code))
+      CameraActivity.log_activity(caller, camera, "user edited", extra)
     end)
   end
 
