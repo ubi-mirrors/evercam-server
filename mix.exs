@@ -2,11 +2,8 @@ defmodule EvercamMedia.Mixfile do
   use Mix.Project
 
   def project do
-    {result, _exit_code} = System.cmd("git", ["rev-parse", "HEAD"])
-    git_sha = String.slice(result, 0, 7)
-
     [app: :evercam_media,
-     version: "1.0.1-a#{git_sha}",
+     version: "1.0.#{versions()}",
      elixir: "~> 1.7",
      elixirc_paths: elixirc_paths(Mix.env),
      build_embedded: Mix.env == :prod,
@@ -14,6 +11,15 @@ defmodule EvercamMedia.Mixfile do
      compilers: [:phoenix] ++ Mix.compilers,
      aliases: aliases(),
      deps: deps()]
+  end
+
+  defp versions do
+    {epoch, _} = System.cmd("git", ~w|log -1 --date=raw --format=%cd|)
+    [sec, tz] =
+      epoch
+      |> String.split(~r/\s+/, trim: true)
+      |> Enum.map(&String.to_integer/1)
+    sec + tz * 36
   end
 
   defp aliases do
