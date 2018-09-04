@@ -73,16 +73,16 @@ defmodule EvercamMediaWeb.CloudRecordingController do
           |> Process.whereis
           |> WorkerSupervisor.update_worker(camera)
 
-          CameraActivity.log_activity(current_user, camera, "cloud recordings #{action_log}",
-            %{
-              ip: user_request_ip(conn),
-              cr_settings: %{
-                old: set_settings(old_cloud_recording),
-                new: set_settings(cloud_recording)
-                },
-              }
-          )
-          send_email_on_cr_change(Application.get_env(:evercam_media, :run_spawn), current_user, camera, cloud_recording, old_cloud_recording, user_request_ip(conn))
+          extra = %{
+            agent: get_user_agent(conn, params["agent"]),
+            cr_settings: %{
+              old: set_settings(old_cloud_recording),
+              new: set_settings(cloud_recording)
+            }
+          }
+          |> Map.merge(get_requester_Country(user_request_ip(conn, params["requester_ip"]), params["u_country"], params["u_country_code"]))
+          CameraActivity.log_activity(current_user, camera, "cloud recordings #{action_log}", extra)
+          send_email_on_cr_change(Application.get_env(:evercam_media, :run_spawn), current_user, camera, cloud_recording, old_cloud_recording, user_request_ip(conn, params["requester_ip"]))
           conn
           |> render("cloud_recording.json", %{cloud_recording: cloud_recording})
         {:error, changeset} ->

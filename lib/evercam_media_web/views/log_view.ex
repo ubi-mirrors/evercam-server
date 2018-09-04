@@ -24,6 +24,7 @@ defmodule EvercamMediaWeb.LogView do
         %{
           who: name(log.name),
           action: log.action,
+          camera_exid: log.camera_exid,
           done_at: Util.ecto_datetime_to_unix(log.done_at),
           extra: log.extra
         }

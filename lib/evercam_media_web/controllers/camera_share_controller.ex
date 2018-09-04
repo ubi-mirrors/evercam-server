@@ -88,7 +88,7 @@ defmodule EvercamMediaWeb.CameraShareController do
     with :ok <- camera_exists(conn, params["id"], camera),
          :ok <- caller_has_permission(conn, caller, camera)
     do
-      requester_ip = user_request_ip(conn)
+      requester_ip = user_request_ip(conn, params["requester_ip"])
       extra =
         %{ agent: get_user_agent(conn, params["agent"]) }
         |> Map.merge(get_requester_Country(requester_ip, params["u_country"], params["u_country_code"]))
@@ -227,7 +227,7 @@ defmodule EvercamMediaWeb.CameraShareController do
 
         extra =
           %{ with: sharee.email, agent: get_user_agent(conn, params["agent"]) }
-          |> Map.merge(get_requester_Country(user_request_ip(conn), params["u_country"], params["u_country_code"]))
+          |> Map.merge(get_requester_Country(user_request_ip(conn, params["requester_ip"]), params["u_country"], params["u_country_code"]))
         CameraActivity.log_activity(caller, camera, "updated share", extra)
         Camera.invalidate_user(sharee)
         Camera.invalidate_camera(camera)
@@ -276,7 +276,7 @@ defmodule EvercamMediaWeb.CameraShareController do
 
       extra =
         %{ with: sharee.email, agent: get_user_agent(conn, params["agent"]) }
-        |> Map.merge(get_requester_Country(user_request_ip(conn), params["u_country"], params["u_country_code"]))
+        |> Map.merge(get_requester_Country(user_request_ip(conn, params["requester_ip"]), params["u_country"], params["u_country_code"]))
       CameraActivity.log_activity(caller, camera, "stopped sharing", extra)
       json(conn, %{})
     end

@@ -43,7 +43,7 @@ defmodule EvercamMediaWeb.TimelapseRecordingController do
 
           CameraActivity.log_activity(current_user, camera, "timelapse recordings #{action_log}",
             %{
-              ip: user_request_ip(conn),
+              ip: user_request_ip(conn, params["requester_ip"]),
               tr_settings: %{
                 old: set_settings(old_timelapse_recordings),
                 new: set_settings(timelapse_recording)

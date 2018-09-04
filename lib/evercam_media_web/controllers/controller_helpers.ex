@@ -9,10 +9,12 @@ defmodule EvercamMediaWeb.ControllerHelpers do
     |> render(ErrorView, "error.json", %{message: message})
   end
 
-  def user_request_ip(conn) do
+  def user_request_ip(conn, requester_ip \\ "")
+  def user_request_ip(conn, requester_ip) when requester_ip in [nil, ""] do
     x_real_ip = Plug.Conn.get_req_header(conn, "x-real-ip")
     x_real_ip |> List.first |> get_ip(conn)
   end
+  def user_request_ip(_conn, requester_ip), do: requester_ip
 
   def get_requester_Country(ip, country_name, _country_code) when country_name in [nil, ""], do: get_country_from_geoip(ip)
   def get_requester_Country(ip, _country_name, country_code) when country_code in [nil, ""], do: get_country_from_geoip(ip)

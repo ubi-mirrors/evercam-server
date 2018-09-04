@@ -104,7 +104,7 @@ defmodule EvercamMediaWeb.UserController do
 
         extra =
           %{ agent: get_user_agent(conn, params["agent"]) }
-          |> Map.merge(get_requester_Country(user_request_ip(conn), params["u_country"], params["u_country_code"]))
+          |> Map.merge(get_requester_Country(user_request_ip(conn, params["requester_ip"]), params["u_country"], params["u_country_code"]))
         CameraActivity.log_activity(user, %{ id: 0, exid: "" }, "login", extra)
       end)
       conn |> render(UserView, "credentials.json", %{user: user})
@@ -165,7 +165,7 @@ defmodule EvercamMediaWeb.UserController do
     with :ok <- ensure_application(conn, params["token"]),
          {:ok, country_id} <- ensure_country(params["country"], conn)
     do
-      requester_ip = user_request_ip(conn)
+      requester_ip = user_request_ip(conn, params["requester_ip"])
       user_agent = get_user_agent(conn)
       share_request_key = params["share_request_key"]
       api_id = UUID.uuid4(:hex) |> String.slice(0..7)
@@ -249,10 +249,9 @@ defmodule EvercamMediaWeb.UserController do
       changeset = User.changeset(user, user_params)
       case Repo.update(changeset) do
         {:ok, updated_user} ->
-          extra = %{
-            agent: get_user_agent(conn, params["agent"])
-          }
-          |> Map.merge(get_requester_Country(user_request_ip(conn), params["u_country"], params["u_country_code"]))
+          extra =
+            %{agent: get_user_agent(conn, params["agent"])}
+            |> Map.merge(get_requester_Country(user_request_ip(conn, params["requester_ip"]), params["u_country"], params["u_country_code"]))
           CameraActivity.log_activity(updated_user, %{id: 0, exid: ""}, "requested for password reset", extra)
           EvercamMedia.UserMailer.password_reset_request(updated_user)
           conn |> put_status(200) |> json(%{message: "We’ve sent you an email with instructions for changing your password."})
@@ -272,10 +271,9 @@ defmodule EvercamMediaWeb.UserController do
       changeset = User.changeset(user, user_params)
       case Repo.update(changeset) do
         {:ok, updated_user} ->
-          extra = %{
-            agent: get_user_agent(conn, params["agent"])
-          }
-          |> Map.merge(get_requester_Country(user_request_ip(conn), params["u_country"], params["u_country_code"]))
+          extra =
+            %{agent: get_user_agent(conn, params["agent"])}
+            |> Map.merge(get_requester_Country(user_request_ip(conn, params["requester_ip"]), params["u_country"], params["u_country_code"]))
           CameraActivity.log_activity(updated_user, %{id: 0, exid: ""}, "password changed", extra)
           conn |> put_status(200) |> json(%{message: "Password changed successfully."})
         {:error, changeset} ->
@@ -336,7 +334,7 @@ defmodule EvercamMediaWeb.UserController do
 
   def update(conn, %{"id" => username} = params) do
     current_user = conn.assigns[:current_user]
-    requester_ip = user_request_ip(conn)
+    requester_ip = user_request_ip(conn, params["requester_ip"])
     user_agent = get_user_agent(conn, params["agent"])
     username = username |> String.replace_trailing(".json", "")
     old_user = User.by_username_or_email(username)
