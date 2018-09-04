@@ -1,5 +1,5 @@
 defmodule EvercamMedia.AddCameraLogs do
-  import CameraActivity, only: [changeset: 2, get_last_on_off_log: 1]
+  import CameraActivity, only: [changeset: 2, get_last_on_off_log: 2]
   alias EvercamMedia.Repo
   alias EvercamMedia.SnapshotRepo
   require Logger
@@ -10,7 +10,7 @@ defmodule EvercamMedia.AddCameraLogs do
     Camera
     |> Repo.all
     |> Enum.each(fn(camera) ->
-      case get_last_on_off_log(camera.id) do
+      case get_last_on_off_log(camera.id, ["online", "offline"]) do
         nil ->
           add_log_for_camera(camera.is_online, camera)
           Logger.info "Log has been added for Camera: #{camera.exid}, Status: #{camera.is_online}."
@@ -21,6 +21,28 @@ defmodule EvercamMedia.AddCameraLogs do
             false ->
               add_log_against_action(action, camera.is_online, done_at, camera)
               Logger.info "Log Added for Camera: #{camera.exid}, Action: #{action}, Status: #{camera.is_online}"
+          end
+      end
+    end)
+  end
+
+  def add_offline_reason do
+    Camera
+    |> Repo.all
+    |> Enum.filter(fn(c) -> c.is_online == false end)
+    |> Enum.each(fn(camera) ->
+      case get_last_on_off_log(camera.id, ["offline"]) do
+        nil ->
+          Logger.info "No log for Camera: #{camera.exid}, Status: #{camera.is_online}."
+        %CameraActivity{} = camera_activity ->
+          case camera_activity.extra["reason"] do
+            nil -> Logger.info "Empty reason."
+            reason ->
+              params = %{offline_reason: reason}
+              camera
+              |> Camera.changeset(params)
+              |> Repo.update!
+              Logger.info "Reason updated: #{camera_activity.extra["reason"]}"
           end
       end
     end)

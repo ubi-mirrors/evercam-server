@@ -55,10 +55,10 @@ defmodule CameraActivity do
     |> SnapshotRepo.all
   end
 
-  def get_last_on_off_log(camera_id) do
+  def get_last_on_off_log(camera_id, action \\ ["online", "offline"]) do
     CameraActivity
     |> where(camera_id: ^camera_id)
-    |> where([c], c.action in ["online", "offline"])
+    |> where([c], c.action in ^action)
     |> order_by(desc: :id)
     |> limit(1)
     |> SnapshotRepo.one
