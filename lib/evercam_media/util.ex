@@ -153,4 +153,31 @@ defmodule EvercamMedia.Util do
   def invalidate_response_time_cache(camera) do
     ConCache.delete(:camera_response_times, camera.exid)
   end
+
+  def get_offline_reason(reason) when reason in [nil, ""], do: reason
+  def get_offline_reason(reason) do
+    case reason |> String.to_atom do
+      :system_limit -> "Sorry, we dropped the ball."
+      :emfile -> "Sorry, we dropped the ball."
+      :case_clause -> "Bad request."
+      :bad_request -> "Bad request."
+      :closed -> "Connection closed."
+      :nxdomain -> "Non-existant domain."
+      :ehostunreach -> "No route to host."
+      :enetunreach -> "Network unreachable."
+      :req_timedout -> "Request to the camera timed out."
+      :timeout -> "Camera response timed out."
+      :connect_timeout -> "Connection to the camera timed out."
+      :econnrefused -> "Connection refused."
+      :not_found -> "Camera snapshot url is not found."
+      :forbidden -> "Camera responded with a Forbidden message."
+      :unauthorized -> "Invalid username and password."
+      :device_error -> "Camera responded with a Device Error message."
+      :device_busy -> "Camera responded with a Device Busy message."
+      :invalid_operation -> "Camera responded with a Invalid Operation message."
+      :moved -> "Camera url has changed, please update it."
+      :not_a_jpeg -> "Camera didn't respond with an image."
+      _reason -> "Sorry, we dropped the ball."
+    end
+  end
 end

@@ -97,7 +97,7 @@ defmodule EvercamMedia.Snapshot.DBHandler do
       |> Ecto.DateTime.cast!
 
     try do
-      params = construct_camera(datetime, status, camera.is_online == status)
+      params = construct_camera(datetime, error_code, status, camera.is_online == status)
       camera =
         camera
         |> Camera.changeset(params)
@@ -145,11 +145,11 @@ defmodule EvercamMedia.Snapshot.DBHandler do
     EvercamMedia.UserMailer.camera_status(status, camera.owner, camera)
   end
 
-  defp construct_camera(datetime, online_status, online_status_unchanged)
-  defp construct_camera(datetime, false, false) do
-    %{last_polled_at: datetime, is_online: false, last_online_at: datetime}
+  defp construct_camera(datetime, error_reason, online_status, online_status_unchanged)
+  defp construct_camera(datetime, error_reason, false, false) do
+    %{last_polled_at: datetime, offline_reason: error_reason, is_online: false, last_online_at: datetime}
   end
-  defp construct_camera(datetime, status, _) do
-    %{last_polled_at: datetime, is_online: status}
+  defp construct_camera(datetime, _, status, _) do
+    %{last_polled_at: datetime, offline_reason: "", is_online: status}
   end
 end

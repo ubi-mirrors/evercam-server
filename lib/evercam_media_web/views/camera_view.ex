@@ -35,6 +35,7 @@ defmodule EvercamMediaWeb.CameraView do
       is_online_email_owner_notification: is_send_notification?(camera.alert_emails, user),
       is_online: camera.is_online,
       is_public: camera.is_public,
+      offline_reason: Util.get_offline_reason(camera.offline_reason),
       discoverable: camera.discoverable,
       timezone: Camera.get_timezone(camera),
       location: Camera.get_location(camera),

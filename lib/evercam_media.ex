@@ -1,5 +1,6 @@
 defmodule EvercamMedia do
   use Application
+  require Logger
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications
@@ -53,8 +54,9 @@ defmodule EvercamMedia do
   defp ensure_porcelain_init() do
     Task.async(fn ->
       # Wait ten seconds after deploy and then try to reinit porcelain
-      :timer.sleep(10000)
+      :timer.sleep(1000)
       Porcelain.Init.init()
+      Logger.info "Porcelain application re-init."
     end)
   end
 end

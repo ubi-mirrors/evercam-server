@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 10.4 (Ubuntu 10.4-0ubuntu0.18.04)
--- Dumped by pg_dump version 10.4 (Ubuntu 10.4-0ubuntu0.18.04)
+-- Dumped from database version 10.5 (Ubuntu 10.5-0ubuntu0.18.04)
+-- Dumped by pg_dump version 10.5 (Ubuntu 10.5-0ubuntu0.18.04)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -455,7 +455,8 @@ CREATE TABLE public.cameras (
     discoverable boolean DEFAULT false NOT NULL,
     thumbnail_url text,
     is_online_email_owner_notification boolean DEFAULT false NOT NULL,
-    alert_emails text
+    alert_emails text,
+    offline_reason character varying(255)
 );
 
 
@@ -739,6 +740,41 @@ CREATE SEQUENCE public.snapmail_cameras_id_seq
 --
 
 ALTER SEQUENCE public.snapmail_cameras_id_seq OWNED BY public.snapmail_cameras.id;
+
+
+--
+-- Name: snapmail_logs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.snapmail_logs (
+    id integer NOT NULL,
+    recipients text,
+    subject text,
+    body text,
+    image_timestamp text,
+    inserted_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+--
+-- Name: snapmail_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.snapmail_logs_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: snapmail_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.snapmail_logs_id_seq OWNED BY public.snapmail_logs.id;
 
 
 --
@@ -1215,6 +1251,13 @@ ALTER TABLE ONLY public.snapmail_cameras ALTER COLUMN id SET DEFAULT nextval('pu
 
 
 --
+-- Name: snapmail_logs id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.snapmail_logs ALTER COLUMN id SET DEFAULT nextval('public.snapmail_logs_id_seq'::regclass);
+
+
+--
 -- Name: snapmails id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1439,6 +1482,14 @@ ALTER TABLE ONLY public.schema_migrations
 
 ALTER TABLE ONLY public.snapmail_cameras
     ADD CONSTRAINT snapmail_cameras_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: snapmail_logs snapmail_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.snapmail_logs
+    ADD CONSTRAINT snapmail_logs_pkey PRIMARY KEY (id);
 
 
 --
@@ -1770,5 +1821,5 @@ ALTER TABLE ONLY public.timelapses
 -- PostgreSQL database dump complete
 --
 
-INSERT INTO "schema_migrations" (version) VALUES (20150622102645), (20150629144629), (20150629183319), (20160616160229), (20160712101523), (20160720125939), (20160727112052), (20160830055709), (20161202114834), (20161202115000), (20161213162000), (20161219130300), (20161221070146), (20161221070226), (20170103162400), (20170112110000), (20170213140200), (20170222114100), (20170414141100), (20170419105000), (20171009070501), (20180411104000), (20180416121600), (20180807101800);
+INSERT INTO "schema_migrations" (version) VALUES (20150622102645), (20150629144629), (20150629183319), (20160616160229), (20160712101523), (20160720125939), (20160727112052), (20160830055709), (20161202114834), (20161202115000), (20161213162000), (20161219130300), (20161221070146), (20161221070226), (20170103162400), (20170112110000), (20170213140200), (20170222114100), (20170414141100), (20170419105000), (20171009070501), (20171213120725), (20171220062816), (20171222101825), (20180102124912), (20180122051210), (20180130103936), (20180411104000), (20180416121600), (20180420054301), (20180502103548), (20180807101800), (20180903164300);
 
