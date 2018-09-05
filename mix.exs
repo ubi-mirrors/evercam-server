@@ -94,7 +94,7 @@ defmodule EvercamMedia.Mixfile do
       {:ecto, "~> 2.1.4"},
       {:distillery, "~> 2.0"},
       {:geo, "~> 1.4"},
-      {:httpoison, github: "ijunaid8989/httpoison", override: true},
+      {:httpoison, "~> 1.3", override: true},
       {:jsx, "~> 2.8.2", override: true},
       {:mailgun, github: "evercam/mailgun"},
       {:nadia, "~> 0.4.4"},
