@@ -571,7 +571,20 @@ defmodule EvercamMediaWeb.ArchiveController do
   defp load_file(:public, conn, camera_exid, file_name, extension) do
     {:ok, response} = do_load("#{camera_exid}/clips/#{file_name}/#{file_name}.#{extension}")
     conn
-    |> put_resp_header("content-type", "video/mp4")
+    |> put_resp_header("content-type", get_content_type(extension))
     |> text(response)
   end
+
+  defp get_content_type("png"), do: "image/png"
+  defp get_content_type("gif"), do: "image/gif"
+  defp get_content_type("jpeg"), do: "image/jpeg"
+  defp get_content_type("jpg"), do: "image/jpeg"
+  defp get_content_type("bmp"), do: "image/bmp"
+  defp get_content_type("webp"), do: "image/webp"
+
+  defp get_content_type("mp4"), do: "video/mp4"
+  defp get_content_type("webm"), do: "video/webm"
+  defp get_content_type("ogg"), do: "video/ogg"
+  defp get_content_type("txt"), do: "text/plain"
+  defp get_content_type("pdf"), do: "application/pdf"
 end
