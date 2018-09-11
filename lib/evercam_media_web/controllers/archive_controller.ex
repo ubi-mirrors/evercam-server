@@ -90,7 +90,7 @@ defmodule EvercamMediaWeb.ArchiveController do
 
     with :ok <- valid_params(conn, params),
          :ok <- ensure_camera_exists(camera, exid, conn),
-         :ok <- deliver_content(conn, exid, archive_id),
+         :ok <- deliver_content(conn, exid, archive_id, current_user),
          :ok <- ensure_can_list(current_user, camera, conn)
     do
       archive = Archive.by_exid(archive_id)
@@ -546,18 +546,18 @@ defmodule EvercamMediaWeb.ArchiveController do
     "#{clip_exid}-#{random_string}"
   end
 
-  defp deliver_content(conn, exid, archive_id) do
+  defp deliver_content(conn, exid, archive_id, requester) do
     archive_with_extension = String.split(archive_id, ".")
     case length(archive_with_extension) do
       2 ->
         [file_name, extension] = archive_with_extension
-        ensure_is_public(conn, file_name)
+        ensure_is_public(conn, file_name, requester)
         |> load_file(conn, exid, file_name, extension)
       _ -> :ok
     end
   end
 
-  defp ensure_is_public(conn, archive_exid) do
+  defp ensure_is_public(conn, archive_exid, nil) do
     with {:ok, archive} <- archive_exists(conn, archive_exid) do
       case archive.public do
         true -> :public
@@ -565,6 +565,7 @@ defmodule EvercamMediaWeb.ArchiveController do
       end
     end
   end
+  defp ensure_is_public(_conn, _archive_exid, _requester), do: :public
 
   defp load_file(:private, conn, _camera_exid, file_name, _extension), do: render_error(conn, 404, "Archive '#{file_name}' not public!")
   defp load_file(:public, conn, camera_exid, file_name, extension) do
