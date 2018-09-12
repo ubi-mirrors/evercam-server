@@ -82,10 +82,10 @@ config :evercam_media,
     {"@hourly", {EvercamMedia.OfflinePeriodicReminder, :offline_cameras_reminder, []}}
   ]
 
-config :evercam_media, :mailgun,
-  domain: System.get_env("MAILGUN_DOMAIN"),
-  key: System.get_env("MAILGUN_KEY"),
-  mode: :prod
+config :evercam_media, EvercamMedia.Mailer,
+  adapter: Swoosh.Adapters.Mailgun,
+  api_key: System.get_env("MAILGUN_KEY"),
+  domain: System.get_env("MAILGUN_DOMAIN")
 
 config :evercam_media, EvercamMedia.Repo,
   adapter: Ecto.Adapters.Postgres,

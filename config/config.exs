@@ -60,11 +60,10 @@ config :evercam_media,
   seaweedfs_url: "http://localhost:8888",
   seaweedfs_url_1: "http://localhost:8888"
 
-config :evercam_media, :mailgun,
-  domain: "sandbox",
-  key: "sandbox",
-  mode: :test,
-  test_file_path: "priv_dir/mailgun_test.json"
+config :evercam_media, EvercamMedia.Mailer,
+  adapter: Swoosh.Adapters.Mailgun,
+  api_key: "sandbox",
+  domain: "sandbox"
 
 config :new_relic,
   application_name: System.get_env("NEWRELIC_APP_NAME"),
