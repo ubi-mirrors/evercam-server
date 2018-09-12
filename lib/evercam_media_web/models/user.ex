@@ -3,7 +3,7 @@ defmodule User do
   import Ecto.Query
   alias EvercamMedia.Repo
 
-  @email_regex ~r/^[a-z0-9.-]+@[a-z\d\-]+(\.[a-z]+)*\.[a-z]+\z/
+  @email_regex ~r/^(?!.*\.{2})[a-z0-9.-]+@[a-z\d\-]+(\.[a-z]+)*\.[a-z]+\z/
   @name_regex ~r/^[\p{Xwd}\s,.']+$/
 
   @required_fields ~w(password firstname lastname email)
