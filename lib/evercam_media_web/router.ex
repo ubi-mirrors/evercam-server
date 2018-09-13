@@ -186,6 +186,7 @@ end
       options "/cameras/:id/nvr/stream/vhinfo", NVRController, :nothing
       post "/cameras/:id/nvr/snapshots/extract", NVRController, :extract_snapshots
       options "/cameras/:id/nvr/snapshots/extract", NVRController, :nothing
+      delete "/cameras/:id/nvr/snapshots/extract", NVRController, :delete_extraction
 
       get "/cameras/:id/compares/:compare_id", CompareController, :show
       get "/cameras/:id/compares", CompareController, :index

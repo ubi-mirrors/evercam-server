@@ -80,9 +80,13 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
       File.exists?("#{path}#{config.exid}.mp4")
       |> upload_image("#{path}#{config.exid}.mp4", "#{upload_path}#{config.exid}.mp4")
       clean_images(path)
+      :ets.delete(:extractions, config.exid)
     end)
   end
-  def create_video_mp4(_, _config, path, _upload_path), do: clean_images(path)
+  def create_video_mp4(_, config, path, _upload_path) do
+    :ets.delete(:extractions, config.exid)
+    clean_images(path)
+  end
 
   defp update_snapshot_extractor(config, snapshot_count) do
     snapshot_extractor = SnapshotExtractor.by_id(config.id)

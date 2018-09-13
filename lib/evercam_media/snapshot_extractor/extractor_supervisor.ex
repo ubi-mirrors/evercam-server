@@ -20,8 +20,11 @@ defmodule EvercamMedia.SnapshotExtractor.ExtractorSupervisor do
     Logger.info "Initiate workers for extractor."
     SnapshotExtractor.by_status(11)
     |> Enum.each(fn(extractor) ->
-      extractor
-      |> start_extraction()
+      extraction_pid = spawn(fn ->
+        extractor
+        |> start_extraction()
+      end)
+      :ets.insert(:extractions, {extractor.camera.exid, extraction_pid})
     end)
   end
 
@@ -34,8 +37,10 @@ defmodule EvercamMedia.SnapshotExtractor.ExtractorSupervisor do
   end
 
   defp get_process_pid(nil) do
-    {:ok, pid} = GenStage.start_link(EvercamMedia.SnapshotExtractor.Extractor, {}, name: :snapshot_extractor)
-    pid
+    case GenStage.start_link(EvercamMedia.SnapshotExtractor.Extractor, {}, name: :snapshot_extractor) do
+      {:ok, pid} -> pid
+      {:error, {:already_started, pid}} -> pid
+    end
   end
   defp get_process_pid(pid), do: pid
 

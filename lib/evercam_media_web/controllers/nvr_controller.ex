@@ -85,6 +85,20 @@ defmodule EvercamMediaWeb.NVRController do
     end
   end
 
+  def delete_extraction(conn, %{"id" => exid, "extraction_id" => extraction_id}) do
+    with [{exid, extraction_pid}] <- :ets.lookup(:extractions, exid),
+         true                     <- Process.exit(extraction_pid, :kill),
+         {:ok, _}                 <- File.rm_rf('#{@root_dir}/#{exid}/extract/'),
+         {1, nil}                 <- SnapshotExtractor.delete_by_id(extraction_id),
+         true                     <- :ets.delete(:extractions, exid)
+   do
+     json(conn, %{message: "Extraction has been deleted"})
+   else
+    _ ->
+      json(conn, %{message: "Extraction is not running for this camera."})
+   end
+  end
+
   def extract_snapshots(conn, %{"id" => exid, "start_date" => start_date, "end_date" => end_date, "interval" => interval} = params) do
     current_user = conn.assigns[:current_user]
     camera = Camera.by_exid_with_associations(exid)
@@ -124,10 +138,11 @@ defmodule EvercamMediaWeb.NVRController do
       |> case do
         {:ok, snapshot_extractor} ->
           full_snapshot_extractor = Repo.preload(snapshot_extractor, :camera, force: true)
-          spawn(fn ->
+          extraction_pid = spawn(fn ->
             EvercamMedia.UserMailer.snapshot_extraction_started(full_snapshot_extractor)
             start_snapshot_extractor(config, full_snapshot_extractor.id)
           end)
+          :ets.insert(:extractions, {exid, extraction_pid})
           conn
           |> put_status(:created)
           |> render(SnapshotExtractorView, "show.json", %{snapshot_extractor: full_snapshot_extractor})

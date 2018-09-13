@@ -55,6 +55,12 @@ defmodule SnapshotExtractor do
     |> Repo.delete_all
   end
 
+  def delete_by_id(id) do
+    SnapshotExtractor
+    |> where(id: ^id)
+    |> Repo.delete_all
+  end
+
   def required_fields do
     @required_fields |> Enum.map(fn(field) -> String.to_atom(field) end)
   end
