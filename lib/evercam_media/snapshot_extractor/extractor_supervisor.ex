@@ -3,7 +3,6 @@ defmodule EvercamMedia.SnapshotExtractor.ExtractorSupervisor do
   use Supervisor
   require Logger
   alias EvercamMedia.SnapshotExtractor.Extractor
-  @vsn DateTime.to_unix(DateTime.utc_now())
 
   @root_dir Application.get_env(:evercam_media, :storage_dir)
 
@@ -12,8 +11,6 @@ defmodule EvercamMedia.SnapshotExtractor.ExtractorSupervisor do
   end
 
   def init(:ok) do
-    Logger.info "Re-init Porcelain."
-    Porcelain.Init.init()
     Task.start_link(&initiate_workers/0)
     children = [worker(Extractor, [], restart: :permanent)]
     supervise(children, strategy: :simple_one_for_one, max_restarts: 1_000_000)

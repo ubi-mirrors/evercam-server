@@ -20,6 +20,7 @@ defmodule EvercamMedia do
       worker(ConCache, [[ttl_check: :timer.hours(2), ttl: :timer.hours(24)], [name: :current_camera_status]], id: :current_camera_status),
       worker(ConCache, [[ttl_check: :timer.hours(2), ttl: :timer.hours(6)], [name: :camera_response_times]], id: :camera_response_times),
       worker(EvercamMedia.Scheduler, []),
+      worker(EvercamMedia.Janitor, []),
       supervisor(EvercamMedia.Repo, []),
       supervisor(EvercamMediaWeb.Endpoint, []),
       supervisor(EvercamMedia.SnapshotRepo, []),
