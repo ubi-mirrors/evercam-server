@@ -116,8 +116,22 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
     Porcelain.shell("ffmpeg -rtsp_transport tcp -stimeout 10000000 -i '#{stream_url}' -vframes 1 -y #{images_path}").out
     spawn(fn ->
       File.exists?(images_path)
+      |> is_it_new?(images_path, config.exid)
       |> upload_and_inject_image(config, images_path, upload_image_path, start_date, timezone)
     end)
+  end
+
+  defp is_it_new?(false, _new_image_path, _exid), do: false
+  defp is_it_new?(true, new_image_path, exid) do
+    with [{_, old_path}] <- :ets.lookup(:extractions, "image_#{exid}_path"),
+         true            <- File.read!(old_path) == File.read!(new_image_path) do
+      File.rm!(new_image_path)
+      false
+    else
+      _ ->
+        :ets.insert(:extractions, {"image_#{exid}_path", new_image_path})
+        true
+    end
   end
 
   defp upload_and_inject_image(true, config, image_path, upload_image_path, start_date, timezone) do
