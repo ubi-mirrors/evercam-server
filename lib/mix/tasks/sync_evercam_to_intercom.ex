@@ -35,4 +35,55 @@ defmodule EvercamMedia.SyncEvercamToIntercom do
     Logger.info "Start next page users. URL: #{next_url}"
     get_users(next_url)
   end
+
+  def start_update_status(next_page \\ nil) do
+    api_url =
+      case next_page do
+        url when url in [nil, ""] -> "#{@intercom_url}"
+        next_url -> next_url
+      end
+
+    headers = ["Authorization": "Bearer #{@intercom_token}", "Accept": "Accept:application/json"]
+    {:ok, %HTTPoison.Response{body: body}} = HTTPoison.get(api_url, headers)
+    users = Poison.decode!(body) |> Map.get("users")
+    pages = Poison.decode!(body) |> Map.get("pages")
+    update_status(users, Map.get(pages, "next"))
+  end
+
+  defp update_status([intercom_user | rest], next_url) do
+    intercom_email = Map.get(intercom_user, "email")
+    user_attributes = Map.get(intercom_user, "custom_attributes")
+    intercom_id = Map.get(intercom_user, "id")
+    case user_attributes["status"] do
+      "Shared-Non-Registered" ->
+        case User.by_username_or_email(intercom_email) do
+          nil -> Logger.info "Intercom user status is corrected. email: #{intercom_email}"
+          %User{} = _user -> update_intercom_user(intercom_id, intercom_email)
+        end
+      _ -> :noop
+    end
+    update_status(rest, next_url)
+  end
+  defp update_status([], nil), do: Logger.info "Users status updated."
+  defp update_status([], next_url) do
+    Logger.info "Start next page users. URL: #{next_url}"
+    start_update_status(next_url)
+  end
+
+  defp update_intercom_user(intercom_id, intercom_email) do
+    Logger.info "Update statue of intercom user email: #{intercom_email}"
+    headers = ["Authorization": "Bearer #{@intercom_token}", "Accept": "Accept:application/json", "Content-Type": "application/json"]
+
+    intercom_new_user = %{
+      "id": intercom_id,
+      "email": intercom_email,
+      "user_id": intercom_email,
+      "custom_attributes": %{
+        "status": "Share-Accepted"
+      }
+    }
+    |> Poison.encode!
+
+    HTTPoison.post(@intercom_url, intercom_new_user, headers)
+  end
 end

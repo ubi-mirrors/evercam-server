@@ -34,17 +34,17 @@ defmodule EvercamMedia.Intercom do
       end
     headers = ["Authorization": "Bearer #{@intercom_token}",  "Accept": "Accept:application/json", "Content-Type": "application/json"]
     intercom_new_user = %{
-      "email": user.email,
-      "name": user.firstname <> " " <> user.lastname,
-      "last_seen_user_agent": user_agent,
-      "last_request_at": user.created_at |> Util.ecto_datetime_to_unix,
-      "last_seen_ip": requester_ip,
-      "signed_up_at": user.created_at |> Util.ecto_datetime_to_unix,
-      "custom_attributes": %{
-        "viewed_camera": 0,
-        "viewed_recordings": 0,
-        "has_shared": false,
-        "has_snapmail": false
+      email: user.email,
+      name: user.firstname <> " " <> user.lastname,
+      last_seen_user_agent: user_agent,
+      last_request_at: user.created_at |> Util.ecto_datetime_to_unix,
+      last_seen_ip: requester_ip,
+      signed_up_at: user.created_at |> Util.ecto_datetime_to_unix,
+      custom_attributes: %{
+        viewed_camera: 0,
+        viewed_recordings: 0,
+        has_shared: false,
+        has_snapmail: false
       }
     }
     |> add_userid(user.username)
@@ -58,6 +58,7 @@ defmodule EvercamMedia.Intercom do
         {:ok, json} -> json
         _ -> nil
       end
+
     HTTPoison.post(@intercom_url, json, headers)
     tag_user(user.email, get_tag_name(company_id))
   end
@@ -70,12 +71,12 @@ defmodule EvercamMedia.Intercom do
       {:ok, response} ->
         intercom_user = response.body |> Poison.decode!
         intercom_new_user = %{
-          "id": intercom_user["id"],
-          "email": user.email,
-          "user_id": user.username,
-          "name": user.firstname <> " " <> user.lastname,
-          "last_seen_user_agent": user_agent,
-          "last_seen_ip": requester_ip,
+          id: intercom_user["id"],
+          email: user.email,
+          user_id: user.username,
+          name: user.firstname <> " " <> user.lastname,
+          last_seen_user_agent: user_agent,
+          last_seen_ip: requester_ip,
         }
         |> Poison.encode!
         HTTPoison.post(@intercom_url, intercom_new_user, headers)
@@ -102,38 +103,38 @@ defmodule EvercamMedia.Intercom do
 
   defp add_userid(params, ""), do: params
   defp add_userid(params, id) do
-    Map.put(params, "user_id", id)
+    Map.put(params, :user_id, id)
   end
 
   defp add_session(params, user_id, _status) when user_id in [nil, ""], do: params
-  defp add_session(params, _user_id, "Shared-Non-Registered"), do: Map.put(params, "new_session", false)
+  defp add_session(params, _user_id, "Shared-Non-Registered"), do: Map.put(params, :new_session, false)
   defp add_session(params, _user_id, _status) do
-    Map.put(params, "new_session", true)
+    Map.put(params, :new_session, true)
   end
 
   defp add_status(params, ""), do: params
   defp add_status(params, status) do
-    put_in(params, [:custom_attributes, "status"], status)
+    put_in(params, [:custom_attributes, :status], status)
   end
 
   defp add_subscribe(params, ""), do: params
   defp add_subscribe(params, "Shared-Non-Registered") do
-    Map.put(params, "unsubscribed_from_emails", true)
+    Map.put(params, :unsubscribed_from_emails, true)
   end
   defp add_subscribe(params, _status) do
-    Map.put(params, "unsubscribed_from_emails", false)
+    Map.put(params, :unsubscribed_from_emails, false)
   end
 
   defp add_company(params, ""), do: params
   defp add_company(params, company_id) do
-    Map.put(params, "companies", [%{company_id: "#{company_id}"}])
+    Map.put(params, :companies, [%{company_id: "#{company_id}"}])
   end
 
   def delete_user(user, by_val \\ "user_id", tries \\ 1)
   def delete_user(_user, _by_val, 3), do: :noop
   def delete_user(user, by_val, tries) do
     url = "#{@intercom_url}?#{by_val}=#{user}"
-    headers = ["Authorization": "Bearer #{@intercom_token}",  "Accept": "Accept:application/json"]
+    headers = ["Authorization": "Bearer #{@intercom_token}",  "Accept": "Accept:application/json", "Content-Type": "application/json"]
 
     case HTTPoison.delete(url, headers) do
       {:ok, _response} -> :noop
