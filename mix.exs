@@ -3,7 +3,7 @@ defmodule EvercamMedia.Mixfile do
 
   def project do
     [app: :evercam_media,
-     version: "1.0.#{versions()}",
+     version: "1.0.#{DateTime.to_unix(DateTime.utc_now())}",
      elixir: "~> 1.7",
      elixirc_paths: elixirc_paths(Mix.env),
      build_embedded: Mix.env == :prod,
@@ -11,15 +11,6 @@ defmodule EvercamMedia.Mixfile do
      compilers: [:phoenix] ++ Mix.compilers,
      aliases: aliases(),
      deps: deps()]
-  end
-
-  defp versions do
-    {epoch, _} = System.cmd("git", ~w|log -1 --date=raw --format=%cd|)
-    [sec, tz] =
-      epoch
-      |> String.split(~r/\s+/, trim: true)
-      |> Enum.map(&String.to_integer/1)
-    sec + tz * 36
   end
 
   defp aliases do
