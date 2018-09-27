@@ -630,6 +630,13 @@ defmodule EvercamMedia.Snapshot.Storage do
     end
   end
 
+  def save_archive_edited_image(camera_exid, archive_exid, content) do
+    File.mkdir_p("#{@root_dir}/#{archive_exid}/")
+    File.write("#{@root_dir}/#{archive_exid}/#{archive_exid}.png", content)
+    file_path = "#{camera_exid}/clips/#{archive_exid}/#{archive_exid}.png"
+    do_save(file_path, content, [content_type: "application/octet-stream"])
+  end
+
   def save_mp4(camera_exid, archive_id, path) do
     "#{path}/#{archive_id}.mp4"
     |> File.open([:read, :binary, :raw], fn(file) -> IO.binread(file, :all) end)

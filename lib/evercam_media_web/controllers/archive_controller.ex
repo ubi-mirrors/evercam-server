@@ -317,6 +317,26 @@ defmodule EvercamMediaWeb.ArchiveController do
         render_error(conn, 400, Util.parse_changeset(changeset))
     end
   end
+  defp create_clip(params, camera, conn, current_user, "edit") do
+    changeset = archive_changeset(params, camera, current_user, @status.completed)
+    exid = get_field(changeset, :exid)
+    changeset = put_change(changeset, :file_name, "#{exid}.#{params["file_extension"]}")
+
+    case Repo.insert(changeset) do
+      {:ok, archive} ->
+        archive = archive |> Repo.preload(:camera) |> Repo.preload(:user)
+        extra = %{
+          name: archive.title,
+          agent: get_user_agent(conn, params["agent"])
+        }
+        |> Map.merge(get_requester_Country(user_request_ip(conn, params["requester_ip"]), params["u_country"], params["u_country_code"]))
+        CameraActivity.log_activity(current_user, camera, "file uploaded", extra)
+        save_edited_image(camera.exid, archive.exid, params["content"])
+        render(conn |> put_status(:created), ArchiveView, "show.json", %{archive: archive})
+      {:error, changeset} ->
+        render_error(conn, 400, Util.parse_changeset(changeset))
+    end
+  end
   defp create_clip(params, camera, conn, current_user, _type) do
     timezone = camera |> Camera.get_timezone
     unix_from = params["from_date"]
@@ -448,6 +468,14 @@ defmodule EvercamMediaWeb.ArchiveController do
   end
   defp copy_uploaded_file(_mode, _camera_id, _archive_id, _url, _extension), do: :noop
 
+  defp save_edited_image(camera_exid, archive_exid, image_base64) do
+    spawn fn ->
+      image = decode_image(image_base64)
+      Storage.save_archive_edited_image(camera_exid, archive_exid, image)
+      create_thumbnail(camera_exid, archive_exid, "png")
+    end
+  end
+
   defp create_thumbnail(camera_id, archive_id, extension) do
     root_dir = "#{Application.get_env(:evercam_media, :storage_dir)}/#{archive_id}/"
     file_path = "#{root_dir}#{archive_id}.#{extension}"
@@ -457,6 +485,12 @@ defmodule EvercamMediaWeb.ArchiveController do
     end
     Storage.save_archive_thumbnail(camera_id, archive_id, root_dir)
     File.rm_rf(root_dir)
+  end
+
+  defp decode_image(image_base64) do
+    image_base64
+    |> String.replace_leading("data:image/png;base64,", "")
+    |> Base.decode64!
   end
 
   defp convert_timestamp(timestamp) do
