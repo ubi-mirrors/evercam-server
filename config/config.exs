@@ -58,7 +58,8 @@ config :geoip, provider: :ipstack, use_https: :false, api_key: System.get_env("I
 
 config :evercam_media,
   seaweedfs_url: "http://localhost:8888",
-  seaweedfs_url_1: "http://localhost:8888"
+  seaweedfs_url_1: "http://localhost:8888",
+  seaweedfs_url_new: "http://localhost:8888"
 
 config :evercam_media, EvercamMedia.Mailer,
   adapter: Swoosh.Adapters.Mailgun,
