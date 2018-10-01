@@ -50,19 +50,6 @@ defmodule EvercamMedia.MoveOldWeedData do
     File.write!("#{@root_dir}/moving_old_data", "#{exid} #{year} #{month} #{day} #{hour} #{file}")
   end
 
-  defp clean_already_completed(list, index), do: get_recent_value(index) |> dont_reduce?(list)
-
-  defp dont_reduce?(nil, list), do: list
-  defp dont_reduce?(last, list), do: Enum.drop_while(list, fn el -> el != last end)
-
-  defp get_recent_value(index), do: read_recent_file() |> Enum.at(index)
-
-  defp read_recent_file, do: File.read("#{@root_dir}/moving_old_data") |> file_is_present()
-
-  defp file_is_present({:error, :enoent}), do: []
-  defp file_is_present({:ok, ""}), do: []
-  defp file_is_present({:ok, data}), do: data |> String.split(" ")
-
   defp move_thumbnails(exids) do
     exids
     |> Enum.each(fn (exid) ->
