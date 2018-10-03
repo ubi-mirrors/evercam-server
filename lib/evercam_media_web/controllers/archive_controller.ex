@@ -430,6 +430,7 @@ defmodule EvercamMediaWeb.ArchiveController do
             }
             |> Map.merge(get_requester_Country(user_request_ip(conn, params["requester_ip"]), params["u_country"], params["u_country_code"]))
             CameraActivity.log_activity(user, camera, "archive edited", extra)
+            save_edited_image(camera.exid, archive.exid, params["content"])
             render(conn, ArchiveView, "show.json", %{archive: updated_archive})
           {:error, changeset} ->
             render_error(conn, 400, Util.parse_changeset(changeset))
@@ -468,6 +469,7 @@ defmodule EvercamMediaWeb.ArchiveController do
   end
   defp copy_uploaded_file(_mode, _camera_id, _archive_id, _url, _extension), do: :noop
 
+  defp save_edited_image(_camera_exid, _archive_exid, image_base64) when image_base64 in [nil, ""], do: :noop
   defp save_edited_image(camera_exid, archive_exid, image_base64) do
     spawn fn ->
       image = decode_image(image_base64)
