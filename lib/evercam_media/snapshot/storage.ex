@@ -516,15 +516,15 @@ defmodule EvercamMedia.Snapshot.Storage do
     end
   end
 
-  def save(camera_exid, timestamp, image, "Evercam Thumbnail"), do: update_cache_and_save_thumbnail(camera_exid, timestamp, image)
+  def save(camera_exid, timestamp, image, "Evercam Thumbnail"), do: update_cache_and_save_thumbnail("#{camera_exid}", timestamp, image)
   def save(camera_exid, timestamp, image, "Evercam SnapMail") do
-    save_snapmail_to_s3(camera_exid, timestamp, image)
-    update_cache_and_save_thumbnail(camera_exid, timestamp, image)
+    save_snapmail_to_s3("#{camera_exid}", timestamp, image)
+    update_cache_and_save_thumbnail("#{camera_exid}", timestamp, image)
   end
   def save(camera_exid, timestamp, image, notes) do
     try do
-      seaweedfs_save(camera_exid, timestamp, image, notes)
-      update_cache_and_save_thumbnail(camera_exid, timestamp, image)
+      seaweedfs_save("#{camera_exid}", timestamp, image, notes)
+      update_cache_and_save_thumbnail("#{camera_exid}", timestamp, image)
     catch _type, _error ->
       :noop
     end
@@ -577,7 +577,6 @@ defmodule EvercamMedia.Snapshot.Storage do
     {last_save_date, _, _img} = ConCache.dirty_get_or_store(:camera_thumbnail, camera_exid, fn() ->
       {Calendar.DateTime.now!("UTC"), timestamp, image}
     end)
-
     case Calendar.DateTime.diff(Calendar.DateTime.now!("UTC"), last_save_date) do
       {:ok, seconds, _, :after} -> thumbnail_save_seaweedfs(camera_exid, image, timestamp, last_save_date, seconds)
       _ -> ConCache.dirty_put(:camera_thumbnail, camera_exid, {last_save_date, timestamp, image})
