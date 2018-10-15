@@ -236,6 +236,7 @@ defmodule EvercamMediaWeb.SnapmailController do
         snapmail.user_id != current_user.id ->
           render_error(conn, 401, "Unauthorized.")
         true ->
+          spawn(fn -> delete_snapmail_worker(snapmail) end)
           SnapmailCamera.delete_by_snapmail(snapmail.id)
           Snapmail.delete_by_exid(snapmail_exid)
           json(conn, %{})
@@ -372,6 +373,13 @@ defmodule EvercamMediaWeb.SnapmailController do
   defp refine_cameras(list1, list2) do
     list1
     |> Enum.reject(fn(item) -> Enum.member?(list2, item) end)
+  end
+
+  defp delete_snapmail_worker(snapmail) do
+    snapmail.exid
+    |> String.to_atom
+    |> Process.whereis
+    |> SnapmailerSupervisor.delete_worker
   end
 
   defp update_snapmail_worker(snapmail) do

@@ -45,6 +45,11 @@ defmodule EvercamMedia.Snapmail.SnapmailerSupervisor do
     end
   end
 
+  def delete_worker(nil), do: :noop
+  def delete_worker(worker_pid) do
+    Supervisor.terminate_child(__MODULE__, worker_pid)
+  end
+
   @doc """
   Start a worker for each snapmail in the database.
 
