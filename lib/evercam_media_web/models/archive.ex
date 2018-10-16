@@ -5,7 +5,7 @@ defmodule Archive do
   alias EvercamMedia.Repo
 
   @required_fields ~w(title exid from_date to_date requested_by camera_id)
-  @optional_fields ~w(status embed_time public frames url file_name)
+  @optional_fields ~w(status embed_time public frames url file_name type)
 
   @archive_status %{pending: 0, processing: 1, completed: 2, failed: 3}
 
@@ -23,6 +23,7 @@ defmodule Archive do
     field :frames, :integer
     field :url, :string
     field :file_name, :string
+    field :type, :string
     timestamps(inserted_at: :created_at, updated_at: false, type: Ecto.DateTime, default: Ecto.DateTime.utc)
   end
 
@@ -106,5 +107,6 @@ defmodule Archive do
     model
     |> cast(params, @required_fields ++ @optional_fields)
     |> validate_required(required_fields())
+    |> update_change(:type, &String.downcase/1)
   end
 end

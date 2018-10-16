@@ -402,7 +402,8 @@ defmodule EvercamMediaWeb.ArchiveController do
         "to_date" => to_date,
         "status" => status,
         "exid" => clip_exid,
-        "url" => params["url"]
+        "url" => params["url"],
+        "type" => params["type"]
       })
     Archive.changeset(%Archive{}, archive_params)
   end
