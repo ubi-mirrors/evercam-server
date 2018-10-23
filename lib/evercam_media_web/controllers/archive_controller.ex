@@ -88,19 +88,11 @@ defmodule EvercamMediaWeb.ArchiveController do
     current_user = conn.assigns[:current_user]
     camera = Camera.get_full(exid)
 
-    with :ok <- valid_params(conn, params),
-         :ok <- ensure_camera_exists(camera, exid, conn),
+    with :ok <- ensure_camera_exists(camera, exid, conn),
          :ok <- deliver_content(conn, exid, archive_id, current_user),
-         :ok <- ensure_can_list(current_user, camera, conn)
+         {:ok, archive} <- archive_can_list(current_user, camera, archive_id, conn)
     do
-      archive = Archive.by_exid(archive_id)
-
-      case archive do
-        nil ->
-          render_error(conn, 404, "Archive '#{archive_id}' not found!")
-        _ ->
-          render(conn, ArchiveView, "show.json", %{archive: archive})
-      end
+      render(conn, ArchiveView, "show.json", %{archive: archive})
     end
   end
 
@@ -516,6 +508,20 @@ defmodule EvercamMediaWeb.ArchiveController do
     end
   end
 
+  defp archive_can_list(current_user, camera, archive_exid, conn) do
+    with {:ok, archive} <- archive_exists(conn, archive_exid) do
+      case archive.public do
+        true -> {:ok, archive}
+        _ ->
+          if current_user && Permission.Camera.can_list?(current_user, camera) do
+            {:ok, archive}
+          else
+            render_error(conn, 403, "Forbidden.")
+          end
+      end
+    end
+  end
+
   defp valid_params(conn, params) do
     if present?(params["id"]) && present?(params["archive_id"]) do
       :ok
@@ -604,12 +610,15 @@ defmodule EvercamMediaWeb.ArchiveController do
   end
   defp ensure_is_public(_conn, _archive_exid, _requester), do: :public
 
-  defp load_file(:private, conn, _camera_exid, file_name, _extension), do: render_error(conn, 404, "Archive '#{file_name}' not public!")
+  defp load_file(:private, conn, _camera_exid, file_name, _extension), do: render_error(conn, 404, "Archive '#{file_name}' is not public!")
   defp load_file(:public, conn, camera_exid, file_name, extension) do
-    {:ok, response} = do_load("#{camera_exid}/clips/#{file_name}/#{file_name}.#{extension}")
-    conn
-    |> put_resp_header("content-type", get_content_type(extension))
-    |> text(response)
+    case do_load("#{camera_exid}/clips/#{file_name}/#{file_name}.#{extension}") do
+      {:ok, response} ->
+        conn
+        |> put_resp_header("content-type", get_content_type(extension))
+        |> text(response)
+      _ -> render_error(conn, 404, "Archive '#{file_name}' not found.")
+    end
   end
 
   defp get_content_type("png"), do: "image/png"
