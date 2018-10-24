@@ -116,7 +116,6 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
     Porcelain.shell("ffmpeg -rtsp_transport tcp -stimeout 10000000 -i '#{stream_url}' -vframes 1 -y #{images_path}").out
     spawn(fn ->
       File.exists?(images_path)
-      |> is_it_new?(images_path, config.exid)
       |> upload_and_inject_image(config, images_path, upload_image_path, start_date, timezone)
     end)
   end
