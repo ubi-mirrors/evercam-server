@@ -2,6 +2,7 @@ defmodule EvercamMedia.HikvisionNVR do
   require Logger
   alias EvercamMedia.Snapshot.Storage
   alias EvercamMedia.XMLParser
+  alias EvercamMedia.HTTPClient
 
   @root_dir Application.get_env(:evercam_media, :storage_dir)
 
@@ -99,8 +100,7 @@ defmodule EvercamMedia.HikvisionNVR do
   """
   def get_stream_info(host, port, username, password, channel) do
     url = "http://#{host}:#{port}/ISAPI/Streaming/channels/#{channel}"
-    hackney = [basic_auth: {username, password}, pool: :snapshot_pool]
-    case HTTPoison.get(url, [], hackney: hackney) do
+    case HTTPClient.get(:digest_auth, url, username, password) do
       {:ok, %HTTPoison.Response{body: body}} ->
         xml = XMLParser.parse_inner_array(body)
         %{
@@ -121,8 +121,7 @@ defmodule EvercamMedia.HikvisionNVR do
   """
   def get_device_info(host, port, username, password) do
     url = "http://#{host}:#{port}/ISAPI/System/deviceInfo"
-    hackney = [basic_auth: {username, password}, pool: :snapshot_pool]
-    case HTTPoison.get(url, [], hackney: hackney) do
+    case HTTPClient.get(:digest_auth, url, username, password) do
       {:ok, %HTTPoison.Response{body: body}} ->
         xml = XMLParser.parse_inner_array(body)
         %{
@@ -146,8 +145,7 @@ defmodule EvercamMedia.HikvisionNVR do
   """
   def get_hdd_info(host, port, username, password) do
     url = "http://#{host}:#{port}/ISAPI/ContentMgmt/Storage"
-    hackney = [basic_auth: {username, password}, pool: :snapshot_pool]
-    case HTTPoison.get(url, [], hackney: hackney) do
+    case HTTPClient.get(:digest_auth, url, username, password) do
       {:ok, %HTTPoison.Response{body: body}} ->
         XMLParser.parse_inner_array(body)
         |> XMLParser.parse_inner('/storage/hddList/hdd')
@@ -173,8 +171,7 @@ defmodule EvercamMedia.HikvisionNVR do
   def get_vh_info(host, port, username, password, channel) do
     channel_id = parse_chl_id(channel)
     url = "http://#{host}:#{port}/ISAPI/ContentMgmt/InputProxy/channels/#{channel_id}/status"
-    hackney = [basic_auth: {username, password}, pool: :snapshot_pool]
-    case HTTPoison.get(url, [], hackney: hackney) do
+    case HTTPClient.get(:digest_auth, url, username, password) do
       {:ok, %HTTPoison.Response{body: body}} ->
         xml = XMLParser.parse_inner_array(body)
         vh_port = get_vh_port(XMLParser.parse_single_element(xml, '/InputProxyChannelStatus/url'))
