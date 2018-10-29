@@ -39,6 +39,16 @@ defmodule EvercamMedia.TimelapseRecording.S3 do
     |> ExAws.request!
   end
 
+  def do_save_multiple(paths) do
+    upload_file = fn {src_path, dest_path} ->
+      ExAws.S3.put_object("evercam-camera-assets", dest_path, File.read!(src_path), [acl: :public_read])
+      |> ExAws.request!
+    end
+    paths
+    |> Task.async_stream(upload_file, max_concurrency: 10, timeout: :infinity)
+    |> Stream.run
+  end
+
   def make_file_public(camera_exid, timestamp) do
     directory_path = construct_bucket_path(camera_exid, timestamp)
     file_path = construct_file_name(timestamp)

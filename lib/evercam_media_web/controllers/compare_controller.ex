@@ -209,9 +209,9 @@ defmodule EvercamMediaWeb.CompareController do
   defp get_content_type("mp4"), do: "video/mp4"
 
   defp start_export(true, camera_exid, compare_exid, params) do
+    spawn fn -> create_animated(params["create_animation"], camera_exid, compare_exid, params["before_image"], params["after_image"]) end
     spawn fn -> do_export_image(camera_exid, compare_exid, String.to_integer(params["before_date"]), params["before_image"], "start") end
     spawn fn -> do_export_image(camera_exid, compare_exid, String.to_integer(params["after_date"]), params["after_image"], "end") end
-    spawn fn -> create_animated(params["create_animation"], camera_exid, compare_exid, params["before_image"], params["after_image"]) end
   end
   defp start_export(_is_run, _camera_exid, _compare_exid, _params), do: :nothing
 
@@ -225,26 +225,20 @@ defmodule EvercamMediaWeb.CompareController do
     File.mkdir_p(root)
     File.write("#{root}before_image.jpg", decode_image(before_image))
     File.write("#{root}after_image.jpg", decode_image(after_image))
-
     evercam_logo = Path.join(Application.app_dir(:evercam_media), "priv/static/images/evercam-logo.png")
     animated_file = "#{root}#{compare_id}.gif"
-    comm_resize_before = "ffmpeg -i #{root}before_image.jpg -s 1280x720 #{root}before_image_resize.jpg"
-    comm_resize_after = "ffmpeg -i #{root}after_image.jpg -s 1280x720 #{root}after_image_resize.jpg"
-    logo_comm = "convert #{root}temp.gif -gravity SouthEast -geometry +15+15 null: #{evercam_logo} -layers Composite #{animated_file}"
-    animation_comm = "convert #{root}after_image_resize.jpg #{root}before_image_resize.jpg -write mpr:stack -delete 0--1 mpr:stack'[1]' \\( mpr:stack'[0]' -set delay 25 -crop 15x0 -reverse \\) mpr:stack'[0]' \\( mpr:stack'[1]' -set delay 27 -crop 15x0 \\) -set delay 2 -loop 0 #{root}temp.gif"
+    animation_command = "convert -depth 8 -gravity SouthEast -define jpeg:size=1280x720 #{evercam_logo} -write MPR:logo +delete \\( #{root}before_image.jpg -resize '1280x720!' MPR:logo -geometry +15+15 -composite -write MPR:before \\) \\( #{root}after_image.jpg  -resize '1280x720!' MPR:logo -geometry +15+15 -composite -write MPR:after  \\) +append -quantize transparent -colors 250 -unique-colors +repage -write MPR:commonmap +delete MPR:after  -map MPR:commonmap +repage -write MPR:after  +delete MPR:before -map MPR:commonmap +repage -write MPR:before \\( MPR:after -set delay 25 -crop 15x0 -reverse \\) MPR:after \\( MPR:before -set delay 27 -crop 15x0 \\) -set delay 2 -loop 0 -write #{animated_file} -delete 1--1 -resize 640x #{root}thumb-#{compare_id}.jpg"
     mp4_command = "ffmpeg -f gif -i #{animated_file} -pix_fmt yuv420p -c:v h264_nvenc -movflags +faststart -filter:v crop='floor(in_w/2)*2:floor(in_h/2)*2' #{root}#{compare_id}.mp4"
-    thumbnail = "ffmpeg -i #{root}#{compare_id}.mp4 -vframes 1 -vf scale=640:-1 -y #{root}thumb-#{compare_id}.jpg"
-    command = "#{comm_resize_before} && #{comm_resize_after} && #{animation_comm} && #{logo_comm} && #{mp4_command} && #{thumbnail}"
-
+    command = "#{animation_command} && #{mp4_command}"
     try do
       case Porcelain.shell(command).out do
         "" ->
-          gif_content = File.read!(animated_file)
-          mp4_content = File.read!("#{root}#{compare_id}.mp4")
           upload_path = "#{camera_exid}/compares/#{compare_id}/"
-          S3.do_save("#{upload_path}#{compare_id}.gif", gif_content, [content_type: "image/gif", acl: :public_read])
-          S3.do_save("#{upload_path}#{compare_id}.mp4", mp4_content, [acl: :public_read])
-          S3.do_save("#{camera_exid}/compares/#{compare_id}/thumb-#{compare_id}.jpg", File.read!("#{root}thumb-#{compare_id}.jpg"), [content_type: "image/jpg", acl: :public_read])
+          S3.do_save_multiple(%{
+            "#{animated_file}" => "#{upload_path}#{compare_id}.gif",
+            "#{root}#{compare_id}.mp4" => "#{upload_path}#{compare_id}.mp4",
+            "#{root}thumb-#{compare_id}.jpg" => "#{camera_exid}/compares/#{compare_id}/thumb-#{compare_id}.jpg"
+            })
           update_compare(compare_id, 1)
         _ -> update_compare(compare_id, 2)
       end

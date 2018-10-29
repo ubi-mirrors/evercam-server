@@ -84,6 +84,9 @@ config :evercam_media, :phoenix_swagger,
     ]
   }
 
+config :ex_aws, :hackney_opts,
+  recv_timeout: 300_000
+
 config :porcelain,
   goon_warn_if_missing: false
 
