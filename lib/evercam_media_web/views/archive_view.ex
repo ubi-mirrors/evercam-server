@@ -9,6 +9,11 @@ defmodule EvercamMediaWeb.ArchiveView do
     %{archives: archives_list ++ compares_list}
   end
 
+  def render("compare.json", %{compare: compare}) do
+    compares_list = [render_compare_archive(compare)]
+    %{archives: compares_list}
+  end
+
   def render("show.json", %{archive: nil}), do: %{archives: []}
   def render("show.json", %{archive: archive}) do
     %{archives: render_many([archive], __MODULE__, "archive.json")}

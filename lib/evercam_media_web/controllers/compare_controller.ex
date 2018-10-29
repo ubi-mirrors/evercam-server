@@ -74,14 +74,9 @@ defmodule EvercamMediaWeb.CompareController do
 
     with :ok <- ensure_camera_exists(camera, camera_exid, conn),
          :ok <- deliver_content(conn, camera_exid, compare_id),
-         :ok <- ensure_can_list(current_user, camera, conn)
+         {:ok, compare} <- compare_can_list(current_user, camera, compare_id, conn)
     do
-      case Compare.by_exid(compare_id) do
-        nil ->
-          render_error(conn, 404, "Compare archive '#{compare_id}' not found!")
-        compare_archive ->
-          render(conn, CompareView, "show.json", %{compare: compare_archive})
-      end
+      render(conn, CompareView, "show.json", %{compare: compare})
     end
   end
 
@@ -323,9 +318,23 @@ defmodule EvercamMediaWeb.CompareController do
     end
   end
 
+  defp compare_can_list(current_user, camera, compare_exid, conn) do
+    with {:ok, compare} <- compare_exists(conn, compare_exid) do
+      case compare.public do
+        true -> {:ok, compare}
+        _ ->
+          if current_user && Permission.Camera.can_list?(current_user, camera) do
+            {:ok, compare}
+          else
+            render_error(conn, 403, "Forbidden.")
+          end
+      end
+    end
+  end
+
   defp compare_exists(conn, compare_id) do
     case Compare.by_exid(compare_id) do
-      nil -> render_error(conn, 404, "Compare '#{compare_id}' not found!")
+      nil -> render_error(conn, 404, "Compare archive '#{compare_id}' not found!")
       %Compare{} = compare -> {:ok, compare}
     end
   end

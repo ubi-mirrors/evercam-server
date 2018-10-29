@@ -84,15 +84,18 @@ defmodule EvercamMediaWeb.ArchiveController do
     response 404, "Camera does not exist or Archive does not found"
   end
 
-  def show(conn, %{"id" => exid, "archive_id" => archive_id} = params) do
+  def show(conn, %{"id" => exid, "archive_id" => archive_id}) do
     current_user = conn.assigns[:current_user]
     camera = Camera.get_full(exid)
 
     with :ok <- ensure_camera_exists(camera, exid, conn),
          :ok <- deliver_content(conn, exid, archive_id, current_user),
-         {:ok, archive} <- archive_can_list(current_user, camera, archive_id, conn)
+         {:ok, media} <- archive_can_list(current_user, camera, archive_id, conn)
     do
-      render(conn, ArchiveView, "show.json", %{archive: archive})
+      case media do
+        %Compare{} = compare -> render(conn, ArchiveView, "compare.json", %{compare: compare})
+        %Archive{} = archive -> render(conn, ArchiveView, "show.json", %{archive: archive})
+      end
     end
   end
 
@@ -509,16 +512,24 @@ defmodule EvercamMediaWeb.ArchiveController do
   end
 
   defp archive_can_list(current_user, camera, archive_exid, conn) do
-    with {:ok, archive} <- archive_exists(conn, archive_exid) do
-      case archive.public do
-        true -> {:ok, archive}
-        _ ->
-          if current_user && Permission.Camera.can_list?(current_user, camera) do
-            {:ok, archive}
-          else
-            render_error(conn, 403, "Forbidden.")
-          end
+    media =
+      case Archive.by_exid(archive_exid) do
+        nil -> Compare.by_exid(archive_exid)
+        archive -> archive
       end
+
+    case media do
+      nil -> render_error(conn, 404, "Archive '#{archive_exid}' not found!")
+      %Archive{} = archive -> can_list(archive.public, archive, current_user, camera, conn)
+      %Compare{} = compare -> can_list(compare.public, compare, current_user, camera, conn)
+    end
+  end
+
+  defp can_list(true, media, _current_user, _camera, _conn), do: {:ok, media}
+  defp can_list(false, media, current_user, camera, conn) do
+    case Permission.Camera.can_list?(current_user, camera) do
+      true -> {:ok, media}
+      false -> render_error(conn, 403, "Forbidden.")
     end
   end
 

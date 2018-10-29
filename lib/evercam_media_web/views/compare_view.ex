@@ -16,16 +16,21 @@ defmodule EvercamMediaWeb.CompareView do
       id: compare.exid,
       camera_id: compare.camera.exid,
       title: compare.name,
-      before: Util.ecto_datetime_to_unix(compare.before_date),
-      after: Util.ecto_datetime_to_unix(compare.after_date),
+      from_date: Util.ecto_datetime_to_unix(compare.before_date),
+      to_date: Util.ecto_datetime_to_unix(compare.after_date),
       created_at: Util.ecto_datetime_to_unix(compare.inserted_at),
       status: status(compare.status),
       requested_by: Util.deep_get(compare, [:user, :username], ""),
       requester_name: User.get_fullname(compare.user),
       requester_email: Util.deep_get(compare, [:user, :email], ""),
       embed_code: compare.embed_code,
-      gif_url: "#{EvercamMediaWeb.Endpoint.static_url}/v1/cameras/#{compare.camera.exid}/compares/#{compare.exid}.gif",
-      mp4_url: "#{EvercamMediaWeb.Endpoint.static_url}/v1/cameras/#{compare.camera.exid}/compares/#{compare.exid}.mp4"
+      embed_time: false,
+      frames: 2,
+      public: compare.public,
+      file_name: "",
+      media_url: "",
+      type: "compare",
+      thumbnail_url: "#{EvercamMediaWeb.Endpoint.static_url}/v1/cameras/#{compare.camera.exid}/archives/#{compare.exid}/thumbnail?type=compare"
     }
   end
 

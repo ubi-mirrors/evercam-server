@@ -5,7 +5,7 @@ defmodule Compare do
   alias EvercamMedia.Repo
 
   @required_fields ~w(camera_id name before_date after_date embed_code status requested_by exid)
-  @optional_fields ~w(create_animation)
+  @optional_fields ~w(create_animation public)
 
   # @status %{processing: 0, completed: 1, failed: 2}
 
@@ -18,6 +18,7 @@ defmodule Compare do
     field :before_date, Ecto.DateTime
     field :after_date, Ecto.DateTime
     field :embed_code, :string
+    field :public, :boolean
     field :create_animation, :boolean
     field :status, :integer, default: 0
     timestamps(type: Ecto.DateTime, default: Ecto.DateTime.utc)
