@@ -17,6 +17,15 @@ defmodule EvercamMedia.UserMailer do
     |> EvercamMedia.Mailer.deliver
   end
 
+  def send_snapmail_notification(email) do
+    new()
+    |> from(@from)
+    |> to(email)
+    |> subject("Snapmail - Sorry, here's the real message.")
+    |> render_body("snapmail_notification.html", %{year: @year})
+    |> EvercamMedia.Mailer.deliver
+  end
+
   def confirm(user, code) do
     new()
     |> from(@from)
@@ -163,7 +172,7 @@ defmodule EvercamMedia.UserMailer do
     |> String.split(",", trim: true)
     |> Enum.each(fn(recipient) ->
       new()
-      |> from(@from)
+      |> from("snapmail@evercam.io")
       |> to(recipient)
       |> add_multi_attachment(attachments)
       |> subject("Your Scheduled SnapMail @ #{notify_time}")
