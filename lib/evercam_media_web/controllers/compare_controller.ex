@@ -220,12 +220,25 @@ defmodule EvercamMediaWeb.CompareController do
     S3.save_compare(camera_exid, compare_exid, timestamp, decoded_image, "compare", state, [acl: :public_read])
   end
 
+  defp export_thumbnail(camera_exid, compare_id, root, evercam_logo) do
+    cmd = "convert -size 1280x720 xc:None -background None \\( #{root}before_image.jpg -resize '1280x720!' -crop 640x720+0+0 \\) -gravity West -composite \\( #{root}after_image.jpg -resize '1280x720!' -crop 640x720+640+0 \\) -gravity East -composite #{evercam_logo} -geometry +15+15 -gravity SouthEast -composite -resize 640x #{root}thumb-#{compare_id}.jpg"
+    case Porcelain.shell(cmd).out do
+      "" ->
+        upload_path = "#{camera_exid}/compares/#{compare_id}/"
+        S3.do_save_multiple(%{
+          "#{root}thumb-#{compare_id}.jpg" => "#{upload_path}thumb-#{compare_id}.jpg"
+        })
+      _ -> :noop
+    end
+  end
+
   defp create_animated(animation, camera_exid, compare_id, before_image, after_image) when animation in [true, "true"] do
     root = "#{Application.get_env(:evercam_media, :storage_dir)}/#{compare_id}/"
     File.mkdir_p(root)
     File.write("#{root}before_image.jpg", decode_image(before_image))
     File.write("#{root}after_image.jpg", decode_image(after_image))
     evercam_logo = Path.join(Application.app_dir(:evercam_media), "priv/static/images/evercam-logo.png")
+    spawn fn -> export_thumbnail(camera_exid, compare_id, root, evercam_logo) end
     animated_file = "#{root}#{compare_id}.gif"
     animation_command = "convert -depth 8 -gravity SouthEast -define jpeg:size=1280x720 #{evercam_logo} -write MPR:logo +delete \\( #{root}before_image.jpg -resize '1280x720!' MPR:logo -geometry +15+15 -composite -write MPR:before \\) \\( #{root}after_image.jpg  -resize '1280x720!' MPR:logo -geometry +15+15 -composite -write MPR:after  \\) +append -quantize transparent -colors 250 -unique-colors +repage -write MPR:commonmap +delete MPR:after  -map MPR:commonmap +repage -write MPR:after  +delete MPR:before -map MPR:commonmap +repage -write MPR:before \\( MPR:after -set delay 25 -crop 15x0 -reverse \\) MPR:after \\( MPR:before -set delay 27 -crop 15x0 \\) -set delay 2 -loop 0 -write #{animated_file} -delete 1--1 -resize 640x #{root}thumb-#{compare_id}.jpg"
     mp4_command = "ffmpeg -f gif -i #{animated_file} -pix_fmt yuv420p -c:v h264_nvenc -movflags +faststart -filter:v crop='floor(in_w/2)*2:floor(in_h/2)*2' #{root}#{compare_id}.mp4"
@@ -236,9 +249,8 @@ defmodule EvercamMediaWeb.CompareController do
           upload_path = "#{camera_exid}/compares/#{compare_id}/"
           S3.do_save_multiple(%{
             "#{animated_file}" => "#{upload_path}#{compare_id}.gif",
-            "#{root}#{compare_id}.mp4" => "#{upload_path}#{compare_id}.mp4",
-            "#{root}thumb-#{compare_id}.jpg" => "#{camera_exid}/compares/#{compare_id}/thumb-#{compare_id}.jpg"
-            })
+            "#{root}#{compare_id}.mp4" => "#{upload_path}#{compare_id}.mp4"
+          })
           update_compare(compare_id, 1)
         _ -> update_compare(compare_id, 2)
       end
