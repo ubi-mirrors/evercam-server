@@ -172,7 +172,7 @@ defmodule EvercamMedia.UserMailer do
     |> String.split(",", trim: true)
     |> Enum.each(fn(recipient) ->
       new()
-      |> from("snapmail@evercam.io")
+      |> from({"Evercam Snapmail", "snapmail@evercam.io"})
       |> to(recipient)
       |> add_multi_attachment(attachments)
       |> subject("Your Scheduled SnapMail @ #{notify_time}")
