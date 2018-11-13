@@ -403,7 +403,7 @@ defmodule EvercamMediaWeb.CameraController do
   end
   defp update_camera_to_zoho(_mode, _camera, _user_id), do: :noop
 
-  defp check_params(params) do
+  def check_params(params) do
     with :ok <- validate("address", params["address"]),
          :ok <- validate("port", params["port"]),
          do: :ok

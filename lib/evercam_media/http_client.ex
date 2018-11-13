@@ -45,6 +45,23 @@ defmodule EvercamMedia.HTTPClient do
     HTTPoison.get snapshot_url, headers, hackney: hackney
   end
 
+  def put(url, username, password, body) do
+    res =
+      case get(url) do
+        {:ok, response} -> response
+        response -> response
+      end
+    auth = get_auth(res, url, username, password, "PUT")
+    HTTPoison.put(url, body, ["Content-Type": "application/x-www-form-urlencoded", "Authorization": "#{auth}"])
+  end
+
+  defp get_auth(response, url, username, password, method) do
+    case response.headers |> Enum.find(fn({k, v}) -> k == "WWW-Authenticate" && String.starts_with?(v, "Digest")  end) do
+      nil -> "Basic #{Base.encode64("#{username}:#{password}")}"
+      _ -> "Digest #{DigestAuth.get_digest_token(response, url, username, password, method)}"
+    end
+  end
+
   defp get_cookie(url, username, password) do
     case get(url) do
       {:ok, response} ->
@@ -86,7 +103,7 @@ defmodule EvercamMedia.HTTPClient do
 end
 
 defmodule EvercamMedia.HTTPClient.DigestAuth do
-  def get_digest_token(response, url, username, password) do
+  def get_digest_token(response, url, username, password, method \\ "GET") do
     case response.headers |> Enum.find(fn({k, v}) -> k == "WWW-Authenticate" && String.starts_with?(v, "Digest") end) do
       {"WWW-Authenticate", auth_string} ->
         digest_head = parse_digest_header(auth_string)
@@ -94,6 +111,7 @@ defmodule EvercamMedia.HTTPClient.DigestAuth do
         cnonce = :crypto.strong_rand_bytes(16) |> md5
         url = URI.parse(url)
         response = create_digest_response(
+          method,
           username,
           password,
           realm,
@@ -130,9 +148,9 @@ defmodule EvercamMedia.HTTPClient.DigestAuth do
     end
   end
 
-  defp create_digest_response(username, password, realm, qop, uri, nonce, cnonce) do
+  defp create_digest_response(method, username, password, realm, qop, uri, nonce, cnonce) do
     ha1 = [username, realm, password] |> Enum.join(":") |> md5
-    ha2 = ["GET", uri] |> Enum.join(":") |> md5
+    ha2 = ["#{method}", uri] |> Enum.join(":") |> md5
     do_create_digest_response(ha1, ha2, qop, nonce, cnonce)
   end
 

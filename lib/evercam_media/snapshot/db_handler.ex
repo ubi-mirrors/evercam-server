@@ -22,6 +22,7 @@ defmodule EvercamMedia.Snapshot.DBHandler do
   alias EvercamMedia.Snapshot.Error
   alias EvercamMedia.Snapshot.WorkerSupervisor
   alias EvercamMedia.Snapshot.Storage
+  import EvercamMedia.CameraStatusAutomation, only: [check_camera_status: 1]
 
   def init(:ok) do
     {:producer_consumer, :ok}
@@ -126,10 +127,12 @@ defmodule EvercamMedia.Snapshot.DBHandler do
       nil ->
         ConCache.dirty_put(:current_camera_status, camera.exid, status)
         insert_a_log(camera, status, datetime, extra)
+        check_vh(status, camera)
       cache_value when cache_value == status -> :noop
       _ ->
         ConCache.dirty_put(:current_camera_status, camera.exid, status)
         insert_a_log(camera, status, datetime, extra)
+        check_vh(status, camera)
     end
   end
 
@@ -152,4 +155,7 @@ defmodule EvercamMedia.Snapshot.DBHandler do
   defp construct_camera(datetime, _, status, _) do
     %{last_polled_at: datetime, offline_reason: "", is_online: status}
   end
+
+  defp check_vh("offline", camera), do: check_camera_status(camera)
+  defp check_vh(_, _camera), do: :noop
 end
