@@ -36,6 +36,21 @@ defmodule EvercamMedia.Snapshot.Storage do
     end)
   end
 
+  # Temporary solution for extractor to sync
+  def seaweedfs_save_sync(camera_exid, timestamp, image, notes, metadata \\ %{motion_level: nil}) do
+    seaweedfs = timestamp |> Calendar.DateTime.Parse.unix! |> point_to_seaweed
+    hackney = [pool: :seaweedfs_upload_pool]
+    app_name = notes_to_app_name(notes)
+    directory_path = construct_directory_path(camera_exid, timestamp, app_name, "")
+    file_name = construct_file_name(timestamp)
+    file_path = directory_path <> file_name
+    case HTTPoison.post("#{seaweedfs}#{file_path}", {:multipart, [{file_path, image, []}]}, [], hackney: hackney) do
+      {:ok, response} -> response
+      {:error, error} -> Logger.info "[seaweedfs_save] [#{camera_exid}] [#{inspect error}]"
+    end
+    metadata_save(directory_path, file_name, metadata)
+  end
+
   def seaweedfs_save(camera_exid, timestamp, image, notes, metadata \\ %{motion_level: nil}) do
     hackney = [pool: :seaweedfs_upload_pool]
     app_name = notes_to_app_name(notes)

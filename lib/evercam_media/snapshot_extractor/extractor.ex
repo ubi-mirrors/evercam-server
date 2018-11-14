@@ -6,7 +6,7 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
   use GenStage
   require Logger
   import EvercamMedia.SnapshotExtractor.ExtractorSchedule, only: [scheduled_now?: 3]
-  import EvercamMedia.Snapshot.Storage, only: [seaweedfs_save: 4]
+  import EvercamMedia.Snapshot.Storage, only: [seaweedfs_save_sync: 4]
 
   @root_dir Application.get_env(:evercam_media, :storage_dir)
 
@@ -141,7 +141,7 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
 
   defp inject_to_cr(status, exid, image_path, start_date, timezone)  when status in [true, "true"] do
     {:ok, image} = File.read("#{image_path}")
-    seaweedfs_save(exid, shift_zone_to_utc(start_date, timezone) |> DateTime.to_unix, image, "Evercam Proxy")
+    seaweedfs_save_sync(exid, shift_zone_to_utc(start_date, timezone) |> DateTime.to_unix, image, "Evercam Proxy")
   end
   defp inject_to_cr(_, _exid, _image_path, _start_date, _timezone), do: :noop
 
