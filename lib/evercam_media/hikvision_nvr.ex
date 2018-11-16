@@ -81,11 +81,13 @@ defmodule EvercamMedia.HikvisionNVR do
     File.mkdir_p(archive_directory)
     rtsp_url = "rtsp://#{username}:#{password}@#{ip}:#{port}/Streaming/tracks/"
     kill_published_streams(camera.exid, rtsp_url)
-    Porcelain.shell("ffmpeg -rtsp_transport tcp -i '#{rtsp_url}#{channel}?starttime=#{starttime}&endtime=#{endtime}' -f mp4 -vcodec copy -an #{archive_directory}#{archive.exid}.mp4", [err: :out]).out
+    Porcelain.shell("ffmpeg -rtsp_transport tcp -i '#{rtsp_url}#{channel}?starttime=#{starttime}&endtime=#{endtime}' -f mp4 -c:v h264_nvenc -pix_fmt yuv420p -b:v 1000 -an #{archive_directory}#{archive.exid}.mp4", [err: :out]).out
 
     case File.exists?("#{archive_directory}#{archive.exid}.mp4") do
       true ->
+        create_thumbnail(archive.exid, archive_directory)
         Storage.save_mp4(camera.exid, archive.exid, archive_directory)
+        Storage.save_archive_thumbnail(camera.exid, archive.exid, archive_directory)
         File.rm_rf archive_directory
         Archive.update_status(archive, Archive.archive_status.completed)
         EvercamMedia.UserMailer.archive_completed(archive, archive.user.email)
@@ -93,6 +95,10 @@ defmodule EvercamMedia.HikvisionNVR do
         Archive.update_status(archive, Archive.archive_status.failed)
         EvercamMedia.UserMailer.archive_failed(archive, archive.user.email)
     end
+  end
+
+  defp create_thumbnail(id, path) do
+    Porcelain.shell("ffmpeg -i #{path}#{id}.mp4 -vframes 1 -vf scale=640:-1 -y #{path}thumb-#{id}.jpg", [err: :out]).out
   end
 
   @doc """
