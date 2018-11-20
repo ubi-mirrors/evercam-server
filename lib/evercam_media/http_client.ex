@@ -31,8 +31,9 @@ defmodule EvercamMedia.HTTPClient do
     case get(url) do
       {:ok, response} ->
         chooose_auth(response, url, username, password)
-      response ->
-        response
+      {:error, _} ->
+        get(:basic_auth, url, username, password)
+      response -> response
     end
   end
 
