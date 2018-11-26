@@ -1,5 +1,6 @@
 defmodule EvercamMediaWeb.StreamController do
   use EvercamMediaWeb, :controller
+  import EvercamMedia.HikvisionNVR, only: [get_stream_info: 5]
 
   @hls_dir "/tmp/hls"
   @hls_url Application.get_env(:evercam_media, :hls_url)
@@ -51,10 +52,10 @@ defmodule EvercamMediaWeb.StreamController do
   defp request_stream(camera_exid, token, ip, command) do
     try do
       [username, password, rtsp_url] = Util.decode(token)
-      camera = Camera.get(camera_exid)
+      camera = Camera.get_full(camera_exid)
       check_auth(camera, username, password)
       check_port(camera)
-      stream(rtsp_url, token, camera.id, ip, command)
+      stream(rtsp_url, token, camera, ip, command)
       200
     rescue
       error ->
@@ -77,24 +78,24 @@ defmodule EvercamMediaWeb.StreamController do
     end
   end
 
-  defp stream(rtsp_url, token, camera_id, ip, :check) do
+  defp stream(rtsp_url, token, camera, ip, :check) do
     if length(ffmpeg_pids(rtsp_url)) == 0 do
-      spawn(fn -> MetaData.delete_by_camera_id(camera_id) end)
-      start_stream(rtsp_url, token, camera_id, ip, "hls")
+      spawn(fn -> MetaData.delete_by_camera_id(camera.id) end)
+      start_stream(rtsp_url, token, camera, ip, "hls")
     end
     sleep_until_hls_playlist_exists(token)
   end
 
-  defp stream(rtsp_url, token, camera_id, ip, :kill) do
-    kill_streams(rtsp_url, camera_id)
-    start_stream(rtsp_url, token, camera_id, ip, "rtmp")
+  defp stream(rtsp_url, token, camera, ip, :kill) do
+    kill_streams(rtsp_url, camera.id)
+    start_stream(rtsp_url, token, camera, ip, "rtmp")
   end
 
-  defp start_stream(rtsp_url, token, camera_id, ip, action) do
+  defp start_stream(rtsp_url, token, camera, ip, action) do
     rtsp_url
     |> construct_ffmpeg_command(token)
     |> Porcelain.spawn_shell
-    spawn(fn -> insert_meta_data(rtsp_url, action, camera_id, ip, token) end)
+    spawn(fn -> insert_meta_data(rtsp_url, action, camera, ip, token) end)
   end
 
   defp kill_streams(rtsp_url, camera_id) do
@@ -123,9 +124,10 @@ defmodule EvercamMediaWeb.StreamController do
     "ffmpeg -rtsp_transport tcp -stimeout 6000000 -i '#{rtsp_url}' -f lavfi -i aevalsrc=0 -vcodec copy -acodec aac -map 0:0 -map 1:0 -shortest -strict experimental -f flv rtmp://localhost:1935/live/#{token}"
   end
 
-  defp insert_meta_data(rtsp_url, action, camera_id, ip, token) do
+  defp insert_meta_data(rtsp_url, action, camera, ip, token) do
     try do
-      stream_in = get_stream_info(rtsp_url)
+      vendor = Camera.get_vendor_attr(camera, :exid)
+      stream_in = get_stream_info(vendor, camera, rtsp_url)
       case has_params(stream_in) do
         false ->
           pid =
@@ -133,9 +135,9 @@ defmodule EvercamMediaWeb.StreamController do
             |> ffmpeg_pids
             |> List.first
 
-          construct_params(camera_id, action, ip, pid, rtsp_url, token, stream_in)
+          construct_params(camera.id, action, ip, pid, rtsp_url, token, stream_in)
           |> MetaData.insert_meta
-        _ -> Logger.debug "Stream not working for camera: #{camera_id}"
+        _ -> Logger.debug "Stream not working for camera: #{camera.id}"
       end
     catch _type, error ->
       Logger.error inspect(error)
@@ -143,7 +145,17 @@ defmodule EvercamMediaWeb.StreamController do
     end
   end
 
-  defp get_stream_info(rtsp_url) do
+  defp get_stream_info("hikvision", camera, _rtsp_url) do
+    ip = Camera.host(camera, "external")
+    port = Camera.get_nvr_port(camera)
+    cam_username = Camera.username(camera)
+    cam_password = Camera.password(camera)
+    channel = VendorModel.get_channel(camera, camera.vendor_model.channel)
+    stream_info = get_stream_info(ip, port, cam_username, cam_password, channel)
+    [width, height] = get_resolution(stream_info.resolution)
+    %{width: width, height: height, codec_name: stream_info.video_encoding, pix_fmt: "", avg_frame_rate: "#{stream_info.frame_rate}", bit_rate: stream_info.bitrate}
+  end
+  defp get_stream_info(_, _, rtsp_url) do
     Porcelain.exec("ffprobe", ["-v", "error", "-show_streams", "#{rtsp_url}"], [err: :out]).out
     |> String.split("\n", trim: true)
     |> Enum.filter(fn(item) ->
@@ -208,5 +220,13 @@ defmodule EvercamMediaWeb.StreamController do
   defp add_parameter(params, "rate", key, value) do
     framerate = String.split(value, "/", trim: true) |> List.first
     Map.put(params, key, framerate)
+  end
+
+  defp get_resolution(resolution) do
+    Logger.info resolution
+    case String.split(resolution, "x") do
+      [width, height] -> [width, height]
+      _ -> ["", ""]
+    end
   end
 end
