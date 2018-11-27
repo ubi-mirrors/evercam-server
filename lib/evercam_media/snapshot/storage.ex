@@ -447,10 +447,7 @@ defmodule EvercamMedia.Snapshot.Storage do
     |> load_oldest_snapshot(camera_exid)
   end
 
-  def load_oldest_snapshot(file_name, camera_exid) when file_name in [nil, "", "thumbnail.jpg"] do
-    import_oldest_image(camera_exid)
-  end
-  def load_oldest_snapshot(file_name, camera_exid) do
+  def load_oldest_snapshot(<<"oldest-", _::binary>> = file_name, camera_exid) do
     url = "#{@seaweedfs_new}/#{camera_exid}/snapshots/"
     case HTTPoison.get("#{url}#{file_name}", [], hackney: [pool: :seaweedfs_download_pool]) do
       {:ok, %HTTPoison.Response{status_code: 200, body: snapshot}} ->
@@ -459,6 +456,9 @@ defmodule EvercamMedia.Snapshot.Storage do
         import_oldest_image(camera_exid)
     end
   end
+  def load_oldest_snapshot(_file_name, camera_exid) do
+    import_oldest_image(camera_exid)
+  end
 
   def take_prefix(full, prefix) do
     base = String.length(prefix)
@@ -466,11 +466,11 @@ defmodule EvercamMedia.Snapshot.Storage do
   end
 
   def import_oldest_image(camera_exid) do
-    url = "#{@seaweedfs_1}/#{camera_exid}/snapshots/"
+    url = "#{@seaweedfs_new}/#{camera_exid}/snapshots/"
     {{year, month, day}, {h, _m, _s}} = Ecto.DateTime.utc |> Ecto.DateTime.to_erl
 
     {snapshot, error, _datetime} =
-      request_from_seaweedfs(url, "Directories", "Name")
+      request_from_seaweedfs(url, "Entries", "FullPath")
       |> Enum.reduce({{}, {}, {year, month, day, h}}, fn(note, {snapshot, error, datetime}) ->
         {yr, mh, dy, hr} = datetime
         case get_oldest_snapshot(url, note, yr, mh, dy, hr) do
@@ -509,7 +509,7 @@ defmodule EvercamMedia.Snapshot.Storage do
          true <- is_previous_date({{to_integer(year), to_integer(month), to_integer(day)}, {0, 0, 0}}, date2, day),
          {:hour, hour} <- get_oldest_directory_name(:hour, "#{url}#{note}/#{year}/#{month}/#{day}/"),
          true <- is_previous_date({{to_integer(year), to_integer(month), to_integer(day)}, {to_integer(hour), 0, 0}}, date2, hour),
-         {:image, oldest_image} <- get_oldest_directory_name(:image, "#{url}#{note}/#{year}/#{month}/#{day}/#{hour}/?limit=2", "Files", "name") do
+         {:image, oldest_image} <- get_oldest_directory_name(:image, "#{url}#{note}/#{year}/#{month}/#{day}/#{hour}/?limit=2", "Entries", "FullPath") do
       case HTTPoison.get("#{url}#{note}/#{year}/#{month}/#{day}/#{hour}/#{oldest_image}", [], hackney: hackney) do
         {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
           [minute, second, _] = String.split(oldest_image, "_")
@@ -524,7 +524,7 @@ defmodule EvercamMedia.Snapshot.Storage do
     end
   end
 
-  defp get_oldest_directory_name(directory, url, type \\ "Directories", attribute \\ "Name") do
+  defp get_oldest_directory_name(directory, url, type \\ "Entries", attribute \\ "FullPath") do
     {
       directory,
       request_from_seaweedfs(url, type, attribute)

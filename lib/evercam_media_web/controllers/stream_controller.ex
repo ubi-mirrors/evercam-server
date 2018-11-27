@@ -42,7 +42,8 @@ defmodule EvercamMediaWeb.StreamController do
     |> put_status(request_stream(params["camera_id"], params["name"], requester_ip, :kill))
     |> text("")
   end
-  defp ensure_nvr_stream(conn, _params, _nvr) do
+  defp ensure_nvr_stream(conn, _params, nvr) do
+    Logger.info "[ensure_nvr_stream] [#{nvr}] [No stream request]"
     conn |> put_status(200) |> text("")
   end
 
@@ -145,12 +146,12 @@ defmodule EvercamMediaWeb.StreamController do
     end
   end
 
-  defp get_stream_info("hikvision", camera, _rtsp_url) do
+  defp get_stream_info("hikvision", camera, rtsp_url) do
     ip = Camera.host(camera, "external")
     port = Camera.get_nvr_port(camera)
     cam_username = Camera.username(camera)
     cam_password = Camera.password(camera)
-    channel = VendorModel.get_channel(camera, camera.vendor_model.channel)
+    channel = parse_channel(rtsp_url)
     stream_info = get_stream_info(ip, port, cam_username, cam_password, channel)
     [width, height] = get_resolution(stream_info.resolution)
     %{width: width, height: height, codec_name: stream_info.video_encoding, pix_fmt: "", avg_frame_rate: "#{stream_info.frame_rate}", bit_rate: stream_info.bitrate}
@@ -223,10 +224,19 @@ defmodule EvercamMediaWeb.StreamController do
   end
 
   defp get_resolution(resolution) do
-    Logger.info resolution
     case String.split(resolution, "x") do
       [width, height] -> [width, height]
       _ -> ["", ""]
     end
+  end
+
+  def parse_channel(rtsp_url) do
+    rtsp_url
+    |> String.downcase
+    |> String.split("/channels/")
+    |> List.last
+    |> String.split("/")
+    |> List.first
+    |> String.to_integer
   end
 end
