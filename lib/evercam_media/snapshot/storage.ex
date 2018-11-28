@@ -818,7 +818,7 @@ defmodule EvercamMedia.Snapshot.Storage do
   end
 
   defp list_expired_days_for_camera(camera_exid, cloud_recording) do
-    ["#{@seaweedfs}/#{camera_exid}/snapshots/recordings/"]
+    ["#{@seaweedfs_new}/#{camera_exid}/snapshots/recordings/"]
     |> list_stored_days_for_camera(["year", "month", "day"])
     |> Enum.filter(fn(day_url) -> expired?(camera_exid, cloud_recording, day_url) end)
     |> Enum.sort
@@ -827,7 +827,7 @@ defmodule EvercamMedia.Snapshot.Storage do
   defp list_stored_days_for_camera(urls, []), do: urls
   defp list_stored_days_for_camera(urls, [_current|rest]) do
     Enum.flat_map(urls, fn(url) ->
-      request_from_seaweedfs(url, "Directories", "Name")
+      request_from_seaweedfs(url, "Entries", "FullPath")
       |> Enum.map(fn(path) -> "#{url}#{path}/" end)
     end)
     |> list_stored_days_for_camera(rest)
