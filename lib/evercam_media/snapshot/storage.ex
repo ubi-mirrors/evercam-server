@@ -440,12 +440,19 @@ defmodule EvercamMedia.Snapshot.Storage do
   end
 
   def get_or_save_oldest_snapshot(camera_exid) do
-    "#{@seaweedfs_new}/#{camera_exid}/snapshots/?limit=1"
+    "#{@seaweedfs_new}/#{camera_exid}/snapshots/"
     |> request_from_seaweedfs("Entries", "FullPath")
+    |> Enum.map(fn dir ->
+      is_oldest?(dir)
+    end)
+    |> Enum.reject(&is_nil/1)
     |> Enum.sort(&(&2 > &1))
     |> List.first
     |> load_oldest_snapshot(camera_exid)
   end
+
+  defp is_oldest?(<<"oldest-", _::binary>> = dir), do: dir
+  defp is_oldest?(_), do: nil
 
   def load_oldest_snapshot(<<"oldest-", _::binary>> = file_name, camera_exid) do
     url = "#{@seaweedfs_new}/#{camera_exid}/snapshots/"
