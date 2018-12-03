@@ -33,6 +33,13 @@ defmodule MetaData do
     |> Repo.delete_all
   end
 
+  def delete_by_camera_and_action(camera_id, action) do
+    MetaData
+    |> where(camera_id: ^camera_id)
+    |> where(action: ^action)
+    |> Repo.delete_all
+  end
+
   def delete_all do
     MetaData
     |> Repo.delete_all

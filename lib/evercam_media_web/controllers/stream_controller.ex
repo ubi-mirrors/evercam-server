@@ -32,14 +32,16 @@ defmodule EvercamMediaWeb.StreamController do
 
   defp ensure_nvr_hls(conn, params, is_nvr) when is_nvr in [nil, ""] do
     requester_ip = user_request_ip(conn)
-    request_stream(params["camera_id"], params["token"], requester_ip, :check)
+    fullname = get_username(params["user"])
+    request_stream(params["camera_id"], params["token"], requester_ip, fullname, :check)
   end
   defp ensure_nvr_hls(_conn, _params, _is_nvr), do: 200
 
   defp ensure_nvr_stream(conn, params, is_nvr) when is_nvr in [nil, ""] do
     requester_ip = get_requester_ip(conn, params["requester"])
+    fullname = get_username(params["user"])
     conn
-    |> put_status(request_stream(params["camera_id"], params["name"], requester_ip, :kill))
+    |> put_status(request_stream(params["camera_id"], params["name"], requester_ip, fullname, :kill))
     |> text("")
   end
   defp ensure_nvr_stream(conn, _params, nvr) do
@@ -50,13 +52,13 @@ defmodule EvercamMediaWeb.StreamController do
   defp get_requester_ip(conn, requester) when requester in [nil, ""], do: user_request_ip(conn)
   defp get_requester_ip(_conn, requester), do: requester
 
-  defp request_stream(camera_exid, token, ip, command) do
+  defp request_stream(camera_exid, token, ip, fullname, command) do
     try do
       [username, password, rtsp_url] = Util.decode(token)
       camera = Camera.get_full(camera_exid)
       check_auth(camera, username, password)
       check_port(camera)
-      stream(rtsp_url, token, camera, ip, command)
+      stream(rtsp_url, token, camera, ip, fullname, command)
       200
     rescue
       error ->
@@ -79,31 +81,31 @@ defmodule EvercamMediaWeb.StreamController do
     end
   end
 
-  defp stream(rtsp_url, token, camera, ip, :check) do
+  defp stream(rtsp_url, token, camera, ip, fullname, :check) do
     if length(ffmpeg_pids(rtsp_url)) == 0 do
-      spawn(fn -> MetaData.delete_by_camera_id(camera.id) end)
-      start_stream(rtsp_url, token, camera, ip, "hls")
+      spawn(fn -> MetaData.delete_by_camera_and_action(camera.id, "hls") end)
+      start_stream(rtsp_url, token, camera, ip, fullname, "hls")
     end
     sleep_until_hls_playlist_exists(token)
   end
 
-  defp stream(rtsp_url, token, camera, ip, :kill) do
+  defp stream(rtsp_url, token, camera, ip, fullname, :kill) do
     kill_streams(rtsp_url, camera.id)
-    start_stream(rtsp_url, token, camera, ip, "rtmp")
+    start_stream(rtsp_url, token, camera, ip, fullname, "rtmp")
   end
 
-  defp start_stream(rtsp_url, token, camera, ip, action) do
+  defp start_stream(rtsp_url, token, camera, ip, fullname, action) do
     rtsp_url
     |> construct_ffmpeg_command(token)
     |> Porcelain.spawn_shell
-    spawn(fn -> insert_meta_data(rtsp_url, action, camera, ip, token) end)
+    spawn(fn -> insert_meta_data(rtsp_url, action, camera, ip, fullname, token) end)
   end
 
   defp kill_streams(rtsp_url, camera_id) do
+    spawn(fn -> MetaData.delete_by_camera_and_action(camera_id, "rtmp") end)
     rtsp_url
     |> ffmpeg_pids
     |> Enum.each(fn(pid) -> Porcelain.shell("kill -9 #{pid}") end)
-    spawn(fn -> MetaData.delete_by_camera_id(camera_id) end)
   end
 
   defp sleep_until_hls_playlist_exists(token, retry \\ 0)
@@ -125,7 +127,7 @@ defmodule EvercamMediaWeb.StreamController do
     "ffmpeg -rtsp_transport tcp -stimeout 6000000 -i '#{rtsp_url}' -f lavfi -i aevalsrc=0 -vcodec copy -acodec aac -map 0:0 -map 1:0 -shortest -strict experimental -f flv rtmp://localhost:1935/live/#{token}"
   end
 
-  defp insert_meta_data(rtsp_url, action, camera, ip, token) do
+  defp insert_meta_data(rtsp_url, action, camera, ip, fullname, token) do
     try do
       vendor = Camera.get_vendor_attr(camera, :exid)
       stream_in = get_stream_info(vendor, camera, rtsp_url)
@@ -136,7 +138,7 @@ defmodule EvercamMediaWeb.StreamController do
             |> ffmpeg_pids
             |> List.first
 
-          construct_params(camera.id, action, ip, pid, rtsp_url, token, stream_in)
+          construct_params(fullname, vendor, camera.id, action, ip, pid, rtsp_url, token, stream_in)
           |> MetaData.insert_meta
         _ -> Logger.debug "Stream not working for camera: #{camera.id}"
       end
@@ -171,14 +173,19 @@ defmodule EvercamMediaWeb.StreamController do
     |> List.flatten
   end
 
-  defp construct_params(camera_id, action, ip, pid, rtsp_url, token, video_params) do
+  defp construct_params(fullname, vendor, camera_id, action, ip, pid, rtsp_url, token, video_params) do
+    framerate =
+      case vendor do
+        "hikvision" -> video_params[:avg_frame_rate]
+        _ -> clean_framerate(video_params[:avg_frame_rate])
+      end
     extra =
-      %{ip: ip, rtsp_url: rtsp_url, token: token}
+      %{requester: fullname, ip: ip, rtsp_url: rtsp_url, token: token}
       |> add_parameter("field", :width, video_params[:width])
       |> add_parameter("field", :height, video_params[:height])
       |> add_parameter("field", :codec, video_params[:codec_name])
       |> add_parameter("field", :pix_fmt, video_params[:pix_fmt])
-      |> add_parameter("rate", :frame_rate, video_params[:avg_frame_rate])
+      |> add_parameter("field", :frame_rate, framerate)
       |> add_parameter("field", :bit_rate, video_params[:bit_rate])
     %{
       camera_id: camera_id,
@@ -218,9 +225,23 @@ defmodule EvercamMediaWeb.StreamController do
   defp add_parameter(params, "field", key, value) do
     Map.put(params, key, value)
   end
-  defp add_parameter(params, "rate", key, value) do
-    framerate = String.split(value, "/", trim: true) |> List.first
-    Map.put(params, key, framerate)
+
+  defp clean_framerate(value) do
+    value
+    |> String.split("/", trim: true)
+    |> List.first
+    |> case do
+      "" -> ""
+      "0" -> "Full Frame Rate"
+      "50" -> "1/2"
+      "25" -> "1/4"
+      "12" -> "1/8"
+      "6" -> "1/16"
+      frames when frames > 2600 ->
+        Integer.floor_div(String.to_integer(frames), 1000)
+      frames when frames > 50 ->
+        Integer.floor_div(String.to_integer(frames), 100)
+    end
   end
 
   defp get_resolution(resolution) do
@@ -238,5 +259,11 @@ defmodule EvercamMediaWeb.StreamController do
     |> String.split("/")
     |> List.first
     |> String.to_integer
+  end
+
+  defp get_username(value) when value in [nil, ""], do: ""
+  defp get_username(value) do
+    [user_fullname] = Util.decode(value)
+    user_fullname
   end
 end
