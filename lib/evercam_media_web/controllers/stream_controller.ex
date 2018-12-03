@@ -52,11 +52,11 @@ defmodule EvercamMediaWeb.StreamController do
   defp get_requester_ip(conn, requester) when requester in [nil, ""], do: user_request_ip(conn)
   defp get_requester_ip(_conn, requester), do: requester
 
-  defp request_stream(camera_exid, token, ip, fullname, command) do
+  defp request_stream(_camera_exid, token, ip, fullname, command) do
     try do
-      [token_string, camera_name] = Base.decode64!(token) |> String.split("|")
+      [token_string, _, exid] = Base.decode64!(token) |> String.split("|")
       [username, password, rtsp_url] = Util.decode(token_string)
-      camera = Camera.get_full(camera_exid)
+      camera = Camera.get_full(exid)
       check_auth(camera, username, password)
       check_port(camera)
       stream(rtsp_url, token, camera, ip, fullname, command)

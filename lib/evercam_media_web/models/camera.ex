@@ -290,7 +290,7 @@ defmodule Camera do
   defp streaming_token(camera) do
     token = username(camera) <> "|" <> password(camera) <> "|" <> rtsp_url(camera)
     token_string = Util.encode([token])
-    Base.url_encode64("#{token_string}|#{camera.name}")
+    Base.url_encode64("#{token_string}|#{camera.name}|#{camera.exid}")
   end
 
   def get_vendor_attr(camera_full, attr) do
