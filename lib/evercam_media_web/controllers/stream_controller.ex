@@ -52,7 +52,7 @@ defmodule EvercamMediaWeb.StreamController do
   defp get_requester_ip(conn, requester) when requester in [nil, ""], do: user_request_ip(conn)
   defp get_requester_ip(_conn, requester), do: requester
 
-  defp request_stream(camera_exid, token, ip, fullname, command) do
+  defp request_stream(_camera_exid, token, ip, fullname, command) do
     try do
       [token_string, _name, exid] = Base.decode64!(token) |> String.split("|")
         # case Base.decode64!(token) |> String.split("|") do
@@ -87,9 +87,15 @@ defmodule EvercamMediaWeb.StreamController do
   end
 
   defp stream(rtsp_url, token, camera, ip, fullname, :check) do
-    if length(ffmpeg_pids(rtsp_url)) == 0 do
-      spawn(fn -> MetaData.delete_by_camera_and_action(camera.id, "hls") end)
-      start_stream(rtsp_url, token, camera, ip, fullname, "hls")
+    case length(ffmpeg_pids(rtsp_url)) do
+      0 ->
+        spawn(fn -> MetaData.delete_by_camera_and_action(camera.id, "hls") end)
+        start_stream(rtsp_url, token, camera, ip, fullname, "hls")
+      _ ->
+        spawn(fn ->
+          MetaData.by_camera(camera.id, "hls")
+          |> MetaData.update_requesters(fullname)
+        end)
     end
     sleep_until_hls_playlist_exists(token)
   end
